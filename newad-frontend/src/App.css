@@ -1,0 +1,222 @@
+/* css grid guides: https://www.ionos.com/digitalguide/websites/website-creation/css-grid/?&utm_term=&utm_campaign=&utm_source=adwords&utm_medium=ppc&hsa_acc=2927073921&hsa_cam=21260756623&hsa_grp=&hsa_ad=&hsa_src=x&hsa_tgt=&hsa_kw=&hsa_mt=&hsa_net=adwords&hsa_ver=3&gad_source=1&gclid=Cj0KCQjw0_WyBhDMARIsAL1Vz8uXWgO_V4fRrs7ZHl_EZqrlbHtmfCvzuxcgaNo4GeAv8f45vDvk9CUaAlcoEALw_wcB&gclsrc=aw.ds */
+
+.root-container {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+  gap: 10px;
+  grid-auto-rows: minmax(100px, auto);
+}
+
+.top-section {
+  clear: both;
+  background-repeat: no-repeat;
+  background-size: 40px;
+}
+
+.header-brand {
+  position: relative;
+  margin-top: 10px;
+  font-size: large;
+  font-weight: bold;
+}
+
+.header-pitch {
+  position: relative;
+  /* float: right; */
+  display: block;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-rows: 50px 100px;
+  grid-template-columns: 1fr 5fr;
+  grid-gap: 5px;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  justify-content: space-evenly;
+  align-content: center;
+}
+
+.grid-header {
+  min-height: 200px;
+  display: block;
+  /* background: blue; */
+  text-align: center;
+  /* border: black 5px solid; */
+  grid-area: header;
+  /* grid-column-start: 1; 
+  grid-column-end: 2; 
+  grid-row-start: 1; 
+  grid-row-end: 1; */
+}
+
+.grid-sidebar {
+  clear: both;
+  display: grid;
+  /* background: grey; */
+  /* border: black 5px solid; */
+  grid-area: sidebar;
+  padding-left: 10px;
+}
+
+.grid-main {
+  clear:both;
+  display: grid;
+  /* background: yellow; */
+  /* text-align: center; */
+  /* border: black 5px solid; */
+  grid-area: main;
+  align-content: flex-start;
+  margin-top: 10px;
+}
+
+.link {
+  display: flex;
+  color: hsl(240, 83%, 64%);
+  padding: 10px 20px;
+  gap: 15px;
+  transition: all 0.5s;
+}
+
+.link:hover {
+  background: lightskyblue;
+  color: #000;
+  transition: all 0.5s;
+  /* width: 300px; */
+}
+
+.active {
+  background: rgb(45, 150, 216);
+  color: #000;
+  /* width:250px ; */
+}
+
+table {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 10px;
+  width: 100%;
+  table-layout: fixed;
+  text-indent: initial;
+  border-spacing: 1px;
+}
+
+tr {
+  border: 1px solid black;
+  vertical-align: inherit;
+  border-color: transparent;
+}
+
+td {
+  border: 1px solid black;
+  vertical-align: inherit;
+  border-color: transparent;
+}
+
+td.image_link {
+  width: 450px;
+}
+
+td.status {
+  width: 50px;
+}
+
+td.image_checkbox {
+  width: 50px;
+}
+
+
+td.nav_link {
+  width: 65px;
+}
+
+td {
+  text-align: left;
+  word-wrap: break-word;
+  padding: 5px;
+}
+
+img.image_thumb {
+  width: 64px;
+  height: 36px;
+}
+
+img.image_detail {
+  width: 320px;
+  height: 180px;
+}
+
+/* tr:nth-child(even) {
+  background-color: green;
+} */
+
+/* CSS Code here will only be executed on a screen with a width below 650px */
+/* @media (max-width: 650px) {
+  .grid-container {
+    grid-template-rows: 50px;
+    grid-template-columns: 1fr;
+  }
+} */
+
+.tooltip-wrap {
+  position: relative;
+}
+.tooltip-wrap .tooltip-content {
+  display: none;
+  position: absolute;
+  bottom: 5%;
+  left: 5%;
+  right: 5%;
+  background-color: #fff;
+  padding: .5em;
+  min-width: 10rem;
+}
+.tooltip-wrap:hover .tooltip-content {
+  display: block;
+}
+
+.textarea_video {
+  height: 200px;
+  width: 650px;
+}
+
+.textarea_sound {
+  height: 200px;
+  width: 400px;
+}
+
+@media (max-width: 600px) {
+  
+  .grid-container {
+    display: grid;
+    grid-template-rows: 50px 100px 100px 100px;
+    grid-template-columns: 1fr;
+    grid-gap: 5px;
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "main";
+    justify-content: space-evenly;
+    align-content: center;
+  }
+  
+  .grid-header {
+    display: grid;
+    text-align: center;
+    grid-area: header;
+  }
+  
+  .grid-sidebar {
+    display: grid;
+    grid-area: sidebar;
+    padding-left: 5px;
+  }
+  
+  .grid-main {
+    display: grid;
+    grid-area: main;
+    align-content: flex-start;
+    margin-top: 5px;
+  }
+ }
