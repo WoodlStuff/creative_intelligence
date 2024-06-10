@@ -15,6 +15,8 @@ import com.noi.models.DbImage;
 import com.noi.models.DbImageLabel;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
+import com.noi.tools.SystemEnv;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -40,15 +42,15 @@ import java.util.List;
  */
 public class GoogleVisionLabelService extends LabelService {
     private static final String HOST = "https://vision.googleapis.com/v1/images:annotate";
-    //    private static final String API_KEY = "AIzaSyB3n5h-N6MiE5cCZzmIVTNy155JYTsp3cg";
 
     // use (for now): google-cloud-sdk/bin/gcloud auth print-access-token to refresh the token
-    private static final String API_KEY = "ya29.a0AXooCgvfVYJYg0ISoE8kppR4kTtqZGBL0avhfzB9FKY-VZoM5rTiC2_N6fEL_KsTfdAjL1E8v8O4Cc2bJiDrWaJyeBaAsPqCFSsPyU-JhoMVJWYjjTB1bgoNVwjJWdbaiXhh9bMADe-U8Fpf-Kk4JzBxfIsk9F6y_jUuy2RWfMexaCgYKAf4SARISFQHGX2Mimi9QAyOnWQrsY7HyOUCUbg0179";
+    private String API_KEY = null;
     private static final String GOOGLE_CLOUD_PROJECT_ID = "api-project-748579429046";
     public static final String MODEL_NAME = "GoogleVision";
 
     protected GoogleVisionLabelService() {
         super(null);
+        API_KEY = SystemEnv.get("GOOGLE_API_KEY", null);
     }
 
     @Override
@@ -57,7 +59,7 @@ public class GoogleVisionLabelService extends LabelService {
         AiImage image = DbImage.find(con, request.getImageId());
         List<AiImageLabel> labels = new ArrayList<>();
 
-        labels.addAll(post(request, image));
+        labels.addAll(post(API_KEY, request, image));
 
         // persist the labels
         DbImageLabel.insertAnnotation(con, request, labels);
@@ -126,14 +128,14 @@ public class GoogleVisionLabelService extends LabelService {
         return root;
     }
 
-    private static List<AiImageLabel> post(AiImageLabelRequest request, AiImage image) throws IOException {
+    private static List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
 
         try {
             client = HttpClients.createDefault();
 
-            HttpPost httpPost = createHttpPost(request, image);
+            HttpPost httpPost = createHttpPost(apiKey, request, image);
             response = client.execute(httpPost);
 
             return parseResponse(image, response);
@@ -147,13 +149,13 @@ public class GoogleVisionLabelService extends LabelService {
         }
     }
 
-    private static HttpPost createHttpPost(AiImageLabelRequest request, AiImage image) throws IOException {
+    private static HttpPost createHttpPost(String apiKey, AiImageLabelRequest request, AiImage image) throws IOException {
         Gson gson = new Gson();
         JsonObject payloadJson = createPayload(request, image);
         StringEntity entity = new StringEntity(gson.toJson(payloadJson), ContentType.APPLICATION_JSON);
 
         HttpPost httpPost = new HttpPost(HOST);
-        httpPost.setHeader("Authorization", "Bearer " + API_KEY);
+        httpPost.setHeader("Authorization", "Bearer " + apiKey);
         httpPost.setHeader("x-goog-user-project", GOOGLE_CLOUD_PROJECT_ID);
         httpPost.setHeader("User-Agent", "Noi");
         httpPost.setEntity(entity);
@@ -260,8 +262,8 @@ public class GoogleVisionLabelService extends LabelService {
         //String imgUrl = String.format("%s" + requestUUID + "/%s", AiImageService.FILE_ROOT_FOLDER, fileName);
         AiImage image = AiImage.create(imageRequest, imgUrl, null);
         image.setId(imageId);
-
-        List<AiImageLabel> imageLabels = post(request, image);
+        String API_KEY = SystemEnv.get("GOOGLE_API_KEY", null);
+        List<AiImageLabel> imageLabels = post(API_KEY, request, image);
         for (AiImageLabel label : imageLabels) {
             System.out.println(label);
         }

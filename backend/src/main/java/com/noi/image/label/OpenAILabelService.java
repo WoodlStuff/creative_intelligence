@@ -8,7 +8,6 @@ import com.noi.AiModel;
 import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.AiImageService;
-import com.noi.image.OpenAiImageService;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiPrompt;
 import com.noi.models.*;
@@ -16,6 +15,7 @@ import com.noi.requests.AiRequestLogger;
 import com.noi.requests.ImageLabelResponse;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
+import com.noi.tools.SystemEnv;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -39,6 +39,8 @@ public class OpenAILabelService extends LabelService {
 
     private final String modelName;
 
+    private String API_KEY = null;
+
     public OpenAILabelService(String modelName) {
         super(LabelService.OPEN_AI_COMPLETION);
         if (modelName == null) {
@@ -46,6 +48,7 @@ public class OpenAILabelService extends LabelService {
         } else {
             this.modelName = modelName;
         }
+        API_KEY = SystemEnv.get("OPENAI_API_KEY", null);
     }
 
     @Override
@@ -80,7 +83,7 @@ public class OpenAILabelService extends LabelService {
         }
 
         List<AiImageLabel> labels = new ArrayList<>();
-        labels.addAll(post(request, image, systemRoleContent, userRoleContent, useHighResolution));
+        labels.addAll(post(API_KEY, request, image, systemRoleContent, userRoleContent, useHighResolution));
 
         // persist the labels
         DbImageLabel.insert(con, request, labels);
@@ -88,14 +91,14 @@ public class OpenAILabelService extends LabelService {
         return ImageLabelResponse.create(request, labels);
     }
 
-    private List<AiImageLabel> post(AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
+    private List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
 
         try {
             client = HttpClients.createDefault();
 
-            HttpPost httpPost = createHttpPost(request, image, systemRoleContent, userRoleContent, useHighResolution);
+            HttpPost httpPost = createHttpPost(apiKey, request, image, systemRoleContent, userRoleContent, useHighResolution);
             response = client.execute(httpPost);
 
             return parseResponse(request, image, response);
@@ -110,7 +113,7 @@ public class OpenAILabelService extends LabelService {
         }
     }
 
-    private HttpPost createHttpPost(AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
+    private HttpPost createHttpPost(String apiKey, AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
         System.out.println("posting to " + LABEL_URL + ": " + image);
         JsonObject payloadJson = createPayload(image, modelName, systemRoleContent, userRoleContent, useHighResolution);
 
@@ -121,7 +124,7 @@ public class OpenAILabelService extends LabelService {
         StringEntity entity = new StringEntity(gson.toJson(payloadJson), ContentType.APPLICATION_JSON);
 
         HttpPost httpPost = new HttpPost(LABEL_URL);
-        httpPost.setHeader("Authorization", "Bearer " + OpenAiImageService.API_KEY);
+        httpPost.setHeader("Authorization", "Bearer " + apiKey);
         httpPost.setHeader("User-Agent", "Noi");
         httpPost.setEntity(entity);
         return httpPost;

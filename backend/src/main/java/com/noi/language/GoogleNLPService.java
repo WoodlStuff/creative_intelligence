@@ -1,9 +1,12 @@
 package com.noi.language;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.noi.models.DbLanguage;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
+import com.noi.tools.SystemEnv;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -15,7 +18,6 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,10 +28,14 @@ import java.util.List;
  * gcloud client: https://cloud.google.com/sdk/docs/install
  */
 public class GoogleNLPService extends NLPService {
-    private static final String API_KEY = "AIzaSyB3n5h-N6MiE5cCZzmIVTNy155JYTsp3cg";
-    private static final String GOOGLE_CLOUD_PROJECT_ID = "api-project-748579429046";
     private static final String API_HOST = "https://language.googleapis.com";
     private static final String API_PATH = "/v2/documents";
+
+    private String GOOGLE_API_KEY = null;
+
+    public GoogleNLPService() {
+        GOOGLE_API_KEY = SystemEnv.get("GOOGLE_NPL_API_KEY", null);
+    }
 
     @Override
     EntitiesResponse analyzeEntities(NLPRequest request) throws IOException {
@@ -39,7 +45,6 @@ public class GoogleNLPService extends NLPService {
         JsonObject responseJson = post(root, "analyzeEntities");
 
         /*
-        export $GOOGLE_API_KEY=AIzaSyB3n5h-N6MiE5cCZzmIVTNy155JYTsp3cg
         curl "https://language.googleapis.com/v2/documents:analyzeEntities" \
           -X POST \
           -H "X-Goog-Api-Key: $GOOGLE_API_KEY" \
@@ -333,7 +338,9 @@ public class GoogleNLPService extends NLPService {
 
         HttpPost httpPost = new HttpPost(String.format("%s%s:%s", API_HOST, API_PATH, path));
 //        httpPost.setHeader("Authorization", "Bearer " + API_KEY);
-        httpPost.setHeader("X-Goog-Api-Key", API_KEY);
+        String apiKey = SystemEnv.get("GOOGLE_NPL_API_KEY", null);
+
+        httpPost.setHeader("X-Goog-Api-Key", apiKey);
 
         //httpPost.setHeader("x-goog-user-project", GOOGLE_CLOUD_PROJECT_ID);
         httpPost.setHeader("User-Agent", "Noi");
