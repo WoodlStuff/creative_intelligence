@@ -5,18 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../CI/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/uiDesigner.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/MetaKeyValues.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoFrameMoment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/AiImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/AiImageLabel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/GoogleNLPService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/GoogleNLPService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Components/Sidebar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Components/Sidebar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +65,13 @@
       </state>
     </system>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
@@ -80,6 +93,15 @@
     "project.structure.side.proportion": "0.0"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.noi.image" />
+      <recent name="com.noi.video" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.noi.language" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="backend [war]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>

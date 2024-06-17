@@ -5,6 +5,7 @@ import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.label.*;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.MetaKeyValues;
 import com.noi.requests.NoiRequest;
 
 import javax.naming.NamingException;
@@ -306,6 +307,10 @@ public class DbImageLabel extends Model {
             for (Map.Entry<String, List<LabelMetaData>> entry : label.getLabelCategories().entrySet()) {
                 stmt.setLong(3, lookupCategoryId(con, categories, entry.getKey()));
                 for (LabelMetaData lm : entry.getValue()) {
+                    if ("none".equalsIgnoreCase(lm.getValue())) {
+                        // skip 'none' values
+                        continue;
+                    }
                     stmt.setString(4, lm.getKey());
                     stmt.setString(5, lm.getValue());
                     stmt.executeUpdate();
@@ -427,5 +432,36 @@ public class DbImageLabel extends Model {
         }
 
         return categories;
+    }
+
+    public static Map<Long, Map<String, List<MetaKeyValues>>> findImageCategoryKeyGroups(Connection con, Long videoId) throws SQLException {
+        Map<Long, Map<String, List<MetaKeyValues>>> kv = new HashMap<>();
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("select ai_image_id, name category_name, meta_key, group_concat(meta_value) meta_values from (select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value from ai_image_label_meta_categories lmc join meta_categories c on c.id = lmc.meta_category_id join ai_images i on i.id = lmc.ai_image_id where i.ai_video_id=?)x group by 1,2,3 order by video_frame_number, name, meta_key");
+            stmt.setLong(1, videoId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                long imageId = rs.getLong("ai_image_id");
+                Map<String, List<MetaKeyValues>> categoryMap = kv.get(imageId);
+                if (categoryMap == null) {
+                    categoryMap = new HashMap<>();
+                    kv.put(imageId, categoryMap);
+                }
+                String categoryName = rs.getString("category_name");
+                List<MetaKeyValues> kvList = categoryMap.get(categoryName);
+                if (kvList == null) {
+                    kvList = new ArrayList<>();
+                    categoryMap.put(categoryName, kvList);
+                }
+
+                kvList.add(MetaKeyValues.create(rs));
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return kv;
     }
 }

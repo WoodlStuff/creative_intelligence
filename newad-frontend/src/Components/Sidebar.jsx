@@ -27,6 +27,17 @@ export default function Sidebar({ children }) {
       name: "Videos",
       icon: <AiFillVideoCamera />,
     },
+    {
+      path: "/prompts",
+      name: "Prompts",
+      icon: <AiFillVideoCamera />,
+    },
+    // {
+    //   path: "/stories",
+    //   name: "Stories",
+    //   icon: <AiFillVideoCamera />,
+    // },
+
   ];
 
   return (

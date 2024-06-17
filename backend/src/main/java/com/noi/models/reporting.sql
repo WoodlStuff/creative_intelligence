@@ -66,3 +66,10 @@ select distinct m.name, r.is_scene_change, last.image_url last_scene_url, first.
    and first.ai_video_id = @video_id and m.name=@model_name
   -- and r.is_scene_change=1
  ;
+
+ -- video frames used to create a summary:
+set @video_id = 8;
+select v.frame_rate, s.ai_image_id, i.image_url, i.video_frame_number, round(i.video_frame_number/v.frame_rate) _seconds_in  from ai_video_summary_scenes s join ai_images i on i.id = s.ai_image_id join ai_videos v on v.id = s.ai_video_id and v.id = i.ai_video_id
+ where s.status=1 and i.status != -1
+   and s.ai_video_id = @video_id
+ order by i.video_frame_number asc;

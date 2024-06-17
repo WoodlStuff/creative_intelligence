@@ -96,7 +96,7 @@ function Images() {
               <tbody>
                 {
                   imageData.map((image) => (
-                    <tr>
+                    <tr key={image.id}  >
                       <td className="image_thumb"><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.id} /></td>
                       <td className="image_link">
                         {/* {image.url} */}

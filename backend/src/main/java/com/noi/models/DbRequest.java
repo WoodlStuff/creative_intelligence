@@ -173,7 +173,7 @@ public class DbRequest extends Model {
                 Long promptId = prompt.getId();
                 if (promptId == null) {
                     // first persist the prompt and get the id
-                    prompt = DbLanguage.insertPrompt(con, prompt.getPrompt(), prompt.getSystemPrompt(), AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+                    prompt = DbLanguage.insertPrompt(con, prompt.getPrompt(), prompt.getSystemPrompt(), AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
                     promptId = prompt.getId();
                 }
                 stmt.setLong(2, promptId);

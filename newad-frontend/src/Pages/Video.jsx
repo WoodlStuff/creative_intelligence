@@ -7,7 +7,8 @@ function Video () {
 
     const [videoData, setVideoData] = useState([]);
 
-    const image_path = '/image';
+    const image_path = '/image/';
+    const story_path = '/story/';
 
 
     function showProgressbar(){
@@ -30,11 +31,11 @@ function Video () {
         if(props.hasScenes == true){
             return (
                 props.videoData[0].orb_scenes.map((scene) => (
-                    <tr>
+                    <tr key={scene.last_scene_frame}>
                       <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
                       <td>
                         <NavLink
-                          to={image_path + '/' + scene.last_scene_image_id }
+                          to={image_path + scene.last_scene_image_id }
                           key={scene.last_scene_image_id}
                           className="image-link"
                         >
@@ -46,7 +47,7 @@ function Video () {
                       <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
                       <td>
                         <NavLink
-                          to={image_path + '/' + scene.first_scene_image_id }
+                          to={image_path + scene.first_scene_image_id }
                           key={scene.first_scene_image_id}
                           className="image-link"
                         >
@@ -68,11 +69,11 @@ function Video () {
         if(props.hasScenes == true){
             return (
                 props.videoData[0].llm_scenes.map((scene) => (
-                    <tr>
+                    <tr key={scene.last_scene_image_id}>
                       <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
                       <td>
                         <NavLink
-                          to={image_path + '/' + scene.last_scene_image_id }
+                          to={image_path + scene.last_scene_image_id }
                           key={scene.last_scene_image_id}
                           className="image-link"
                         >
@@ -84,7 +85,7 @@ function Video () {
                       <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
                       <td>
                         <NavLink
-                          to={image_path + '/' + scene.first_scene_image_id }
+                          to={image_path + scene.first_scene_image_id }
                           key={scene.first_scene_image_id}
                           className="image-link"
                         >
@@ -96,9 +97,9 @@ function Video () {
                         <span>{scene.score}</span>
                       </td>
                       <td className="image_checkbox">
-                        <div class="tooltip-wrap">
+                        <div className="tooltip-wrap">
                           <Checkbox value={scene.is_new_video_scene}/>
-                           <div class="tooltip-content">
+                           <div className="tooltip-content">
                             {scene.explanation}
                            </div> 
                         </div>
@@ -214,7 +215,7 @@ function Video () {
                     <tbody>
                     {
                       videoData.map((video) => (
-                        <tr>
+                        <tr key={video.url}>
                           <td>
                             {video.url}
                           </td>
@@ -243,19 +244,26 @@ function Video () {
                 <table width="100%">
                   <thead>
                     <tr>
-                      <td width="60%">Video Summary</td>
+                      <td width="60%">
+                        <NavLink
+                          to={story_path + params.id }
+                          key={params.id}
+                          className="story-link">
+                            <span className="story_link_text">Video Summary</span>
+                          </NavLink>
+                        </td>
                       <td width="40%">Sound Transcript Summary</td>
                     </tr>
                   </thead>
                     <tbody>
                     {
                       videoData.map((video) => (
-                        <tr>
+                        <tr key={video.url}>
                           <td>
-                            <textarea className="textarea_video">{video.video_summary}</textarea>
+                            <textarea className="textarea_video" defaultValue={video.video_summary}/>
                           </td>
                           <td>
-                          <textarea className="textarea_sound">{video.sound_summary}</textarea>
+                          <textarea className="textarea_sound" defaultValue={video.sound_summary}/>
                           </td>
                         </tr>
                       ))

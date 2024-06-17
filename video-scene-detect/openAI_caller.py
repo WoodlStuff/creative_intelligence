@@ -110,13 +110,24 @@ def videoSummaryURL(sceneChanges, folderPath, videoName, model=MODEL_NAME):
     if not os.path.exists(path):
         os.mkdir(path)
     base64Frames = []
+
+    if len(sceneChanges) <= 0:
+        return
+    
+    # add the very first frame (before the first change)
+    base64Frames.append(imageURLToBase64String(sceneChanges[0]['image_url_before']))
+
     # loop urls and convert the content to base64
     for sceneChange in sceneChanges:
-        img = Image.open(sceneChange['image_url'])
-        buffered = BytesIO()
-        img.save(buffered, img.format)
-        base64Frames.append(base64.b64encode(buffered.getvalue()).decode('utf-8'))
+        base64Frames.append(imageURLToBase64String(sceneChange['image_url']))
+
     return videoSummary(sceneChanges, base64Frames, folderPath, videoName, model)
+
+def imageURLToBase64String(image_url):
+    img = Image.open(image_url)
+    buffered = BytesIO()
+    img.save(buffered, img.format)
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
 # generate summary from local video scene images
 def videoSummary(sceneChanges, base64Frames, folderPath, videoName, model=MODEL_NAME):
@@ -155,7 +166,6 @@ def videoSummary(sceneChanges, base64Frames, folderPath, videoName, model=MODEL_
     summaryJson['summary'] = response.choices[0].message.content
     summaryPath = os.path.join(folderPath, videoName, videoName + '_scene_summary.json')
     with open(summaryPath, 'w') as f:
-        # f.write(response.choices[0].message.content)
         json.dump(summaryJson, f)
         f.close()
     return summaryPath

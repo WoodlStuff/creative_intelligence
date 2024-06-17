@@ -22,3 +22,6 @@ gradle-app.setting
 
 # ignore .env files 
 .env
+
+# ignore py cache
+__pycache__

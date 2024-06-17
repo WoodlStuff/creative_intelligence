@@ -111,7 +111,7 @@ function Image() {
               <tbody>
                 {
                   imageLabelData.map((meta) => (
-                    <tr>
+                    <tr key={meta.key + '-'+ meta.value}>
                       <td>
                         {meta.category_name}
                       </td>
@@ -156,7 +156,7 @@ function Image() {
               <tbody>
                 {
                   imageAnnotationData.map((anno) => (
-                    <tr>
+                    <tr key={anno.mid}>
                       <td>
                         {anno.mid}
                       </td>
@@ -177,8 +177,6 @@ function Image() {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 }

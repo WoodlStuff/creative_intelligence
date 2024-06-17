@@ -2,6 +2,7 @@ package com.noi.models;
 
 import com.noi.Status;
 import com.noi.video.AiVideo;
+import com.noi.video.VideoFrameMoment;
 
 import javax.naming.NamingException;
 import java.sql.Connection;
@@ -9,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DbVideo extends Model {
@@ -67,5 +69,24 @@ public class DbVideo extends Model {
         } finally {
             close(stmt);
         }
+    }
+
+    public static List<VideoFrameMoment> findSummaryFrames(Connection con, Long videoId) throws SQLException {
+        List<VideoFrameMoment> moments = new LinkedList<>();
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("select s.ai_image_id, i.image_url, i.video_frame_number, v.frame_rate, round(i.video_frame_number/v.frame_rate) _seconds_in  from ai_video_summary_scenes s join ai_images i on i.id = s.ai_image_id join ai_videos v on v.id = s.ai_video_id and v.id = i.ai_video_id  where s.status=? and i.status !=? and s.ai_video_id=?  order by i.video_frame_number asc");
+            stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(2, Status.DELETED.getStatus());
+            stmt.setLong(3, videoId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                moments.add(VideoFrameMoment.create(rs));
+            }
+
+        } finally {
+            Model.close(stmt);
+        }
+        return moments;
     }
 }

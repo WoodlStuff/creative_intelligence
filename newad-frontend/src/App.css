@@ -186,6 +186,11 @@ img.image_detail {
   width: 400px;
 }
 
+.textarea_prompt {
+  height: 80px;
+  width: 650px;
+}
+
 @media (max-width: 600px) {
   
   .grid-container {

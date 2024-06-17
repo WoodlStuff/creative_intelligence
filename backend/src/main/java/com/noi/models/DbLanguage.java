@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DbLanguage extends Model {
+    private static final String PROMPT_COLUMNS = "id, prompt, prompt_type, system_prompt, status";
 
     public static void persistClassificationResponse(NLPRequest request, ClassificationResponse classificationResponse, String type) throws SQLException, NamingException {
         Connection con = null;
@@ -163,11 +164,11 @@ public class DbLanguage extends Model {
 
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select prompt, prompt_type from ai_prompts where id=?");
+            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where id=?");
             stmt.setLong(1, promptId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return AiPrompt.create(promptId, rs.getString("prompt"), rs.getInt("prompt_type"));
+                return AiPrompt.create(rs);
             }
         } finally {
             close(stmt);
@@ -190,7 +191,7 @@ public class DbLanguage extends Model {
 
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select id, prompt, prompt_type from ai_prompts where prompt=?");
+            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where prompt=?");
             stmt.setString(1, prompt);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -224,11 +225,12 @@ public class DbLanguage extends Model {
 
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select id, prompt, prompt_type from ai_prompts where status=?");
+            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?)");
             stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(2, Status.NEW.getStatus());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                prompts.add(AiPrompt.create(rs.getLong("id"), rs.getString("prompt"), rs.getInt("prompt_type")));
+                prompts.add(AiPrompt.create(rs));
             }
         } finally {
             close(stmt);

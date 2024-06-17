@@ -58,7 +58,7 @@ function Videos() {
               </thead>
               <tbody>
                 {videoData.map(video => (
-                  <tr>
+                  <tr key={video.id}>
                     <td>
                       <NavLink
                         to={video_path + '/' + video.id}

@@ -65,9 +65,9 @@ public class OpenAILabelService extends LabelService {
             userRoleContent = request.getPrompt().getPrompt();
         } else {
             // find or create the default prompt!
-            AiPrompt prompt = DbLanguage.findPrompt(con, userRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+            AiPrompt prompt = DbLanguage.findPrompt(con, userRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
             if (prompt == null) {
-                prompt = DbLanguage.insertPrompt(con, userRoleContent, systemRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+                prompt = DbLanguage.insertPrompt(con, userRoleContent, systemRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
             }
             // now link this request to the correct prompt
             DbRequest.updateForLabel(con, request, prompt);

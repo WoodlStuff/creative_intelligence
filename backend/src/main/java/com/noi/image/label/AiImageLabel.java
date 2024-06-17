@@ -75,9 +75,9 @@ public class AiImageLabel {
     }
 
     public static Map<String, List<LabelMetaData>> parseMetaCategories(JsonObject metaDataRoot, String rootCategory, int promptType) {
-        if (promptType == AiPrompt.TYPE_IMAGE_LABEL_OBJECTS) {
+        if (promptType == AiPrompt.TYPE_IMAGE_LABEL_OBJECTS.getType()) {
             return parseImageElements(metaDataRoot);
-        } else if (promptType == AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES) {
+        } else if (promptType == AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES.getType()) {
             return parseImageProperties(metaDataRoot);
         }
 
@@ -118,14 +118,14 @@ public class AiImageLabel {
         // image_properties: {"size": "the size of the image", "format": "the encoding of the file (JPEG, PNG, ...)", "overall_color": "vibrant", "color_gradients": "Sky blue to white", "shadows": "minimal", "lighting"}
         JsonElement propertiesNode = metaDataRoot.get("image_properties");
         if (propertiesNode != null && propertiesNode.isJsonObject()) {
-            labelMeta.putAll(parseMetaCategories(propertiesNode.getAsJsonObject(), "image_properties", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES));
+            labelMeta.putAll(parseMetaCategories(propertiesNode.getAsJsonObject(), "image_properties", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType()));
         }
 
         // language featured in the image (if any)
         // {"image_language": {"themes": "", "persuasive_language": "", "calls_to_action": "", "claims_language": "", "trust_queues": "", "figures_of_speech": "", "sense_of_urgency": "", "health_claims
         JsonElement languageNode = metaDataRoot.get("image_language");
         if (languageNode != null && languageNode.isJsonObject()) {
-            labelMeta.putAll(parseMetaCategories(languageNode.getAsJsonObject(), "image_language", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES));
+            labelMeta.putAll(parseMetaCategories(languageNode.getAsJsonObject(), "image_language", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType()));
         }
 
         return labelMeta;
@@ -235,7 +235,7 @@ public class AiImageLabel {
         if (layout != null && !layout.isJsonNull()) {
             if (layout.isJsonObject()) {
                 JsonObject layoutObject = layout.getAsJsonObject();
-                labelMeta.putAll(parseMetaCategories(layoutObject, "layout", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES));
+                labelMeta.putAll(parseMetaCategories(layoutObject, "layout", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType()));
             } else if (layout.isJsonArray()) {
                 // "layout":["water horizon","skyline"]
                 JsonArray array = layout.getAsJsonArray();
@@ -244,7 +244,7 @@ public class AiImageLabel {
                     if (arrayElement.isJsonPrimitive()) {
                         appendLabelMeta(labelMeta, "layout", "layout", arrayElement);
                     } else {
-                        labelMeta.putAll(parseMetaCategories(arrayElement.getAsJsonObject(), "layout", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES));
+                        labelMeta.putAll(parseMetaCategories(arrayElement.getAsJsonObject(), "layout", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType()));
                     }
                 }
             }
@@ -292,7 +292,7 @@ public class AiImageLabel {
             } else if (!imageElements.isJsonPrimitive()) {
                 // is it a map (k:v)?
                 // "objects":{"person_1":"yellow shirt","person_2":"blue shirt", ...
-                Map<String, List<LabelMetaData>> objects = parseMetaCategories(imageElements.getAsJsonObject(), "image_objects", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+                Map<String, List<LabelMetaData>> objects = parseMetaCategories(imageElements.getAsJsonObject(), "image_objects", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
                 labelMeta.putAll(objects);
                 for (List<LabelMetaData> metaList : objects.values()) {
                     for (LabelMetaData data : metaList) {
@@ -316,7 +316,7 @@ public class AiImageLabel {
                 }
             } else if (!imageElements.isJsonPrimitive()) {
                 // "overlay_text":{"top_left_text":"Explore Barbados like never before!","logos":"Gears246 Bike Adventure Tours","main_heading":"eBIKE GROUP TOURS AVAILABLE","main_text":"Experience the thrill of a bike ride along the scenic spots in Barbados at your own pace. Book your eBike tour or rental today!"}
-                Map<String, List<LabelMetaData>> objects = parseMetaCategories(imageElements.getAsJsonObject(), "overlay_text", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+                Map<String, List<LabelMetaData>> objects = parseMetaCategories(imageElements.getAsJsonObject(), "overlay_text", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
                 labelMeta.putAll(objects);
                 for (List<LabelMetaData> metaList : objects.values()) {
                     for (LabelMetaData data : metaList) {
@@ -333,7 +333,7 @@ public class AiImageLabel {
 
         // fallback
         if (labelMeta.isEmpty()) {
-            return parseMetaCategories(metaDataRoot, "image_objects", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+            return parseMetaCategories(metaDataRoot, "image_objects", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
         }
         return labelMeta;
     }

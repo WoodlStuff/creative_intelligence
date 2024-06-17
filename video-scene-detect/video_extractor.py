@@ -15,7 +15,7 @@ import openAI_caller
 import uuid
 
 def test():
-    path = '/Users/martin/work/AI/videos/'
+    path = '/Users/martin/work/tmp/ai-data/videos/'
 
     video_name = None
 

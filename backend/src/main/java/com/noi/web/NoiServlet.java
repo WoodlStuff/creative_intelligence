@@ -22,6 +22,7 @@ import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
 import com.noi.video.AiVideo;
 import com.noi.video.AiVideoService;
+import com.noi.video.VideoFrameMoment;
 import org.apache.http.entity.ContentType;
 
 import javax.naming.NamingException;
@@ -34,10 +35,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @WebServlet(name = "NoiServlet", urlPatterns = {"/api/*"}, loadOnStartup = 0)
@@ -170,6 +168,26 @@ public class NoiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // curl http://localhost:8080/noi-server/api/request/123
 
+        // meta about the most recent n images...
+        // curl http://localhost:8080/noi-server/api/image/<image-id>
+
+        // render the video bytes
+        // curl http://localhost:8080/noi-server/api/video/<video-id>
+
+        // meta about the most recent n videos
+        // curl http://localhost:8080/noi-server/api/video/<video-id>
+
+        // curl http://localhost:8080/noi-server/api/video-story/<video-id>
+
+        // label data for one image
+        // curl http://localhost:8080/noi-server/api/label/<image-id>
+
+        // meta about the most recent n prompts
+        // curl http://localhost:8080/noi-server/api/prompts
+
+        // metadata for one prompt
+        // curl http://localhost:8080/noi-server/api/prompt/<id>
+
         Path path = Path.parse(req);
         if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -222,6 +240,27 @@ public class NoiServlet extends HttpServlet {
 
                 writeImageLabels(req, resp, pathTokens);
                 return;
+            } else if ("prompts".equalsIgnoreCase(pathTokens[0])) {
+                writePromptList(req, resp);
+                return;
+            } else if ("prompt".equalsIgnoreCase(pathTokens[0])) {
+                if (pathTokens.length <= 1) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+
+                Long promptId = Long.parseLong(pathTokens[1].trim());
+                writePrompt(promptId, req, resp);
+                return;
+            } else if ("video-story".equalsIgnoreCase(pathTokens[0])) {
+                if (pathTokens.length <= 1) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+
+                Long videoId = Long.parseLong(pathTokens[1].trim());
+                writeVideoStoryData(videoId, resp);
+                return;
             }
         } catch (SQLException | NamingException e) {
             throw new RuntimeException(e);
@@ -229,6 +268,132 @@ public class NoiServlet extends HttpServlet {
 
         // DEFAULT TO DENY EVERYTHING
         resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    }
+
+    private void writeVideoStoryData(Long videoId, HttpServletResponse resp) throws IOException, SQLException, NamingException {
+        JsonObject root = new JsonObject();
+        JsonObject story = new JsonObject();
+        root.add("story", story);
+
+        Connection con = null;
+
+        try {
+            con = Model.connectX();
+
+            List<VideoFrameMoment> moments = DbVideo.findSummaryFrames(con, videoId);
+            JsonArray momentsArray = new JsonArray();
+            story.add("moments", momentsArray);
+            for (VideoFrameMoment moment : moments) {
+                JsonObject mom = new JsonObject();
+                mom.addProperty("image_id", moment.getImageId());
+                mom.addProperty("image_url", moment.getImageURL());
+                mom.addProperty("video_frame_number", moment.getFrameNumber());
+                mom.addProperty("frame_rate", moment.getVideoFrameRate());
+                mom.addProperty("seconds", moment.getSecondsFromStart());
+
+                momentsArray.add(mom);
+            }
+
+            JsonArray categoryNames = new JsonArray();
+            story.add("category_names", categoryNames);
+            Set<String> catNames = new TreeSet<>();
+            JsonArray categories = new JsonArray();
+            story.add("categories", categories);
+
+            // Map<image_id> => Map<Category-Name> => KV-Pair[k,v]
+            Map<Long, Map<String, List<MetaKeyValues>>> metaData = DbImageLabel.findImageCategoryKeyGroups(con, videoId);
+            for (Map.Entry<Long, Map<String, List<MetaKeyValues>>> entry : metaData.entrySet()) {
+                // one array per image
+                JsonObject image = new JsonObject();
+                categories.add(image);
+                image.addProperty("image_id", entry.getKey());
+
+                JsonArray storyElements = new JsonArray();
+                image.add("story_elements", storyElements);
+
+                for (Map.Entry<String, List<MetaKeyValues>> metaEntry : entry.getValue().entrySet()) {
+                    String categoryName = metaEntry.getKey();
+                    if (!catNames.contains(categoryName)) {
+                        catNames.add(categoryName);
+                    }
+
+                    for (MetaKeyValues kv : metaEntry.getValue()) {
+                        JsonObject storyElement = new JsonObject();
+                        storyElements.add(storyElement);
+                        storyElement.addProperty("category_name", categoryName);
+                        storyElement.addProperty("key", kv.getKey());
+                        storyElement.addProperty("values", kv.getValues());
+                    }
+                }
+            }
+            // add unique category names as a separate array
+            List<String> sorted = new ArrayList<>(catNames);
+            System.out.println("sorted has a size of: " + sorted.size());
+            Collections.sort(sorted);
+            for (String catName : sorted) {
+                categoryNames.add(catName);
+            }
+        } finally {
+            Model.close(con);
+        }
+
+        writeResponse(resp, root);
+    }
+
+    private void writePrompt(Long promptId, HttpServletRequest req, HttpServletResponse resp) throws SQLException, NamingException, IOException {
+        // {'id':123, 'type': 1, 'type_name': '????', 'prompt': 'some text here..', 'system_prompt': 'more text ...', 'status': 'active'}
+        JsonObject root = new JsonObject();
+        Connection con = null;
+        try {
+            con = Model.connectX();
+
+            AiPrompt prompt = DbLanguage.findPrompt(con, promptId);
+            if (prompt != null) {
+                addPromptToJson(root, prompt);
+            }
+            writeResponse(resp, root);
+        } finally {
+            Model.close(con);
+        }
+    }
+
+    private static void addPromptToJson(JsonObject root, AiPrompt prompt) {
+        root.addProperty("id", prompt.getId());
+        root.addProperty("type", prompt.getPromptType());
+
+        AiPrompt.Type type = AiPrompt.Type.parse(prompt.getPromptType());
+        root.addProperty("type_name", type == null ? "n/a" : type.getName());
+
+        root.addProperty("prompt", prompt.getPrompt());
+        // root.addProperty("link_text", prompt.getPrompt());
+
+        if (prompt.getSystemPrompt() != null) {
+            root.addProperty("system_prompt", prompt.getSystemPrompt());
+        }
+
+        root.addProperty("status", prompt.getStatus().getName());
+    }
+
+    private void writePromptList(HttpServletRequest req, HttpServletResponse resp) throws SQLException, NamingException, IOException {
+        // prompts: [{'type_name': xxx, 'id', 'link_text': 'xxxx', 'status': 'active'}]
+        JsonObject root = new JsonObject();
+        JsonArray array = new JsonArray();
+        root.add("prompts", array);
+
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            List<AiPrompt> prompts = DbLanguage.findPrompts(con);
+            for (AiPrompt prompt : prompts) {
+                JsonObject p = new JsonObject();
+                addPromptToJson(p, prompt);
+                array.add(p);
+            }
+        } finally {
+            Model.close(con);
+        }
+
+        writeResponse(resp, root);
     }
 
     private void writeImageLabels(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
@@ -416,6 +581,7 @@ public class NoiServlet extends HttpServlet {
 
     /**
      * render meta data for one image
+     *
      * @param images
      * @param resp
      * @throws IOException
@@ -871,7 +1037,7 @@ public class NoiServlet extends HttpServlet {
             // lookup the model id for our local scoring alg.
             AiModel orbModel = DbModel.ensure(con, "ORB");
             AiModel sceneModel = DbModel.ensure(con, sameSceneModel);
-            AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE);
+            AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE.getType());
 
             // read the raw scored scene changes and persist the frames as ai_images
             JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");
@@ -957,7 +1123,7 @@ public class NoiServlet extends HttpServlet {
                 String userPrompt = JsonTools.getAsString(meta, "user_prompt");
                 String audioSummary = JsonTools.getAsString(meta, "summary");
 
-                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY);
+                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY.getType());
                 AiModel model = DbModel.ensure(con, modelName);
                 Long requestId = DbMedia.insertTranscriptSummaryRequest(con, uuid, transcriptId, prompt, model);
                 DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
@@ -974,7 +1140,7 @@ public class NoiServlet extends HttpServlet {
                 String videoSummary = JsonTools.getAsString(meta, "summary");
                 JsonArray scenes = meta.getAsJsonArray("scenes");
 
-                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY);
+                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY.getType());
                 AiModel model = DbModel.ensure(con, modelName);
                 Long requestId = DbMedia.insertVideoSummaryRequest(con, uuid, videoId, prompt, model);
 
