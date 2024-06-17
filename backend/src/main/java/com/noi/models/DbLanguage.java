@@ -203,11 +203,11 @@ public class DbLanguage extends Model {
         return null;
     }
 
-    public static List<AiPrompt> findPrompts() throws SQLException, NamingException {
+    public static List<AiPrompt> findPrompts(List<AiPrompt.Type> types) throws SQLException, NamingException {
         Connection con = null;
         try {
             con = Model.connectX();
-            return findPrompts(con);
+            return findPrompts(con, types);
         } finally {
             Model.close(con);
         }
@@ -226,6 +226,35 @@ public class DbLanguage extends Model {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?)");
+            stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(2, Status.NEW.getStatus());
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                prompts.add(AiPrompt.create(rs));
+            }
+        } finally {
+            close(stmt);
+        }
+        return prompts;
+    }
+
+    public static List<AiPrompt> findPrompts(Connection con, List<AiPrompt.Type> types) throws SQLException {
+        List<AiPrompt> prompts = new ArrayList<>();
+
+        PreparedStatement stmt = null;
+        try {
+            StringBuilder sql = new StringBuilder().append("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?) and prompt_type in(");
+            int i = 0;
+            for (AiPrompt.Type type : types) {
+                if (i > 0) {
+                    sql.append(",");
+                }
+                sql.append(type.getType());
+                i++;
+            }
+            sql.append(")");
+            stmt = con.prepareStatement(sql.toString());
+
             stmt.setInt(1, Status.ACTIVE.getStatus());
             stmt.setInt(2, Status.NEW.getStatus());
             ResultSet rs = stmt.executeQuery();

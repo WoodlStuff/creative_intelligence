@@ -70,6 +70,7 @@ public abstract class LabelService {
 
         response.setContentType(ContentType.APPLICATION_JSON.toString());
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
         Writer out = response.getWriter();
         Gson gson = new Gson();

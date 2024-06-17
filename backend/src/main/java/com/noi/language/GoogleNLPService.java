@@ -34,6 +34,7 @@ public class GoogleNLPService extends NLPService {
     private String GOOGLE_API_KEY = null;
 
     public GoogleNLPService() {
+        // @Note! in $TOMCAT_HOME/bin/setenv.sh add export GOOGLE_NPL_API_KEY=xxx
         GOOGLE_API_KEY = SystemEnv.get("GOOGLE_NPL_API_KEY", null);
     }
 

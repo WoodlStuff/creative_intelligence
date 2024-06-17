@@ -64,7 +64,11 @@ public class NoiServlet extends HttpServlet {
                 con = Model.connectX();
 
                 // read the prompts once
-                List<AiPrompt> dbPrompts = DbLanguage.findPrompts(con);
+                List<AiPrompt.Type> promptTypes = new ArrayList<>();
+                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+                List<AiPrompt> dbPrompts = DbLanguage.findPrompts(con, promptTypes);
                 AiPrompt[] prompts = new AiPrompt[dbPrompts.size()];
                 dbPrompts.toArray(prompts);
 
@@ -732,6 +736,7 @@ public class NoiServlet extends HttpServlet {
         Gson gson = new Gson();
         response.setContentType(ContentType.APPLICATION_JSON.toString());
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
         Writer out = response.getWriter();
         out.write(gson.toJson(root));
         out.flush();
@@ -868,16 +873,29 @@ public class NoiServlet extends HttpServlet {
 
     private void handleVideoImagesLabelRequest(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
         Long videoId = Long.parseLong(pathTokens[1].trim());
+        List<AiImage> images = new ArrayList<>();
+        List<AiPrompt> dbPrompts = new ArrayList<>();
 
         // the model dictates what service we'll call
         String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
 
-        // get all active prompts
-        List<AiPrompt> dbPrompts = DbLanguage.findPrompts();
+        List<AiPrompt.Type> promptTypes = new ArrayList<>();
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            // get all active prompts
+            dbPrompts.addAll(DbLanguage.findPrompts(con, promptTypes));
+            images.addAll(DbImage.findVideoScenes(videoId));
+        } finally {
+            Model.close(con);
+        }
+
         AiPrompt[] prompts = new AiPrompt[dbPrompts.size()];
         dbPrompts.toArray(prompts);
-
-        List<AiImage> images = DbImage.findVideoScenes(videoId);
 
         System.out.println("NoiServlet: labels for video " + videoId + ": processing " + images.size() + " images ...");
         List<NoiResponse> responses = new ArrayList<>();
@@ -930,8 +948,12 @@ public class NoiServlet extends HttpServlet {
         if (prompt != null) {
             prompts = new AiPrompt[]{prompt};
         } else {
-            // otherwise: use all active prompts
-            List<AiPrompt> dbPrompts = DbLanguage.findPrompts();
+            // otherwise: use all active label prompts
+            List<AiPrompt.Type> promptTypes = new ArrayList<>();
+            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+            List<AiPrompt> dbPrompts = DbLanguage.findPrompts(promptTypes);
             prompts = new AiPrompt[dbPrompts.size()];
             dbPrompts.toArray(prompts);
         }

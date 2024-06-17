@@ -98,8 +98,12 @@ public class AiImageLabel {
                                 labelMeta.putAll(parseMetaCategories(arrayElement.getAsJsonObject(), entry.getKey(), promptType));
                             }
                         }
-                    } else {
+                    } else if (entry.getValue().isJsonObject()) {
                         labelMeta.putAll(parseMetaCategories(entry.getValue().getAsJsonObject(), entry.getKey(), promptType));
+                    } else if (entry.getValue().isJsonNull()) {
+                        System.out.println("!!-> skipping json null value for " + entry.getKey());
+                    } else {
+                        System.out.println("\r\n\r\n!! >>>>>>> ERROR: not a json object: k=" + entry.getKey() + "; v=" + entry.getValue());
                     }
 
                 } else {

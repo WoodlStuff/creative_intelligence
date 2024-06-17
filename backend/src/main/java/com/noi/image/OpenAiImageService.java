@@ -35,6 +35,7 @@ public class OpenAiImageService extends AiImageService {
 
     protected OpenAiImageService(String modelName) {
         super(modelName);
+        // @Note! in $TOMCAT_HOME/bin/setenv.sh add export OPENAI_API_KEY=xxx
         API_KEY = SystemEnv.get("OPENAI_API_KEY", null);
     }
 

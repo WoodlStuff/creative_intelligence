@@ -88,7 +88,7 @@ public class DbImageLabel extends Model {
         Map<String, List<LabelMetaData>> labelCategories = new HashMap<>();
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select r.uuid label_request_uuid, p.prompt_type, r.model_name, c.name category_name, mc.meta_key, mc.meta_value  from ai_label_requests r join ai_prompts p on p.id=r.ai_prompt_id    join ai_image_labels l on l.ai_label_request_id = r.id    join ai_image_label_meta_categories mc on mc.ai_image_label_id = l.id join meta_categories c on c.id = mc.meta_category_id  where r.ai_image_id=? and r.status=? order by c.name, mc.meta_key");
+            stmt = con.prepareStatement("select r.uuid label_request_uuid, p.prompt_type, r.model_name, c.name category_name, mc.meta_key, group_concat(mc.meta_value) meta_values from ai_label_requests r join ai_prompts p on p.id=r.ai_prompt_id    join ai_image_labels l on l.ai_label_request_id = r.id    join ai_image_label_meta_categories mc on mc.ai_image_label_id = l.id join meta_categories c on c.id = mc.meta_category_id  where r.ai_image_id=? and r.status=? group by uuid, p.prompt_type, r.model_name, c.name, mc.meta_key order by c.name, mc.meta_key");
             stmt.setLong(1, image.getId());
             stmt.setInt(2, Status.COMPLETE.getStatus());
             ResultSet rs = stmt.executeQuery();
@@ -99,7 +99,7 @@ public class DbImageLabel extends Model {
                     metas = new ArrayList<>();
                     labelCategories.put(categoryName, metas);
                 }
-                metas.add(LabelMetaData.create(rs.getString("label_request_uuid"), rs.getString("model_name"), rs.getString("meta_key"), rs.getString("meta_value")));
+                metas.add(LabelMetaData.create(rs.getString("label_request_uuid"), rs.getString("model_name"), rs.getString("meta_key"), rs.getString("meta_values")));
             }
         } finally {
             close(stmt);

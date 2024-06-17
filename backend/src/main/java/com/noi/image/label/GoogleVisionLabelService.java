@@ -50,6 +50,8 @@ public class GoogleVisionLabelService extends LabelService {
 
     protected GoogleVisionLabelService() {
         super(null);
+        // @Note! in $TOMCAT_HOME/bin/setenv.sh add export GOOGLE_API_KEY=xxx
+        // see account details: https://console.cloud.google.com/apis/dashboard?project=xxx
         API_KEY = SystemEnv.get("GOOGLE_API_KEY", null);
     }
 

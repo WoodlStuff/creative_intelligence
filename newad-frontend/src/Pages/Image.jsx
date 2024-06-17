@@ -111,7 +111,7 @@ function Image() {
               <tbody>
                 {
                   imageLabelData.map((meta) => (
-                    <tr key={meta.key + '-'+ meta.value}>
+                    <tr key={meta.key + '-'+ meta.value + '-' + meta.request_uuid}>
                       <td>
                         {meta.category_name}
                       </td>
