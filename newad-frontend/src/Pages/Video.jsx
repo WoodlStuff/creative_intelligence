@@ -279,7 +279,7 @@ function Video () {
           {/* list labeled (by LLM) scene change scores */}
           <div className="card">
             <div className="card-header">
-              <h3>LLM Scenes Changes</h3>
+              <h3>LLM Scene Changes</h3>
             </div>
 
             <div className="card-body">
@@ -307,7 +307,7 @@ function Video () {
           {/* list local scene change scores */}
           <div className="card">
             <div className="card-header">
-              <h3>ORB Scenes Changes</h3>
+              <h3>ORB Scene Changes</h3>
             </div>
 
             <div className="card-body">

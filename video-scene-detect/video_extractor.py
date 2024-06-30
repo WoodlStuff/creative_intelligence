@@ -80,8 +80,8 @@ def process_video2(path, videoName, frames_to_skip=0, max_distance_for_similarit
     sceneChangeImages = []
     videoPath = os.path.join(path, videoName + '.mp4')
     # temp staging for comparison of image scores
-    imgA_URL = path + videoName + '_frameA.jpg'
-    imgB_URL = path + videoName + '_frameB.jpg'
+    imgA_URL = os.path.join(path,  videoName + '_frameA.jpg')
+    imgB_URL = os.path.join(path, videoName + '_frameB.jpg')
     video = cv2.VideoCapture(videoPath)
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = video.get(cv2.CAP_PROP_FPS)
@@ -91,6 +91,7 @@ def process_video2(path, videoName, frames_to_skip=0, max_distance_for_similarit
     # Loop through the video and extract frames at specified sampling rate
     currentFrame = 0
     lastFrame = 0
+    sceneStartFrame = 0
     while currentFrame < totalFrames:
         video.set(cv2.CAP_PROP_POS_FRAMES, currentFrame)
         success, frame = video.read()
@@ -125,6 +126,80 @@ def process_video2(path, videoName, frames_to_skip=0, max_distance_for_similarit
     print(f"Extracted {len(sceneChangeImages)} scene changes")
     return [sceneChangeImages, totalFrames, fps]
 
+# look for scene changes in this video, and store first scene frame(s) as jpg file(s)
+# returns a dict with format: {'frame': 99, 'image_url': '/local file URL', 'similarity_score': 0.88}
+def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarity=70, scene_change_threshold=.75, verbose=False):
+    ensureVideoFolder(path, videoName)
+    sceneChangeImages = []
+    videoPath = os.path.join(path, videoName + '.mp4')
+    seekImageURL = os.path.join(path, videoName + '_seeker.jpg')
+    
+    video = cv2.VideoCapture(videoPath)
+    totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = video.get(cv2.CAP_PROP_FPS)
+    print(
+        f"process_video3: max_distance_for_similarity={max_distance_for_similarity}, scene_change_threshold={scene_change_threshold}")
+    print(f"total frames: {totalFrames}; fps: {fps}")
+    # Loop through the video and extract frames at specified sampling rate
+    currentFrame = 0
+    sceneStartFrame = 0
+    while currentFrame < totalFrames:
+        if(verbose):
+            print(f"currentFrame: {currentFrame}")
+
+        video.set(cv2.CAP_PROP_POS_FRAMES, currentFrame)
+        success, frame = video.read()
+        if not success:
+            break
+        
+        _, buffer = cv2.imencode(".jpg", frame)
+        seekImage = Image.open(BytesIO(buffer))
+        
+        # check if the image is all white or black, and if so skip it!
+        extrema = seekImage.convert("L").getextrema()
+        # all black: (0, 0); all white: (1, 1)
+        if extrema == (0, 0) or extrema == (1, 1):
+            # handle blank images at the beginning (skip them ... )
+            if sceneStartFrame >= currentFrame:
+                sceneStartFrame = currentFrame + frames_to_skip + 1
+            currentFrame += (frames_to_skip + 1)
+            continue
+
+        seekImage.save(seekImageURL)
+        sceneStartURL = constructImageURL(path, videoName, sceneStartFrame)
+        if currentFrame == sceneStartFrame:
+            # store the first frame as our starting point
+            if(verbose):
+                print(f"new sceneStartFrame: {sceneStartFrame}")
+            seekImage.save(sceneStartURL)
+        else:
+            # compare this with the previous frame
+            score = sift_sim2(sceneStartURL, seekImageURL, max_distance_for_similarity)
+            if(verbose):
+                print(f"startFrame: {sceneStartFrame} - currentFrame: {currentFrame}: score={score}")
+
+            # we always store the last frame!
+            if (score > 0 and score < scene_change_threshold) or (currentFrame == totalFrames - 1):
+                # we have a scene change!
+                print(f"we have a scene change at frame {currentFrame} for score={score}!")
+                #  save the new scene image to file (refresh the buffer before, just in case the imgA handler changed anything ...)
+                imageURL = saveFrameToFile(path, videoName, video, currentFrame)
+                # ensure the last frame is stores as well (we need it for logging purposes later!)
+                sceneStartURL = saveFrameToFile(path, videoName, video, sceneStartFrame)
+                
+                print(f"saved scene change image at {imageURL}!")
+                sceneChangeImages.append({'frame': currentFrame, 'frame_before': sceneStartFrame, 'image_url': imageURL, 'image_url_before': sceneStartURL, 'similarity_score': score})
+                storeSnapShots(video, path, videoName, currentFrame)
+                sceneStartFrame = currentFrame
+        
+        currentFrame += (frames_to_skip + 1)
+    
+    video.release()
+    if os.path.exists(seekImageURL):
+        os.remove(seekImageURL)
+    print(f"Extracted {len(sceneChangeImages)} scene changes")
+    return [sceneChangeImages, totalFrames, fps]
+
 def saveFrameToFile(path, videoName, video, frameNumber):
     imgURL = constructImageURL(path, videoName, frameNumber)
     video.set(cv2.CAP_PROP_POS_FRAMES, frameNumber)
@@ -136,16 +211,14 @@ def saveFrameToFile(path, videoName, video, frameNumber):
     img.save(imgURL)
     return imgURL
 
-# def saveImage(path, videoName, frameNumber, imageData):
-#     imageURL = constructImageURL(path, videoName, frameNumber)
-#     img = Image.open(BytesIO(imageData))
-#     img.save(imageURL)
-#     return imageURL
-
-def constructImageURL(path, videoName, frameNumber):
+def ensureVideoFolder(path, videoName):
     folder = os.path.join(path, videoName)
     if not os.path.exists(folder):
         os.mkdir(folder)
+    return folder
+
+def constructImageURL(path, videoName, frameNumber):
+    ensureVideoFolder(path, videoName)
     return os.path.join(path, videoName, videoName + '_frame' + str(frameNumber) + '.jpg')
 
 # score for image similarity [0..1]
@@ -185,11 +258,11 @@ def extractAudio(folderPath, videoName):
 
 # call OpenAI model to label images at position and position-1 to look for scene similarities
 def labelForSameVideoScene(openAI_caller, sceneChanges, position):
-    if position < 1 or position > (len(sceneChanges) - 1):
+    if position > (len(sceneChanges) - 1):
         print(f"out of position! {position}/{len(sceneChanges) - 1}")
         return
-    url_old = sceneChanges[position - 1]['image_url']
-    frame_old = sceneChanges[position - 1]['frame']
+    url_old = sceneChanges[position]['image_url_before']
+    frame_old = sceneChanges[position]['frame_before']
     url_new = sceneChanges[position]['image_url']
     frame_new = sceneChanges[position]['frame']
 
@@ -203,7 +276,7 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
 def summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary):
     scoreFilterThreshold = 0.95
     scenes = labelSceneChanges
-    if len(labelSceneChanges) <= 2 and len(sceneChanges) > 2:
+    if len(labelSceneChanges) <= 2 and len(sceneChanges) > 0:
         print(f"WARNING: not enough labeled scene changes {len(labelSceneChanges)}: attempting a fallback ...")
         scenes = sceneChanges
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes
@@ -221,44 +294,41 @@ def downloadYouTubeVideo(videoURL, outputPath, fileName):
     return os.path.join(outputPath, fileName)
 
 
-def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60, scoreThreshold=.80):
+def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60, scoreThreshold=.80, verbose=False):
     response = {}
     labelSceneChanges = []
     labelSceneRejections = []
-    [sceneChanges, totalFrames, fps] = process_video2(path, videoName,
+    [sceneChanges, totalFrames, fps] = process_video3(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
-                                                    scene_change_threshold=scoreThreshold)
+                                                    scene_change_threshold=scoreThreshold, verbose=verbose)
     
     for counter, sceneChange in enumerate(sceneChanges):
-        if counter > 0:
-            try:
-                # generate uuid for this request
-                uid = uuid.uuid4()
-                [is_same_scene, frame_old, frame_new, explanation, url_old] = labelForSameVideoScene(openAI_caller, sceneChanges, counter)
-                if sceneChange['frame'] != frame_new:
-                    print(f"ERROR: sceneChange['frame'] is not equal to frame_new: {sceneChange['frame']} <-> {frame_new}")
+        try:
+            # generate uuid for this request
+            uid = uuid.uuid4()
+            [is_same_scene, frame_old, frame_new, explanation, url_old] = labelForSameVideoScene(openAI_caller, sceneChanges, counter)
+            if sceneChange['frame'] != frame_new:
+                print(f"ERROR: sceneChange['frame'] is not equal to frame_new: {sceneChange['frame']} <-> {frame_new}")
 
-                # score the similarity of these two images (so we can compare ours to theirs!)
-                labeledImageScore = sift_sim2(sceneChange['image_url'], url_old, maxDistanceForSimilarity)
+            # score the similarity of these two images (so we can compare ours to theirs!)
+            # labeledImageScore = sift_sim2(sceneChange['image_url'], url_old, maxDistanceForSimilarity)
 
-                label_dict = {'uuid': str(uid), 'frame': frame_new, 'frame_before': frame_old, 'image_url': sceneChange['image_url'],
-                              'image_url_before': url_old, 'explanation': explanation, 'similarity_score': labeledImageScore}
-                print(
-                    f"{counter + 1}/{len(sceneChanges)}: label found scene change from frame {frame_old} to {frame_new}? {not is_same_scene}")
-                if not is_same_scene:
-                    # the model thinks this is a new scene!
-                    print(f"{counter + 1}/{len(sceneChanges)}: frame {sceneChange['frame']}: {explanation}")
-                    labelSceneChanges.append(label_dict)
-                else:
-                    labelSceneRejections.append(label_dict)
-            except Exception as e:
-                print(f"error labeling for frame={sceneChange['frame']}: {sceneChange['image_url']}")
-                print(e)
-                labelSceneChanges.append(
-                    {'frame': sceneChange['frame'], 'image_url': sceneChange['image_url'],
-                    'explanation': 'fallback: encountered labeling error for this frame!', 'similarity_score': sceneChange['similarity_score']})
-        else:
-            print("skipping first image ...")
+            label_dict = {'uuid': str(uid), 'frame': frame_new, 'frame_before': frame_old, 'image_url': sceneChange['image_url'],
+                            'image_url_before': url_old, 'explanation': explanation, 'similarity_score': sceneChange['similarity_score']}
+            print(
+                f"{counter + 1}/{len(sceneChanges)}: label found scene change from frame {frame_old} to {frame_new}? {not is_same_scene}")
+            if not is_same_scene:
+                # the model thinks this is a new scene!
+                print(f"{counter + 1}/{len(sceneChanges)}: frame {sceneChange['frame']}: {explanation}")
+                labelSceneChanges.append(label_dict)
+            else:
+                labelSceneRejections.append(label_dict)
+        except Exception as e:
+            print(f"error labeling for frame={sceneChange['frame']}: {sceneChange['image_url']}")
+            print(e)
+            labelSceneChanges.append(
+                {'frame': sceneChange['frame'], 'image_url': sceneChange['image_url'],
+                'explanation': 'fallback: encountered labeling error for this frame!', 'similarity_score': sceneChange['similarity_score']})
     
     response["same_scene_prompt_user"] = openAI_caller.USER_PROMPT
     response["same_scene_prompt_system"] = openAI_caller.SYSTEM_PROMPT
@@ -281,7 +351,7 @@ def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60
 
 def main():
     print("extracting video details ...")
-    path = './../videos/'
+    path = '/Users/martin/work/tmp/ai-data/videos/'
 
     videoName = None
     if len(sys.argv) > 1:
@@ -309,17 +379,22 @@ def main():
     print(
         f'scoring similarities with threshold: {scoreThreshold} and max distance for similarity: {maxDistanceForSimilarity}')
 
+    [sceneChanges, totalFrames, fps] = process_video3(path, videoName,
+                                                    max_distance_for_similarity=maxDistanceForSimilarity,
+                                                    scene_change_threshold=scoreThreshold)
+
+
     # get a list of first images of a new scene in the video
-    [sceneChanges, labelSceneChanges] = scoreFramesAndLabelSceneChanges(path, videoName,
-                                                                        maxDistanceForSimilarity=maxDistanceForSimilarity,
-                                                                        scoreThreshold=scoreThreshold)
-    extractAudio(path, videoName)
-    openAI_caller.transcribeVideo(path, videoName)
+    # [sceneChanges, labelSceneChanges] = scoreFramesAndLabelSceneChanges(path, videoName,
+    #                                                                     maxDistanceForSimilarity=maxDistanceForSimilarity,
+    #                                                                     scoreThreshold=scoreThreshold)
+    # extractAudio(path, videoName)
+    # openAI_caller.transcribeVideo(path, videoName)
 
     # summarize the video based on a set of scene images
     # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
-    max_scenes_for_summary = 16
-    summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary)
+    # max_scenes_for_summary = 16
+    # summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary)
 
 
 # usage:

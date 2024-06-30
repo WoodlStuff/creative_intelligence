@@ -40,8 +40,8 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         postData = self.post_data.decode("utf-8")
         jsonData = json.loads(postData)
         videoName = jsonData['video_name']
-        path = '/Users/martin/work/AI/videos'
-
+        
+        path = '/Users/martin/work/tmp/ai-data/videos/'
         if 'path' in jsonData:
             path = jsonData['path']
 
@@ -49,8 +49,12 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         if 'refresh' in jsonData:
             refresh = jsonData['refresh']
 
+        verbose = False
+        if 'verbose' in jsonData:
+            verbose = jsonData['verbose']
+
         if refresh:
-            [sceneChanges, labelSceneChanges] = video_extractor.scoreFramesAndLabelSceneChanges(path, videoName)
+            [sceneChanges, labelSceneChanges] = video_extractor.scoreFramesAndLabelSceneChanges(path, videoName, verbose=verbose)
 
         # file at <folder>/<video_name>/<video_name>_scenes.json
         metaPath = os.path.join(path, videoName, videoName + "-scenes.json")
@@ -59,7 +63,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
     
         # extract audio from the video
         # if refresh:
-        #     extractor.extractAudio(path, videoName)
+        video_extractor.extractAudio(path, videoName)
         
         audio_path = os.path.join(path, videoName, videoName + '.mp3')
         jsonResponse.update({"audio_path": audio_path})

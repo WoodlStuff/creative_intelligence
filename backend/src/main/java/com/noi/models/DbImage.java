@@ -93,7 +93,7 @@ public class DbImage extends Model {
                 stmt.setString(1, null);
             }
 
-            if (frame > 0) {
+            if (frame >= 0) {
                 stmt.setInt(2, frame);
             } else {
                 stmt.setString(2, null);
