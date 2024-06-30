@@ -384,6 +384,24 @@ public class DbImage extends Model {
         }
     }
 
+    /**
+     * find all images that were used to generate the video summary
+     *
+     * @param videoId
+     * @return
+     * @throws SQLException
+     * @throws NamingException
+     */
+    public static List<AiImage> findVideoSummaryScenes(Long videoId) throws SQLException, NamingException {
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            return findVideoSummaryScenes(con, videoId);
+        } finally {
+            Model.close(con);
+        }
+    }
+
     public static List<AiImage> findVideoScenes(Connection con, Long videoId) throws SQLException {
         List<AiImage> images = new ArrayList<>();
         PreparedStatement stmt = null;
@@ -404,6 +422,32 @@ public class DbImage extends Model {
                 images.add(AiImage.create(rs, prompt));
             }
 
+        } finally {
+            close(stmt);
+        }
+
+        return images;
+    }
+
+    /**
+     * find all images used to summarize the video (but only for the most recent request!).
+     *
+     * @param con
+     * @param videoId
+     * @return
+     * @throws SQLException
+     */
+    public static List<AiImage> findVideoSummaryScenes(Connection con, Long videoId) throws SQLException {
+        List<AiImage> images = new ArrayList<>();
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("select " + COLUMNS + " from ai_images i left join ai_prompts p on i.ai_prompt_id = p.id left join ai_revised_prompts rp on p.id = rp.ai_prompt_id and i.ai_image_request_id = rp.ai_image_request_id join ai_video_summary_scenes vss on vss.ai_video_id = i.ai_video_id and vss.ai_image_id = i.id join (select id, uuid, ai_video_id, ai_model_id, ai_prompt_id from ai_video_summary_requests where ai_video_id=? order by id desc limit 1)vsr on vsr.ai_video_id = i.ai_video_id and vsr.id = vss.ai_video_summary_request_id order by i.video_frame_number asc");
+            stmt.setLong(1, videoId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
+                images.add(AiImage.create(rs, prompt));
+            }
         } finally {
             close(stmt);
         }

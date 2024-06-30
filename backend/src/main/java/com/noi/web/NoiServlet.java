@@ -889,7 +889,7 @@ public class NoiServlet extends HttpServlet {
             con = Model.connectX();
             // get all active prompts
             dbPrompts.addAll(DbLanguage.findPrompts(con, promptTypes));
-            images.addAll(DbImage.findVideoScenes(videoId));
+            images.addAll(DbImage.findVideoSummaryScenes(videoId));
         } finally {
             Model.close(con);
         }
@@ -897,13 +897,17 @@ public class NoiServlet extends HttpServlet {
         AiPrompt[] prompts = new AiPrompt[dbPrompts.size()];
         dbPrompts.toArray(prompts);
 
-        System.out.println("NoiServlet: labels for video " + videoId + ": processing " + images.size() + " images ...");
+        System.out.println("NoiServlet: labels for video " + videoId + ": processing " + images.size() + " images with " + dbPrompts.size() + " prompts ...");
         List<NoiResponse> responses = new ArrayList<>();
         for (AiImage image : images) {
-            System.out.println("NoiServlet: labels for video " + videoId + " image: " + image.getUrl() + " ...");
-            responses.addAll(requestImageLabels(image.getId(), modelName, prompts));
-            // call GoogleVision separately (no prompt here!)
-            responses.addAll(requestImageLabels(image.getId(), GoogleVisionLabelService.MODEL_NAME, null));
+            try {
+                System.out.println("NoiServlet: labels for video " + videoId + " image: " + image.getUrl() + " ...");
+                responses.addAll(requestImageLabels(image.getId(), modelName, prompts));
+                // call GoogleVision separately (no prompt here!)
+                responses.addAll(requestImageLabels(image.getId(), GoogleVisionLabelService.MODEL_NAME, null));
+            } catch (SQLException | NamingException e) {
+                e.printStackTrace();
+            }
         }
 
         writeResponses(resp, responses);

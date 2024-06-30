@@ -6,8 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

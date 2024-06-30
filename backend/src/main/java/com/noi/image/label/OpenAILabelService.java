@@ -219,45 +219,50 @@ public class OpenAILabelService extends LabelService {
             JsonArray choicesArray = root.getAsJsonArray("choices");
             if (choicesArray != null && !choicesArray.isJsonNull()) {
                 for (int c = 0; c < choicesArray.size(); c++) {
-                    JsonObject choice = choicesArray.get(c).getAsJsonObject();
-                    JsonObject message = JsonTools.getAsObject(choice, "message");
-                    if (message != null && !message.isJsonNull()) {
-                        String content = JsonTools.getAsString(message, "content");
+                    try {
+                        JsonObject choice = choicesArray.get(c).getAsJsonObject();
+                        JsonObject message = JsonTools.getAsObject(choice, "message");
+                        if (message != null && !message.isJsonNull()) {
+                            String content = JsonTools.getAsString(message, "content");
 
-                        // see if there are any metadata (json) fragments in the content:
-                        Map<String, List<LabelMetaData>> metaCategories = new HashMap<>();
-                        if (content != null && content.contains("```json")) {
-                            // parse out the json segment
-                            int posStart = content.indexOf("```json");
-                            int posEnd = content.indexOf("```", posStart + 7);
-                            if (posEnd > posStart) {
-                                String json = content.substring(posStart + 7, posEnd);
-                                parseLabelsFromJson(request, metaCategories, json);
+                            // see if there are any metadata (json) fragments in the content:
+                            Map<String, List<LabelMetaData>> metaCategories = new HashMap<>();
+                            if (content != null && content.contains("```json")) {
+                                // parse out the json segment
+                                int posStart = content.indexOf("```json");
+                                int posEnd = content.indexOf("```", posStart + 7);
+                                if (posEnd > posStart) {
+                                    String json = content.substring(posStart + 7, posEnd);
+                                    parseLabelsFromJson(request, metaCategories, json);
 
-                                // adjust the content (cut out the json, since we store that separately)
-                                StringBuilder cb = new StringBuilder();
-                                cb.append(content, 0, posStart);
-                                if (posEnd + 2 < content.length() - 1) {
-                                    if (cb.length() > 0) {
-                                        cb.append("; ");
+                                    // adjust the content (cut out the json, since we store that separately)
+                                    StringBuilder cb = new StringBuilder();
+                                    cb.append(content, 0, posStart);
+                                    if (posEnd + 2 < content.length() - 1) {
+                                        if (cb.length() > 0) {
+                                            cb.append("; ");
+                                        }
+                                        cb.append(content.substring(posEnd + 3));
                                     }
-                                    cb.append(content.substring(posEnd + 3));
+                                    // re-assign to get the reduced content to populate the db with
+                                    content = cb.toString().trim();
                                 }
-                                // re-assign to get the reduced content to populate the db with
-                                content = cb.toString().trim();
-                            }
-                            if (content.isEmpty()) {
+                                if (content.isEmpty()) {
+                                    content = null;
+                                }
+                            } else if (content != null) {
+                                // maybe the response is only a json doc (not wrapped in something else)?
+                                parseLabelsFromJson(request, metaCategories, content.trim());
+
+                                // if the full content was a json, we don't have to store that in db: we already have the raw file logged, and the parsed results in db
                                 content = null;
                             }
-                        } else if (content != null) {
-                            // maybe the response is only a json doc (not wrapped in something else)?
-                            parseLabelsFromJson(request, metaCategories, content.trim());
 
-                            // if the full content was a json, we don't have to store that in db: we already have the raw file logged, and the parsed results in db
-                            content = null;
+                            labels.add(AiImageLabel.create(image, request.getUUID(), modelName, content, metaCategories));
                         }
-
-                        labels.add(AiImageLabel.create(image, request.getUUID(), modelName, content, metaCategories));
+                    } catch (IOException e) {
+                        // catch here so we don't lose all messages!
+                        System.out.println("ERROR for choice #" + c + ": " + e.getMessage());
                     }
                 }
             }
