@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)">
       <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,6 +123,18 @@
       <option name="presentableId" value="Default" />
       <updated>1718050042395</updated>
     </task>
+    <task id="LOCAL-00001" summary="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)">
+      <created>1719778008823</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1719778008823</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)" />
+    <option name="LAST_COMMIT_MESSAGE" value="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)" />
   </component>
 </project>

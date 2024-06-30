@@ -89,18 +89,6 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         jsonResponse.update({"video_summary": summaryPath})
         
         return json.dumps(jsonResponse)
-        # return json.dumps(
-        #     {
-        #         "path": self.url.path,
-        #         "query_data": self.query_data,
-        #         "post_data": self.post_data.decode("utf-8"),
-        #         "form_data": self.form_data,
-        #         "cookies": {
-        #             name: cookie.value
-        #             for name, cookie in self.cookies.items()
-        #         },
-        #     }
-        # )        
 
     def do_OPTIONS(self):
         self.send_response(200)

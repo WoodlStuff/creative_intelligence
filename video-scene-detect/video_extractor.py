@@ -274,7 +274,7 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
 # LabelSceneChanges trump the raw sceneChanges (i.e. if there are enough of them, we use those over the raw)
 # if there are too many scenes (count > max_scenes_for_summary), we filter them by score, lowering the threshold until we get to the max count
 def summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary):
-    scoreFilterThreshold = 0.95
+    scoreFilterThreshold = 0.25
     scenes = labelSceneChanges
     if len(labelSceneChanges) <= 2 and len(sceneChanges) > 0:
         print(f"WARNING: not enough labeled scene changes {len(labelSceneChanges)}: attempting a fallback ...")
@@ -282,9 +282,10 @@ def summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes
     while len(scenes) > max_scenes_for_summary:
         # try to filter by score (low similarity score), in case we have too many scenes (will run into token limits with model!)
-        print(f"fallback: filter scene changes {len(scenes)}...")
-        scenes = [scene for scene in scenes if (scene['similarity_score'] <= scoreFilterThreshold)]
-        scoreFilterThreshold -= 0.01
+        print(f"fallback: filter {len(scenes)} scene changes to max={max_scenes_for_summary}...")
+        # only keep the ones with a similarity score greater than the threshold!
+        scenes = [scene for scene in scenes if (scene['similarity_score'] >= scoreFilterThreshold)]
+        scoreFilterThreshold += 0.01
     openAI_caller.videoSummaryURL(scenes, path, videoName)
 
 
