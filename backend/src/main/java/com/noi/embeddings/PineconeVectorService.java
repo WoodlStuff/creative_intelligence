@@ -2,6 +2,8 @@ package com.noi.embeddings;
 
 import com.google.gson.*;
 import com.noi.image.AiImage;
+import com.noi.models.DbImageLabel;
+import com.noi.models.DbRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.SystemEnv;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,6 +15,8 @@ import org.apache.http.impl.client.HttpClients;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,42 +52,9 @@ public class PineconeVectorService extends VectorService {
         this.apiKey = apiKey;
     }
 
-    @Override
-    protected long upsert(AiImage image, JsonArray vector, String indexName, String nameSpace) throws EmbeddingException {
-        // todo
-
-        /*
-        create the index:
-        @see https://docs.pinecone.io/guides/indexes/create-an-index
-
-        curl -s -X POST "https://api.pinecone.io/indexes" \
-          -H "Accept: application/json" \
-          -H "Content-Type: application/json" \
-          -H "Api-Key: $PINECONE_API_KEY" \
-          -d '{
-                 "name": "serverless-index",
-                 "dimension": 1024,
-                 "metric": "cosine",
-                 "spec": {
-                    "serverless": {
-                       "cloud": "aws",
-                       "region": "us-east-1"
-                    }
-                 }
-              }'
-
-         -- response:
-         {"name":"serverless-index","metric":"cosine","dimension":1024,"status":{"ready":false,"state":"Initializing"},"host":"serverless-index-0ee2lb1.svc.aped-4627-b74a.pinecone.io","spec":{"serverless":{"region":"us-east-1","cloud":"aws"}}}
-         */
-
-
-        return 0;
-    }
-
-    @Override
-    protected Map<String, Long> upsert(AiImage image, JsonArray vectors, String indexName) throws EmbeddingException, IOException {
+    private Map<String, Integer> upsert(Connection con, AiImage image, JsonArray vectors, String indexName) throws EmbeddingException, IOException {
         // insert vectors into the indexName, each vector element contains a category name and an array of double
-        Map<String, Long> categoryUpsertCounts = new HashMap<>();
+        Map<String, Integer> categoryUpsertCounts = new HashMap<>();
 
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
@@ -93,45 +64,28 @@ public class PineconeVectorService extends VectorService {
             String url = getIndexHostURL(indexName);
             HttpPost httpPost = createHttpPost(url, apiKey);
 
+            Map<String, Long> imageCategories = DbImageLabel.findAllCategories(con);
+
             for (int i = 0; i < vectors.size(); i++) {
                 JsonObject categoryEmbeddings = vectors.get(i).getAsJsonObject();
                 String category = categoryEmbeddings.get("category").getAsString();
                 JsonArray vector = categoryEmbeddings.get("vector").getAsJsonArray();
 
-                // todo: post it
-                // namespace = category name
-                // id = image id
-                // vector = vectors for that category
-
-
-                /*
-                 -d '{
-                    "vectors": [
-                      {
-                        "id": "vec1",
-                        "values": [1.0, -2.5]
-                      },
-                      {
-                        "id": "vec2",
-                        "values": [3.0, -2.0]
-                      },
-                      {
-                        "id": "vec3",
-                        "values": [0.5, -1.5]
-                      }
-                    ],
-                    "namespace": "ns2"
-                  }'
-                 */
+                // log the request
+                Long categoryId = imageCategories.get(category);
+                AiImageVectorRequest request = DbRequest.insertForVector(con, image, categoryId, "Pinecone", vector.size());
 
                 StringEntity entity = createPostEntity(image, category, vector);
                 httpPost.setEntity(entity);
                 response = client.execute(httpPost);
-                long upsertCount = parseResponse(response);
+
+                int upsertCount = parseResponse(response);
+                DbRequest.updateForVector(con, request, upsertCount);
+
                 categoryUpsertCounts.put(category, upsertCount);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | SQLException e) {
+            throw new EmbeddingException(e);
         } finally {
             if (response != null) {
                 response.close();
@@ -171,23 +125,24 @@ public class PineconeVectorService extends VectorService {
         return categoryUpsertCounts;
     }
 
-    private long parseResponse(CloseableHttpResponse response) throws IOException {
-//        {"upsertedCount":3}
-        String jsonResponse = FileTools.readToString(response.getEntity().getContent());
-        System.out.println("response:" + jsonResponse);
-        System.out.println("response-code:" + response.getStatusLine().getStatusCode());
+    @Override
+    public Map<String, Integer> upsert(Connection con, EmbeddingService.ImageEmbeddings embeddings, String indexName) throws EmbeddingException, IOException {
+        return upsert(con, embeddings.getImage(), embeddings.getVectors(), indexName);
+    }
 
+    private int parseResponse(CloseableHttpResponse response) throws IOException {
+        String jsonResponse = FileTools.readToString(response.getEntity().getContent());
         if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
                 response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
             JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
             if (root != null) {
                 JsonElement count = root.get("upsertedCount");
                 if (count != null && !count.isJsonNull()) {
-                    return count.getAsLong();
+                    return count.getAsInt();
                 }
             }
         }
-        return -1L;
+        return -1;
     }
 
     private String getIndexHostURL(String indexName) {

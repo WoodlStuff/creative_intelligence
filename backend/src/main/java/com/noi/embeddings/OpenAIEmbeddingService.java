@@ -2,6 +2,8 @@ package com.noi.embeddings;
 
 import com.google.gson.*;
 import com.noi.image.AiImage;
+import com.noi.models.DbImageLabel;
+import com.noi.models.DbRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.SystemEnv;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,6 +15,9 @@ import org.apache.http.impl.client.HttpClients;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
 
 public class OpenAIEmbeddingService extends EmbeddingService {
     public OpenAIEmbeddingService(String apiKey) {
@@ -29,29 +34,16 @@ public class OpenAIEmbeddingService extends EmbeddingService {
 
     private static final String EMBEDDING_URL = "https://api.openai.com/v1/embeddings";
 
+    /**
+     * @param con
+     * @param image
+     * @param categories
+     * @return 'vectors': an array of {"category":"paralanguage","vector":[0.09, 0.12, ....]}, {"category": ...}]
+     * @throws EmbeddingException
+     * @throws IOException
+     */
     @Override
-    protected JsonArray createEmbedding(AiImage image, JsonObject inputDoc) throws EmbeddingException, IOException {
-        // post a doc to the embedding endpoint, and read the returned vector
-        CloseableHttpClient client = null;
-        CloseableHttpResponse response = null;
-        try {
-
-            client = HttpClients.createDefault();
-            HttpPost httpPost = createHttpPost(apiKey, modelName, image, inputDoc);
-            response = client.execute(httpPost);
-            return parseResponse(image, response);
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-            if (client != null) {
-                client.close();
-            }
-        }
-    }
-
-    @Override
-    public JsonArray createEmbeddings(AiImage image, JsonArray categories) throws EmbeddingException, IOException {
+    public JsonArray createEmbeddings(Connection con, AiImage image, JsonArray categories) throws EmbeddingException, IOException {
         JsonArray responseArray = new JsonArray();
 
         CloseableHttpClient client = null;
@@ -61,27 +53,38 @@ public class OpenAIEmbeddingService extends EmbeddingService {
             client = HttpClients.createDefault();
             HttpPost httpPost = createHttpPost(apiKey);
 
+            Map<String, Long> imageCategories = DbImageLabel.findAllCategories(con);
+
             for (int i = 0; i < categories.size(); i++) {
                 JsonObject category = categories.get(i).getAsJsonObject();
+                String categoryName = category.get("category").getAsString();
+                // log the embedding request!
+                Long categoryId = imageCategories.get(categoryName);
+                AiImageEmbeddingRequest request = DbRequest.insertForEmbedding(con, image, categoryId, modelName);
+
                 StringEntity entity = createPostEntity(image, category);
                 httpPost.setEntity(entity);
+                JsonArray embeddingArray = null;
                 response = client.execute(httpPost);
-                JsonArray embeddingArray = parseResponse(image, response);
                 if (response != null) {
+                    embeddingArray = parseResponse(image, response);
                     response.close();
-                }
 
-                if (embeddingArray.isJsonNull() || embeddingArray.size() <= 0) {
-                    continue;// skip it if it's empty
+                    // update request log with vector dimensions
+                    DbRequest.updateForEmbedding(con, request, embeddingArray.size());
+                    if (embeddingArray.size() <= 0) {
+                        continue;// skip it if it's empty
+                    }
                 }
 
                 JsonObject vectorResponse = new JsonObject();
                 responseArray.add(vectorResponse);
 
-                vectorResponse.addProperty("category", category.get("category").getAsString());
+                vectorResponse.addProperty("category", categoryName);
                 vectorResponse.add("vector", embeddingArray);
             }
-
+        } catch (SQLException e) {
+            throw new EmbeddingException(e);
         } finally {
             if (response != null) {
                 response.close();
@@ -95,34 +98,7 @@ public class OpenAIEmbeddingService extends EmbeddingService {
     }
 
     private JsonArray parseResponse(AiImage image, CloseableHttpResponse response) throws IOException {
-        /*
-        response:
-        {
-          "object": "list",
-          "data": [
-            {
-              "object": "embedding",
-              "index": 0,
-              "embedding": [
-                -0.006929283495992422,
-                -0.005336422007530928,
-                ... (omitted for spacing)
-                -4.547132266452536e-05,
-                -0.024047505110502243
-              ],
-            }
-          ],
-          "model": "text-embedding-3-small",
-          "usage": {
-            "prompt_tokens": 5,
-            "total_tokens": 5
-          }
-        }
-         */
         String jsonResponse = FileTools.readToString(response.getEntity().getContent());
-        System.out.println("response:" + jsonResponse);
-        System.out.println("response-code:" + response.getStatusLine().getStatusCode());
-
         if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
                 response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
             JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();

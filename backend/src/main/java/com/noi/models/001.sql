@@ -479,6 +479,43 @@ CREATE TABLE `ai_image_label_meta_color_gradients` (
   FOREIGN KEY(ai_image_label_id) references ai_image_labels(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
+-- 20240703: embedding requests
+DROP TABLE if exists `ai_embedding_requests`;
+CREATE TABLE `ai_embedding_requests` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(65) NOT NULL,
+  `ai_image_id` bigint NOT NULL,
+  `meta_category_id` bigint NULL,
+  `model_name` varchar(50) NOT NULL,
+  `dimension_count` int default 0,
+  `status` tinyint default 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY(meta_category_id) references meta_categories(id) ON DELETE RESTRICT,
+  FOREIGN KEY(ai_image_id) references ai_images(id) ON DELETE RESTRICT,
+  UNIQUE KEY (`uuid`),
+  KEY(model_name, uuid, id)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
+
+DROP TABLE if exists `ai_upsert_requests`;
+CREATE TABLE `ai_upsert_requests` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(65) NOT NULL,
+  `ai_image_id` bigint NOT NULL,
+  `meta_category_id` bigint NULL,
+  `model_name` varchar(50) NOT NULL,
+  `dimension_count` int default 0,
+  `upsert_count` int default 0,
+  `status` tinyint default 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY(meta_category_id) references meta_categories(id) ON DELETE RESTRICT,
+  FOREIGN KEY(ai_image_id) references ai_images(id) ON DELETE RESTRICT,
+  UNIQUE KEY (`uuid`),
+  KEY(model_name, uuid, id)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
 -- =======================================
 -- reset schema

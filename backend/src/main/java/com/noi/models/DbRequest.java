@@ -1,6 +1,9 @@
 package com.noi.models;
 
 import com.noi.Status;
+import com.noi.embeddings.AiImageEmbeddingRequest;
+import com.noi.embeddings.AiImageVectorRequest;
+import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiPrompt;
@@ -11,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class DbRequest extends Model {
 
@@ -308,5 +312,91 @@ public class DbRequest extends Model {
         }
 
         return null;
+    }
+
+    public static AiImageEmbeddingRequest insertForEmbedding(Connection con, AiImage image, Long categoryId, String modelName) throws SQLException {
+        UUID uuid = UUID.randomUUID();
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("insert ignore into ai_embedding_requests (uuid, ai_image_id, meta_category_id, model_name, dimension_count, status, created_at, updated_at) values(?,?,?,?,?,?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), status=?, id=LAST_INSERT_ID(id)");
+            stmt.setString(1, uuid.toString());
+            stmt.setLong(2, image.getId());
+            if (categoryId == null) {
+                stmt.setString(3, null);
+            } else {
+                stmt.setLong(3, categoryId);
+            }
+            stmt.setString(4, modelName);
+            stmt.setInt(5, 0);
+            stmt.setInt(6, Status.NEW.getStatus());
+            stmt.setInt(7, Status.ACTIVE.getStatus());
+            Long id = executeWithLastId(stmt);
+            if (id > 0L) {
+                return AiImageEmbeddingRequest.create(id, uuid, image, categoryId, modelName);
+            }
+
+        } finally {
+            close(stmt);
+        }
+        return null;
+    }
+
+    public static void updateForEmbedding(Connection con, AiImageEmbeddingRequest request, int vectorDimensions) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_embedding_requests set updated_at=now(), status=?, dimension_count=? where id=?");
+            stmt.setInt(1, Status.COMPLETE.getStatus());
+            stmt.setInt(2, vectorDimensions);
+            stmt.setLong(3, request.getId());
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+        }
+    }
+
+    public static AiImageVectorRequest insertForVector(Connection con, AiImage image, Long categoryId, String modelName, int size) throws SQLException {
+        UUID uuid = UUID.randomUUID();
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("insert ignore into ai_upsert_requests(uuid, ai_image_id, meta_category_id, model_name, dimension_count, status, created_at, updated_at) values(?,?,?,?,?,?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), status=?, dimension_count=?, id=LAST_INSERT_ID(id)");
+            stmt.setString(1, uuid.toString());
+            stmt.setLong(2, image.getId());
+            if (categoryId == null) {
+                stmt.setString(3, null);
+            } else {
+                stmt.setLong(3, categoryId);
+            }
+            stmt.setString(4, modelName);
+            stmt.setInt(5, size);
+            stmt.setInt(6, Status.NEW.getStatus());
+            stmt.setInt(7, Status.ACTIVE.getStatus());
+            stmt.setInt(8, size);
+
+            Long id = executeWithLastId(stmt);
+            if (id > 0L) {
+                return AiImageVectorRequest.create(id, uuid, image, categoryId, modelName, size);
+            }
+
+        } finally {
+            close(stmt);
+        }
+        return null;
+    }
+
+    public static void updateForVector(Connection con, AiImageVectorRequest request, int upsertCount) throws SQLException {
+        // ai_upsert_requests
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_upsert_requests set updated_at=now(), status=?, upsert_count=? where id=?");
+            stmt.setInt(1, Status.COMPLETE.getStatus());
+            stmt.setInt(2, upsertCount);
+            stmt.setLong(3, request.getId());
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+        }
+
     }
 }
