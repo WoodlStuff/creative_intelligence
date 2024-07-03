@@ -3,6 +3,8 @@ package com.noi.embeddings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.noi.image.AiImage;
+import com.noi.models.DbImage;
 import com.noi.models.Model;
 import com.noi.web.Path;
 import org.apache.http.entity.ContentType;
@@ -17,10 +19,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "EmbeddingServlet", urlPatterns = {"/embeddings/*"}, loadOnStartup = 0)
+@WebServlet(name = "EmbeddingServlet", urlPatterns = {"/embeddings/*", "/video-embeddings/*"}, loadOnStartup = 0)
 public class EmbeddingServlet extends HttpServlet {
     private static final String INDEX_NAME = "categories";
 
@@ -39,20 +43,38 @@ public class EmbeddingServlet extends HttpServlet {
             return;
         }
 
-        Long imageId;
+        //servletPath='embeddings' | video-embeddings
+        boolean isVideo = false;
+        if ("video-embeddings".equalsIgnoreCase(path.getServletPath())) {
+            //we want all the relevant images for the video!
+            isVideo = true;
+        }
+
+        Long id;
         String categoryName = null;
-        imageId = Long.valueOf(pathTokens[0].trim());
+        id = Long.valueOf(pathTokens[0].trim());
 
         if (pathTokens.length > 1) {
             categoryName = pathTokens[1].trim();
         }
 
-
         Connection con = null;
         try {
             con = Model.connectX();
-            EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, imageId, categoryName);
-            writeResponse(embeddings, resp);
+
+            List<AiImage> images = new ArrayList<>();
+            if (isVideo) {
+                images.addAll(DbImage.findVideoSummaryScenes(con, id));
+            } else {
+                images.add(DbImage.find(con, id));
+            }
+
+            Map<Long, EmbeddingService.ImageEmbeddings> imageEmbeddings = new HashMap<>();
+            for (AiImage image : images) {
+                imageEmbeddings.put(image.getId(), EmbeddingService.getEmbeddings(con, image.getId(), categoryName));
+            }
+
+            writeEmbeddingResponse(imageEmbeddings, resp);
 
         } catch (EmbeddingException | SQLException | NamingException e) {
             throw new ServletException(e);
@@ -77,25 +99,42 @@ public class EmbeddingServlet extends HttpServlet {
             return;
         }
 
-        Long imageId;
+        //servletPath='embeddings' | video-embeddings
+        boolean isVideo = false;
+        if ("video-embeddings".equalsIgnoreCase(path.getServletPath())) {
+            //we want all the relevant images for the video!
+            isVideo = true;
+        }
+
+        Long id;
         String categoryName = null;
-        imageId = Long.valueOf(pathTokens[0].trim());
+        id = Long.valueOf(pathTokens[0].trim());
 
         if (pathTokens.length > 1) {
             categoryName = pathTokens[1].trim();
         }
 
-
         Connection con = null;
         try {
             con = Model.connectX();
-            EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, imageId, categoryName);
 
-            Map<String, Integer> upsertCounts = new HashMap<>();
-            if (embeddings.hasVectors()) {
-                VectorService vectorService = VectorService.getService();
-                upsertCounts.putAll(vectorService.upsert(con, embeddings, INDEX_NAME));
+            List<AiImage> images = new ArrayList<>();
+            if (isVideo) {
+                images.addAll(DbImage.findVideoSummaryScenes(con, id));
+            } else {
+                images.add(DbImage.find(con, id));
             }
+
+            Map<Long, Map<String, Integer>> upsertCounts = new HashMap<>();
+            for (AiImage image : images) {
+                EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
+                if (embeddings.hasVectors()) {
+                    VectorService vectorService = VectorService.getService();
+                    Map<String, Integer> imageCategoryCounts = vectorService.upsert(con, embeddings, INDEX_NAME);
+                    upsertCounts.put(image.getId(), imageCategoryCounts);
+                }
+            }
+
             writeResponse(upsertCounts, resp);
 
         } catch (EmbeddingException | SQLException | NamingException e) {
@@ -105,33 +144,43 @@ public class EmbeddingServlet extends HttpServlet {
         }
     }
 
-    private void writeResponse(EmbeddingService.ImageEmbeddings embeddings, HttpServletResponse resp) throws IOException {
+    private void writeEmbeddingResponse(Map<Long, EmbeddingService.ImageEmbeddings> imageEmbeddings, HttpServletResponse resp) throws IOException {
         // we haven't written to the vector db, so we only have the raw input for that.
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
         PrintWriter out = resp.getWriter();
 
         JsonObject root = new JsonObject();
-        root.addProperty("image-id", embeddings.getImage().getId());
-        root.addProperty("category-name", embeddings.getCategoryName());
-        root.add("categories", embeddings.getCategories());
-        root.add("vectors", embeddings.getVectors());
+        JsonArray images = new JsonArray();
+        root.add("image-embeddings", images);
+        for (Map.Entry<Long, EmbeddingService.ImageEmbeddings> entry : imageEmbeddings.entrySet()) {
+            JsonObject emb = new JsonObject();
+            images.add(emb);
+            EmbeddingService.ImageEmbeddings embeddings = entry.getValue();
+            emb.addProperty("image-id", entry.getKey());
+            emb.addProperty("category-name", embeddings.getCategoryName());
+            emb.add("categories", embeddings.getCategories());
+            emb.add("vectors", embeddings.getVectors());
+        }
 
         out.write(new Gson().toJson(root));
         out.flush();
     }
 
-    private void writeResponse(Map<String, Integer> upsertCounts, HttpServletResponse resp) throws IOException {
+    private void writeResponse(Map<Long, Map<String, Integer>> upsertCounts, HttpServletResponse resp) throws IOException {
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
         PrintWriter out = resp.getWriter();
 
         JsonObject root = new JsonObject();
         JsonArray a = new JsonArray();
         root.add("upsertCounts", a);
-        for (Map.Entry<String, Integer> entry : upsertCounts.entrySet()) {
-            JsonObject count = new JsonObject();
-            a.add(count);
-            count.addProperty("category", entry.getKey());
-            count.addProperty("upsertCount", entry.getValue());
+        for (Map.Entry<Long, Map<String, Integer>> image : upsertCounts.entrySet()) {
+            for (Map.Entry<String, Integer> entry : image.getValue().entrySet()) {
+                JsonObject count = new JsonObject();
+                a.add(count);
+                count.addProperty("image-id", image.getKey());
+                count.addProperty("category", entry.getKey());
+                count.addProperty("upsertCount", entry.getValue());
+            }
         }
 
         out.write(new Gson().toJson(root));
