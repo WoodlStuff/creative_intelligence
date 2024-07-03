@@ -153,7 +153,12 @@ def videoSummary(sceneChanges, base64Frames, folderPath, videoName, model=MODEL_
         temperature=0,
     )
 
+    # log the urls for all images used to create the summary
     sceneURLs = []
+    if len(sceneChanges) > 0:
+        # append the very first scene
+        sceneURLs.append(sceneChanges[0]['image_url_before'])
+
     for sceneChange in sceneChanges:
         sceneURLs.append(sceneChange['image_url'])
 
