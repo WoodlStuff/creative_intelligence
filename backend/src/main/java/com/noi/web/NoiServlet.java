@@ -28,7 +28,6 @@ import org.apache.http.entity.ContentType;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -39,7 +38,7 @@ import java.util.*;
 
 
 @WebServlet(name = "NoiServlet", urlPatterns = {"/api/*"}, loadOnStartup = 0)
-public class NoiServlet extends HttpServlet {
+public class NoiServlet extends BaseControllerServlet {
 
     private static JsonObject processImageDirectory(String folder, String modelName) throws SQLException, NamingException, IOException {
         // read folder and look for images;
@@ -90,10 +89,10 @@ public class NoiServlet extends HttpServlet {
                         Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
 
                         // add the image meta to the json doc (for the response)
-                        imagesArray.add(LabelService.addImageLabels(image, annotations, metaValues));
+                        imagesArray.add(LabelService.addImageLabels(image, annotations, metaValues, null));
 
                         // create a json file for each image in the same local image folder
-                        JsonObject imgRoot = LabelService.addImageLabels(image, annotations, metaValues);
+                        JsonObject imgRoot = LabelService.addImageLabels(image, annotations, metaValues, null);
                         File parentFolder = f.getParentFile();
                         String jsonFileName = f.getName().replace(".jpg", ".json");
                         File imgJsonFile = new File(parentFolder, jsonFileName);
@@ -118,55 +117,6 @@ public class NoiServlet extends HttpServlet {
 //        return prompts;
 //    }
 
-    private static List<ImageLabelResponse> requestImageLabels(Long imageId, String modelName, AiPrompt[] prompts) throws SQLException, NamingException {
-        List<ImageLabelResponse> responses = new ArrayList<>();
-        // handle a GoogleVision request (has no prompt!)
-        if (prompts == null) {
-            try {
-                AiImageLabelRequest request = AiImageLabelRequest.create(imageId, null, modelName);
-                responses.add(requestImageLabels(request));
-            } catch (IOException e) {
-                // todo:
-                e.printStackTrace();
-            }
-        } else {
-            // models other than GoogleVision
-            for (AiPrompt prompt : prompts) {
-                if (prompt == null) {
-                    System.out.println("skipping missing prompt!");
-                    continue;
-                }
-                try {
-                    AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, modelName);
-                    responses.add(requestImageLabels(request));
-                } catch (IOException e) {
-                    // todo:
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return responses;
-    }
-
-    private static ImageLabelResponse requestImageLabels(AiImageLabelRequest request) throws SQLException, NamingException, IOException {
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            request = DbRequest.insertForLabel(con, request);
-
-            LabelService labelService = LabelService.getService(request);
-            if (labelService != null) {
-                ImageLabelResponse response = labelService.labelize(con, request);
-                DbRequest.finishedForLabel(con, request);
-                return response;
-            }
-
-            return ImageLabelResponse.create(request);
-        } finally {
-            Model.close(con);
-        }
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -182,9 +132,6 @@ public class NoiServlet extends HttpServlet {
         // curl http://localhost:8080/noi-server/api/video/<video-id>
 
         // curl http://localhost:8080/noi-server/api/video-story/<video-id>
-
-        // label data for one image
-        // curl http://localhost:8080/noi-server/api/label/<image-id>
 
         // meta about the most recent n prompts
         // curl http://localhost:8080/noi-server/api/prompts
@@ -236,14 +183,14 @@ public class NoiServlet extends HttpServlet {
                 writeVideoList(req, resp, pathTokens);
                 return;
 
-            } else if ("label".equalsIgnoreCase(pathTokens[0])) {
-                // read the labels for the image id
-                if (pathTokens.length <= 1 && req.getParameter("image_url") == null) {
-                    throw new IllegalArgumentException("image id or image_url param is missing!");
-                }
-
-                writeImageLabels(req, resp, pathTokens);
-                return;
+//            } else if ("label".equalsIgnoreCase(pathTokens[0])) {
+//                // read the labels for the image id
+//                if (pathTokens.length <= 1 && req.getParameter("image_url") == null) {
+//                    throw new IllegalArgumentException("image id or image_url param is missing!");
+//                }
+//
+//                writeImageLabels(req, resp, pathTokens);
+//                return;
             } else if ("prompts".equalsIgnoreCase(pathTokens[0])) {
                 writePromptList(req, resp);
                 return;
@@ -400,28 +347,28 @@ public class NoiServlet extends HttpServlet {
         writeResponse(resp, root);
     }
 
-    private void writeImageLabels(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
-        // either the image and prompt id are provided in the path,
-        // or the prompt id and image url are provided as parameters
-        Long imgId = null;
-
-        if (pathTokens.length > 1) {
-            String imageId = pathTokens[1].trim();
-            if (imageId.isEmpty()) {
-                throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>");
-            }
-            imgId = Long.valueOf(imageId);
-        } else {
-            String imageUrl = req.getParameter("image_url");
-            AiImage image = DbImage.find(imageUrl);
-            if (image != null) {
-                imgId = image.getId();
-            }
-        }
-
-        // read the image and the labels, and format a response (json)
-        writeLabelResponse(imgId, resp);
-    }
+//    private void writeImageLabels(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
+//        // either the image and prompt id are provided in the path,
+//        // or the prompt id and image url are provided as parameters
+//        Long imgId = null;
+//
+//        if (pathTokens.length > 1) {
+//            String imageId = pathTokens[1].trim();
+//            if (imageId.isEmpty()) {
+//                throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>");
+//            }
+//            imgId = Long.valueOf(imageId);
+//        } else {
+//            String imageUrl = req.getParameter("image_url");
+//            AiImage image = DbImage.find(imageUrl);
+//            if (image != null) {
+//                imgId = image.getId();
+//            }
+//        }
+//
+//        // read the image and the labels, and format a response (json)
+//        writeLabelResponse(imgId, resp);
+//    }
 
     private void writeVideoList(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
         List<AiVideo> videos = listVideos(req, pathTokens);
@@ -568,20 +515,20 @@ public class NoiServlet extends HttpServlet {
         }
     }
 
-    private void writeLabelResponse(Long imgId, HttpServletResponse resp) throws SQLException, NamingException, IOException {
-        // read the image and the labels, and format a response (json)
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            AiImage image = DbImage.find(con, imgId);
-            List<AiImageLabel> annotations = DbImageLabel.findAnnotations(con, image);
-            Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
-
-            LabelService.writeLabelReport(image, annotations, metaValues, resp);
-        } finally {
-            Model.close(con);
-        }
-    }
+//    private void writeLabelResponse(Long imgId, HttpServletResponse resp) throws SQLException, NamingException, IOException {
+//        // read the image and the labels, and format a response (json)
+//        Connection con = null;
+//        try {
+//            con = Model.connectX();
+//            AiImage image = DbImage.find(con, imgId);
+//            List<AiImageLabel> annotations = DbImageLabel.findAnnotations(con, image);
+//            Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
+//
+//            LabelService.writeLabelReport(image, annotations, metaValues, null, resp);
+//        } finally {
+//            Model.close(con);
+//        }
+//    }
 
     /**
      * render meta data for one image
@@ -750,12 +697,12 @@ public class NoiServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
-    @Override
-    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    }
+//    @Override
+//    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+//        resp.setStatus(HttpServletResponse.SC_OK);
+//        resp.setHeader("Access-Control-Allow-Origin", "*");
+//        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+//    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -772,15 +719,6 @@ public class NoiServlet extends HttpServlet {
             ]
         }'
 
-        // Labels only!
-        // curl -X POST http://localhost:8080/noi-server/api/label/<image-id>/<prompt-id>
-        // curl -X POST http://localhost:8080/noi-server/api/label/12345 (for all active prompts don't specify one!)
-        // call labelling service and pick specific label service (by default both will be called)
-        // curl -X POST http://localhost:8080/noi-server/api/label/12345/12
-        // [or:
-         curl -X POST http://localhost:8080/noi-server/api/label/12345 -d "{'prompt_type': 10, 'prompt': 'some text goes here'}"  -d "modelName=gpt-4o (the default) | GoogleVision"]
-        // with url encoding for url parameters in passed image url
-        // curl -X POST -G http://localhost:8080/noi-server/api/label -d "modelName=gpt-4o" -d "prompt_id=1" --data-urlencode "image_url=https://scontent.fbgi3-1.fna.fbcdn.net/v/t45.1600-4/407953252_120203198010660611_4827034948669956474_n.png?stp=cp0_dst-jpg_fr_q90_spS444&_nc_cat=100&ccb=1-7&_nc_sid=5f2048&_nc_ohc=bzeFfJzfm_0Q7kNvgFcIMKg&_nc_ht=scontent.fbgi3-1.fna&oh=00_AYDLxbzIFiQqvqhkMu2u3cMA7bIGqm2U5QlU66a9sl1FAg&oe=6644314E"
 
         // NLP only
         // curl -X POST http://localhost:8080/noi-server/api/nlp/<prompt-id>
@@ -818,14 +756,14 @@ public class NoiServlet extends HttpServlet {
                 handleVideoImagesLabelRequest(req, resp, pathTokens);
                 return;
 
-            } else if ("label".equalsIgnoreCase(pathTokens[0])) {
-                // send request to label the images of a specific request (or prompt within a request ... )
-                if (pathTokens.length <= 1 && req.getParameter("image_url") == null) {
-                    throw new IllegalArgumentException("image id or image_url param is missing!");
-                }
-
-                handleSingleImageLabelRequest(req, resp, path, pathTokens);
-                return;
+//            } else if ("label".equalsIgnoreCase(pathTokens[0])) {
+//                // send request to label the images of a specific request (or prompt within a request ... )
+//                if (pathTokens.length <= 1 && req.getParameter("image_url") == null) {
+//                    throw new IllegalArgumentException("image id or image_url param is missing!");
+//                }
+//
+//                handleSingleImageLabelRequest(req, resp, path, pathTokens);
+//                return;
 
             } else if ("nlp".equalsIgnoreCase(pathTokens[0])) {
                 // send request to analyze the prompt text
@@ -913,62 +851,62 @@ public class NoiServlet extends HttpServlet {
         writeResponses(resp, responses);
     }
 
-    private void handleSingleImageLabelRequest(HttpServletRequest req, HttpServletResponse resp, Path path, String[] pathTokens) throws IOException, SQLException, NamingException {
-        // either the image and prompt id are provided in the path,
-        // or the prompt id and image url are provided as parameters
-        Long imgId = null;
-        AiPrompt prompt = null;
-
-        if (pathTokens.length > 1) {
-            String imageId = pathTokens[1].trim();
-            if (imageId.isEmpty()) {
-                throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>/<prompt-id>");
-            }
-            imgId = Long.valueOf(imageId);
-
-            if (pathTokens.length > 2) {
-                // todo: revisit! (case: no id in url, but type and prompt as posted json)
-                prompt = handlePrompt(req, path, 2);
-            }
-        } else {
-            String imageUrl = req.getParameter("image_url");
-            AiImage image = DbImage.findOrCreate(imageUrl);
-            if (image != null) {
-                imgId = image.getId();
-            }
-
-            String promptId = req.getParameter("prompt_id");
-            if (promptId != null) {
-                Long id = Long.valueOf(promptId.trim());
-                prompt = DbLanguage.findPrompt(id);
-            }
-        }
-
-        // the model dictates what service we'll call
-        String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
-
-        AiPrompt[] prompts;
-        // one specific prompt requested?
-        if (prompt != null) {
-            prompts = new AiPrompt[]{prompt};
-        } else {
-            // otherwise: use all active label prompts
-            List<AiPrompt.Type> promptTypes = new ArrayList<>();
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
-            List<AiPrompt> dbPrompts = DbLanguage.findPrompts(promptTypes);
-            prompts = new AiPrompt[dbPrompts.size()];
-            dbPrompts.toArray(prompts);
-        }
-
-        List<NoiResponse> responses = new ArrayList<>();
-        responses.addAll(requestImageLabels(imgId, modelName, prompts));
-        responses.addAll(requestImageLabels(imgId, GoogleVisionLabelService.MODEL_NAME, null));
-
-        //writeResponses(resp, responses);
-        writeLabelResponse(imgId, resp);
-    }
+//    private void handleSingleImageLabelRequest(HttpServletRequest req, HttpServletResponse resp, Path path, String[] pathTokens) throws IOException, SQLException, NamingException {
+//        // either the image and prompt id are provided in the path,
+//        // or the prompt id and image url are provided as parameters
+//        Long imgId = null;
+//        AiPrompt prompt = null;
+//
+//        if (pathTokens.length > 1) {
+//            String imageId = pathTokens[1].trim();
+//            if (imageId.isEmpty()) {
+//                throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>/<prompt-id>");
+//            }
+//            imgId = Long.valueOf(imageId);
+//
+//            if (pathTokens.length > 2) {
+//                // todo: revisit! (case: no id in url, but type and prompt as posted json)
+//                prompt = handlePrompt(req, path, 2);
+//            }
+//        } else {
+//            String imageUrl = req.getParameter("image_url");
+//            AiImage image = DbImage.findOrCreate(imageUrl);
+//            if (image != null) {
+//                imgId = image.getId();
+//            }
+//
+//            String promptId = req.getParameter("prompt_id");
+//            if (promptId != null) {
+//                Long id = Long.valueOf(promptId.trim());
+//                prompt = DbLanguage.findPrompt(id);
+//            }
+//        }
+//
+//        // the model dictates what service we'll call
+//        String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
+//
+//        AiPrompt[] prompts;
+//        // one specific prompt requested?
+//        if (prompt != null) {
+//            prompts = new AiPrompt[]{prompt};
+//        } else {
+//            // otherwise: use all active label prompts
+//            List<AiPrompt.Type> promptTypes = new ArrayList<>();
+//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+//            List<AiPrompt> dbPrompts = DbLanguage.findPrompts(promptTypes);
+//            prompts = new AiPrompt[dbPrompts.size()];
+//            dbPrompts.toArray(prompts);
+//        }
+//
+//        List<NoiResponse> responses = new ArrayList<>();
+//        responses.addAll(requestImageLabels(imgId, modelName, prompts));
+//        responses.addAll(requestImageLabels(imgId, GoogleVisionLabelService.MODEL_NAME, null));
+//
+//        //writeResponses(resp, responses);
+//        writeLabelResponse(imgId, resp);
+//    }
 
     private void handlePostedVideoMeta(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws IOException, SQLException, NamingException {
         String jsonPayload = FileTools.readToString(req.getInputStream());
@@ -1185,30 +1123,30 @@ public class NoiServlet extends HttpServlet {
         }
     }
 
-    private String handleModelName(HttpServletRequest req, String defaultName) {
-        String modelName = defaultName; // set default model to generate images
-        if (req.getParameter("modelName") != null) {
-            modelName = req.getParameter("modelName");
-        }
-        return modelName;
-    }
+//    private String handleModelName(HttpServletRequest req, String defaultName) {
+//        String modelName = defaultName; // set default model to generate images
+//        if (req.getParameter("modelName") != null) {
+//            modelName = req.getParameter("modelName");
+//        }
+//        return modelName;
+//    }
 
-    private AiPrompt handlePrompt(HttpServletRequest req, Path path, int promptIdIndex) throws IOException, SQLException, NamingException {
-        AiPrompt prompt = AiPrompt.parse(req, path, promptIdIndex);
-        if (prompt.getId() == null) {
-            // we need to insert the prompt!
-            prompt = DbLanguage.insertPrompt(prompt);
-        } else {
-            // we need to look up the actual prompt text
-            prompt = DbLanguage.findPrompt(prompt.getId());
-        }
-
-        if (prompt == null) {
-            throw new IllegalStateException();
-        }
-
-        return prompt;
-    }
+//    private AiPrompt handlePrompt(HttpServletRequest req, Path path, int promptIdIndex) throws IOException, SQLException, NamingException {
+//        AiPrompt prompt = AiPrompt.parse(req, path, promptIdIndex);
+//        if (prompt.getId() == null) {
+//            // we need to insert the prompt!
+//            prompt = DbLanguage.insertPrompt(prompt);
+//        } else {
+//            // we need to look up the actual prompt text
+//            prompt = DbLanguage.findPrompt(prompt.getId());
+//        }
+//
+//        if (prompt == null) {
+//            throw new IllegalStateException();
+//        }
+//
+//        return prompt;
+//    }
 
     private NLPResponse requestPromptAnalysis(AiPrompt prompt, String modelName) throws IOException, SQLException, NamingException {
         System.out.println("NOI: request prompt analysis...");

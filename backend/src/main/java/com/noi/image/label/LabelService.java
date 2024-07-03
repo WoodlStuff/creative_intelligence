@@ -64,9 +64,9 @@ public abstract class LabelService {
         return modelName;
     }
 
-    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, HttpServletResponse response) throws IOException {
+    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, HttpServletResponse response) throws IOException {
         // create the json doc
-        JsonObject root = addImageLabels(image, annotations, metaValues);
+        JsonObject root = addImageLabels(image, annotations, metaValues, categoryName);
 
         response.setContentType(ContentType.APPLICATION_JSON.toString());
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -79,7 +79,7 @@ public abstract class LabelService {
         out.close();
     }
 
-    public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues) {
+    public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName) {
         JsonObject i = new JsonObject();
         i.addProperty("path", image.getFilePath());
 
@@ -100,14 +100,17 @@ public abstract class LabelService {
         JsonArray categories = new JsonArray();
         i.add("categories", categories);
         for (Map.Entry<String, List<LabelMetaData>> cat : metaValues.entrySet()) {
-            for (LabelMetaData meta : cat.getValue()) {
-                JsonObject label = new JsonObject();
-                categories.add(label);
-                label.addProperty("category_name", cat.getKey());
-                label.addProperty("request_uuid", meta.getRequestUUID());
-                label.addProperty("model_name", meta.getModelName());
-                label.addProperty("key", meta.getKey());
-                label.addProperty("value", meta.getValue());
+            // if a filter is provided: only the matching category will be added to the response
+            if (categoryName == null || categoryName.equalsIgnoreCase(cat.getKey())) {
+                for (LabelMetaData meta : cat.getValue()) {
+                    JsonObject label = new JsonObject();
+                    categories.add(label);
+                    label.addProperty("category_name", cat.getKey());
+                    label.addProperty("request_uuid", meta.getRequestUUID());
+                    label.addProperty("model_name", meta.getModelName());
+                    label.addProperty("key", meta.getKey());
+                    label.addProperty("value", meta.getValue());
+                }
             }
         }
 

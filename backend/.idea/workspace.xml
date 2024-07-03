@@ -5,8 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)">
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/OpenAIEmbeddingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,11 +91,15 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.noi.embeddings" />
       <recent name="com.noi.image" />
       <recent name="com.noi.video" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.noi.language" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.noi.embeddings" />
     </key>
   </component>
   <component name="RunManager">

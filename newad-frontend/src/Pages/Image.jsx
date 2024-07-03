@@ -36,8 +36,7 @@ function Image() {
     // set the progress bar to visible
     showProgressbar();
     console.log("label image for id: " + params.id);
-    // Note!: this requires the python server to be running!
-    axios.post('http://localhost:8080/noi-server/api/label/' + params.id).then((response) => {
+    axios.post('http://localhost:8080/noi-server/categories/' + params.id).then((response) => {
       // todo: take the response.data json, and post it to be inserted into the db (post to Java code on :8080)
       console.log(response.data);
       let data = response.data; 
@@ -56,7 +55,7 @@ function Image() {
       try {
         console.log("calling for image meta...")
         console.log(imageId);
-        axios.get("http://localhost:8080/noi-server/api/label/" + imageId).then((response) => {
+        axios.get("http://localhost:8080/noi-server/categories/" + imageId).then((response) => {
           let data = response.data;
           if (!isCalled) {
             if (Object.entries(data).length >= 0) {
