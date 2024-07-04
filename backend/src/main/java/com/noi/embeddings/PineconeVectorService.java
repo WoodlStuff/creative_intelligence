@@ -6,6 +6,7 @@ import com.noi.models.DbImageLabel;
 import com.noi.models.DbRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.SystemEnv;
+import com.noi.video.AiVideo;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -52,7 +53,7 @@ public class PineconeVectorService extends VectorService {
         this.apiKey = apiKey;
     }
 
-    private Map<String, Integer> upsert(Connection con, AiImage image, JsonArray vectors, String indexName) throws EmbeddingException, IOException {
+    private Map<String, Integer> upsert(Connection con, AiVideo video, AiImage image, JsonArray vectors, String indexName) throws EmbeddingException, IOException {
         // insert vectors into the indexName, each vector element contains a category name and an array of double
         Map<String, Integer> categoryUpsertCounts = new HashMap<>();
 
@@ -75,7 +76,7 @@ public class PineconeVectorService extends VectorService {
                 Long categoryId = imageCategories.get(category);
                 AiImageVectorRequest request = DbRequest.insertForVector(con, image, categoryId, "Pinecone", vector.size());
 
-                StringEntity entity = createPostEntity(image, category, vector);
+                StringEntity entity = createPostEntity(video, image, category, vector);
                 httpPost.setEntity(entity);
                 response = client.execute(httpPost);
 
@@ -127,7 +128,7 @@ public class PineconeVectorService extends VectorService {
 
     @Override
     public Map<String, Integer> upsert(Connection con, EmbeddingService.ImageEmbeddings embeddings, String indexName) throws EmbeddingException, IOException {
-        return upsert(con, embeddings.getImage(), embeddings.getVectors(), indexName);
+        return upsert(con, embeddings.getVideo(), embeddings.getImage(), embeddings.getVectors(), indexName);
     }
 
     private int parseResponse(CloseableHttpResponse response) throws IOException {
@@ -159,12 +160,12 @@ public class PineconeVectorService extends VectorService {
         return httpPost;
     }
 
-    private StringEntity createPostEntity(AiImage image, String category, JsonArray vector) {
-        JsonObject payload = createPayload(image, category, vector);
+    private StringEntity createPostEntity(AiVideo video, AiImage image, String category, JsonArray vector) {
+        JsonObject payload = createPayload(video, image, category, vector);
         return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
     }
 
-    private JsonObject createPayload(AiImage image, String category, JsonArray vector) {
+    private JsonObject createPayload(AiVideo video, AiImage image, String category, JsonArray vector) {
         JsonObject root = new JsonObject();
         root.addProperty("namespace", category);
         JsonArray vectors = new JsonArray();
@@ -175,25 +176,17 @@ public class PineconeVectorService extends VectorService {
         v.addProperty("id", image.getId().toString());
         v.add("values", vector);
 
-        /*
-        -d '{
-            "vectors": [
-              {
-                "id": "vec1",
-                "values": [1.0, -2.5]
-              },
-              {
-                "id": "vec2",
-                "values": [3.0, -2.0]
-              },
-              {
-                "id": "vec3",
-                "values": [0.5, -1.5]
-              }
-            ],
-            "namespace": "ns2"
-          }'
-         */
+        // if this image is part of a video, add the video metadata for future query
+        if (video != null) {
+            JsonObject metaData = new JsonObject();
+            v.add("metadata", metaData);
+            metaData.addProperty("video-id", video.getId());
+            metaData.addProperty("frame-number", image.getVideoFrameNumber());
+            double seconds = image.getVideoFrameNumber() / video.getFrameRate();
+            metaData.addProperty("frame-seconds", Math.round(seconds));
+            metaData.addProperty("video-frameCount", video.getFrameCount());
+            metaData.addProperty("video-seconds", video.getSeconds());
+        }
 
         return root;
     }

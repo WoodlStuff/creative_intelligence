@@ -6,6 +6,8 @@ import com.noi.image.AiImage;
 import com.noi.image.label.LabelMetaData;
 import com.noi.models.DbImage;
 import com.noi.models.DbImageLabel;
+import com.noi.models.DbVideo;
+import com.noi.video.AiVideo;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -22,6 +24,12 @@ public abstract class EmbeddingService {
     public static ImageEmbeddings getEmbeddings(Connection con, Long imageId, String categoryName) throws SQLException, EmbeddingException, IOException {
         // look up the image and the label metadata for it
         AiImage image = DbImage.find(con, imageId);
+        AiVideo video = null;
+
+        if (image.getVideoId() != null) {
+            video = DbVideo.find(con, image.getVideoId());
+        }
+
         Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
 
         // then get the embeddings for the categories
@@ -65,7 +73,7 @@ public abstract class EmbeddingService {
             }
         }
 
-        return ImageEmbeddings.create(image, categoryName, categories, vectors, dimensions);
+        return ImageEmbeddings.create(video, image, categoryName, categories, vectors, dimensions);
     }
 
     /**
@@ -83,12 +91,14 @@ public abstract class EmbeddingService {
 
     public static class ImageEmbeddings {
         private final AiImage image;
+        private final AiVideo video;
         private final String categoryName;
         private final JsonArray categories;
         private final JsonArray vectors;
         private final int dimensions;
 
-        private ImageEmbeddings(AiImage image, String categoryName, JsonArray categories, JsonArray vectors, int dimensions) {
+        private ImageEmbeddings(AiVideo video, AiImage image, String categoryName, JsonArray categories, JsonArray vectors, int dimensions) {
+            this.video = video;
             this.image = image;
             this.categoryName = categoryName;
             this.categories = categories;
@@ -97,6 +107,7 @@ public abstract class EmbeddingService {
         }
 
         /**
+         * @param video
          * @param image        the image holding the labels
          * @param categoryName optional filter for only that category (in the labels for this image)
          * @param categories   is a json array with format: [{'category': 'name here', 'labels':[{'model_name':'gpt-4o', 'key':'xx', 'value':'yyy'}, {}, ...]}, {'category': ...}, ...]
@@ -104,8 +115,8 @@ public abstract class EmbeddingService {
          * @param dimensions   the dimension count of each vector element
          * @return
          */
-        public static ImageEmbeddings create(AiImage image, String categoryName, JsonArray categories, JsonArray vectors, int dimensions) {
-            return new ImageEmbeddings(image, categoryName, categories, vectors, dimensions);
+        public static ImageEmbeddings create(AiVideo video, AiImage image, String categoryName, JsonArray categories, JsonArray vectors, int dimensions) {
+            return new ImageEmbeddings(video, image, categoryName, categories, vectors, dimensions);
         }
 
         @Override
@@ -121,6 +132,10 @@ public abstract class EmbeddingService {
 
         public AiImage getImage() {
             return image;
+        }
+
+        public AiVideo getVideo() {
+            return video;
         }
 
         public String getCategoryName() {
