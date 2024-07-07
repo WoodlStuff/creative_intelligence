@@ -18,7 +18,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -45,6 +47,8 @@ curl -s -X POST "https://api.pinecone.io/indexes" \
 public class PineconeVectorService extends VectorService {
     private final String apiKey;
 
+    private final String MODEL_NAME = "Pinecone";
+
     public PineconeVectorService(String apiKey) {
         super();
         if (apiKey == null) {
@@ -62,8 +66,9 @@ public class PineconeVectorService extends VectorService {
         try {
             client = HttpClients.createDefault();
 
-            String url = getIndexHostURL(indexName);
-            HttpPost httpPost = createHttpPost(url, apiKey);
+            String hostName = getIndexHostURL(indexName);
+            String postUrl = String.format("https://%s/vectors/upsert", hostName);
+            HttpPost httpPost = createHttpPost(postUrl, apiKey);
 
             Map<String, Long> imageCategories = DbImageLabel.findAllCategories(con);
 
@@ -74,13 +79,13 @@ public class PineconeVectorService extends VectorService {
 
                 // log the request
                 Long categoryId = imageCategories.get(category);
-                AiImageVectorRequest request = DbRequest.insertForVector(con, image, categoryId, "Pinecone", vector.size());
+                AiImageVectorRequest request = DbRequest.insertForVector(con, image, categoryId, MODEL_NAME, vector.size());
 
-                StringEntity entity = createPostEntity(video, image, category, vector);
+                StringEntity entity = createUpsertEntity(video, image, category, vector);
                 httpPost.setEntity(entity);
                 response = client.execute(httpPost);
 
-                int upsertCount = parseResponse(response);
+                int upsertCount = parseUpsertResponse(response);
                 DbRequest.updateForVector(con, request, upsertCount);
 
                 categoryUpsertCounts.put(category, upsertCount);
@@ -131,7 +136,36 @@ public class PineconeVectorService extends VectorService {
         return upsert(con, embeddings.getVideo(), embeddings.getImage(), embeddings.getVectors(), indexName);
     }
 
-    private int parseResponse(CloseableHttpResponse response) throws IOException {
+    @Override
+    protected List<VectorMatch> querySimilarImages(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) throws EmbeddingException, IOException {
+        // query the vector db for matches in this category
+
+        CloseableHttpClient client = null;
+        CloseableHttpResponse response = null;
+        try {
+            client = HttpClients.createDefault();
+
+            String hostName = getIndexHostURL(indexName);
+            String postUrl = String.format("https://%s/query", hostName);
+            HttpPost httpPost = createHttpPost(postUrl, apiKey);
+
+            StringEntity entity = createQueryEntity(embeddings, indexName, queryMeta);
+            httpPost.setEntity(entity);
+            response = client.execute(httpPost);
+
+            return parseQueryResponse(response);
+
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+            if (client != null) {
+                client.close();
+            }
+        }
+    }
+
+    private int parseUpsertResponse(CloseableHttpResponse response) throws IOException {
         String jsonResponse = FileTools.readToString(response.getEntity().getContent());
         if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
                 response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
@@ -146,11 +180,32 @@ public class PineconeVectorService extends VectorService {
         return -1;
     }
 
+    private List<VectorMatch> parseQueryResponse(CloseableHttpResponse response) throws IOException {
+        List<VectorMatch> vectorMatches = new ArrayList<>();
+
+        String jsonResponse = FileTools.readToString(response.getEntity().getContent());
+        System.out.println("PineconeVestorService:httpResponse:" + response.getStatusLine().getStatusCode());
+        System.out.println("PineconeVestorService:httpResponse:" + jsonResponse);
+        if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
+                response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
+            JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
+            if (root != null) {
+                JsonArray matches = root.get("matches").getAsJsonArray();
+                for (int i = 0; i < matches.size(); i++) {
+                    JsonObject match = matches.get(i).getAsJsonObject();
+                    vectorMatches.add(VectorMatch.parse(match));
+                }
+            }
+        }
+        return vectorMatches;
+    }
+
     private String getIndexHostURL(String indexName) {
         // response from index create:
         /// {"name":"categories","metric":"cosine","dimension":1536,"status":{"ready":false,"state":"Initializing"},"host":"categories-0ee2lb1.svc.aped-4627-b74a.pinecone.io","spec":{"serverless":{"region":"us-east-1","cloud":"aws"}}}%
         String hostName = "categories-0ee2lb1.svc.aped-4627-b74a.pinecone.io"; // todo: lookup, based on index name
-        return String.format("https://%s/vectors/upsert", hostName);
+//        return String.format("https://%s/vectors/upsert", hostName);
+        return hostName;
     }
 
     private HttpPost createHttpPost(String url, String apiKey) {
@@ -160,12 +215,12 @@ public class PineconeVectorService extends VectorService {
         return httpPost;
     }
 
-    private StringEntity createPostEntity(AiVideo video, AiImage image, String category, JsonArray vector) {
-        JsonObject payload = createPayload(video, image, category, vector);
+    private StringEntity createUpsertEntity(AiVideo video, AiImage image, String category, JsonArray vector) {
+        JsonObject payload = createUpsertPayload(video, image, category, vector);
         return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
     }
 
-    private JsonObject createPayload(AiVideo video, AiImage image, String category, JsonArray vector) {
+    private JsonObject createUpsertPayload(AiVideo video, AiImage image, String category, JsonArray vector) {
         JsonObject root = new JsonObject();
         root.addProperty("namespace", category);
         JsonArray vectors = new JsonArray();
@@ -186,6 +241,49 @@ public class PineconeVectorService extends VectorService {
             metaData.addProperty("frame-seconds", Math.round(seconds));
             metaData.addProperty("video-frameCount", video.getFrameCount());
             metaData.addProperty("video-seconds", video.getSeconds());
+        }
+
+        return root;
+    }
+
+    private StringEntity createQueryEntity(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) {
+        JsonObject payload = createQueryPayload(embeddings, indexName, queryMeta);
+        System.out.println("PineconeVectorService:query with: \r\n" + new Gson().toJson(payload));
+        return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
+    }
+
+    private JsonObject createQueryPayload(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) {
+        JsonObject root = new JsonObject();
+        // vectors is array of {"category":"paralanguage","vector":[....]}, {"category": ...}]
+        JsonArray vectors = embeddings.getVectors();
+        JsonArray vector = null;
+        for (int i = 0; i < vectors.size(); i++) {
+            JsonObject categoryVector = vectors.get(i).getAsJsonObject();
+            if (indexName.equalsIgnoreCase(categoryVector.get("category").getAsString())) {
+                // found it!
+                vector = categoryVector.get("vector").getAsJsonArray();
+                break;
+            }
+        }
+
+        if (vector == null) {
+            throw new IllegalArgumentException("no category found for index[" + indexName + "]");
+        }
+
+        root.addProperty("namespace", indexName);
+        root.add("vector", vector);
+        root.addProperty("topK", 3);
+
+        //?? does this depend on weather or not we send a filter?
+        root.addProperty("includeMetadata", true);
+
+        if (queryMeta.getVideoId() != null) {
+            // "filter": {"genre": {"$in": ["comedy", "documentary", "drama"]}},
+            JsonObject filter = new JsonObject();
+            root.add("filter", filter);
+            JsonObject filterClause = new JsonObject();
+            filterClause.addProperty("$ne", queryMeta.getVideoId());
+            filter.add("video-id", filterClause);
         }
 
         return root;

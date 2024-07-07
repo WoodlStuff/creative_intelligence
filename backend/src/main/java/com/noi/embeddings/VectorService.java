@@ -2,6 +2,7 @@ package com.noi.embeddings;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 
 public abstract class VectorService {
@@ -11,4 +12,6 @@ public abstract class VectorService {
     }
 
     protected abstract Map<String, Integer> upsert(Connection con, EmbeddingService.ImageEmbeddings embeddings, String indexName) throws EmbeddingException, IOException;
+
+    protected abstract List<VectorMatch> querySimilarImages(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) throws EmbeddingException, IOException;
 }
