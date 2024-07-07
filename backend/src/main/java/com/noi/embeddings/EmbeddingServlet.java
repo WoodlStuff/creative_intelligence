@@ -71,7 +71,7 @@ public class EmbeddingServlet extends HttpServlet {
 
             Map<Long, EmbeddingService.ImageEmbeddings> imageEmbeddings = new HashMap<>();
             for (AiImage image : images) {
-                imageEmbeddings.put(image.getId(), EmbeddingService.getEmbeddings(con, image.getId(), categoryName));
+                imageEmbeddings.put(image.getId(), EmbeddingService.getEmbeddings(con, image.getId(), categoryName, true));
             }
 
             writeEmbeddingResponse(imageEmbeddings, resp);

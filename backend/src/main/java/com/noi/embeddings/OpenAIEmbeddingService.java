@@ -81,6 +81,7 @@ public class OpenAIEmbeddingService extends EmbeddingService {
                 responseArray.add(vectorResponse);
 
                 vectorResponse.addProperty("category", categoryName);
+                vectorResponse.addProperty("model", modelName);
                 vectorResponse.add("vector", embeddingArray);
             }
         } catch (SQLException e) {
@@ -159,15 +160,8 @@ public class OpenAIEmbeddingService extends EmbeddingService {
 
     private JsonObject createPayload(String modelName, AiImage image, JsonObject categoryObject) {
         JsonObject root = new JsonObject();
-        // todo: can we send json here, or do we need to flatten this to a string?
         root.addProperty("input", new Gson().toJson(categoryObject));
         root.addProperty("model", modelName);
-        /*
-        {
-            "input": "{\"function\":\"depict a domestic or preparatory activity in a household\"}",
-            "model": "text-embedding-3-small"
-         }
-         */
         return root;
     }
 }

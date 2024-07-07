@@ -22,6 +22,10 @@ public abstract class EmbeddingService {
     }
 
     public static ImageEmbeddings getEmbeddings(Connection con, Long imageId, String categoryName) throws SQLException, EmbeddingException, IOException {
+        return getEmbeddings(con, imageId, categoryName, false);
+    }
+
+    public static ImageEmbeddings getEmbeddings(Connection con, Long imageId, String categoryName, boolean includeModelName) throws SQLException, EmbeddingException, IOException {
         // look up the image and the label metadata for it
         AiImage image = DbImage.find(con, imageId);
         AiVideo video = null;
@@ -50,7 +54,9 @@ public abstract class EmbeddingService {
                 for (LabelMetaData meta : cat.getValue()) {
                     JsonObject label = new JsonObject();
                     labels.add(label);
-                    label.addProperty("model_name", meta.getModelName());
+                    if (includeModelName) {
+                        label.addProperty("model_name", meta.getModelName());
+                    }
                     label.addProperty("key", meta.getKey());
                     label.addProperty("value", meta.getValue());
                 }

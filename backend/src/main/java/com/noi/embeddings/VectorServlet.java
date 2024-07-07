@@ -60,7 +60,7 @@ public class VectorServlet extends HttpServlet {
 
             // namespace, vector,TopK, metadata: video-id !=
             AiImage image = DbImage.find(con, id);
-            // 1) calculate the vector for the image id and category
+            // 1) calculate the vector for the image id and category (to use as part of the query)
             EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
             if (embeddings.hasVectors()) {
                 System.out.println("VectorServlet: created embeddings with vector for image=" + image.getId() + " and cat=" + categoryName);
