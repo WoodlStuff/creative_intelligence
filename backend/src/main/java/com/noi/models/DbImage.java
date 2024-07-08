@@ -295,7 +295,7 @@ public class DbImage extends Model {
                 query.append(" and i.video_frame_number=?");
             }
 
-            query.append(" order by i.video_frame_number desc, i.updated_at desc limit ?");
+            query.append(" order by i.updated_at desc limit ?");
 
             stmt = con.prepareStatement(query.toString());
             int index = 1;
