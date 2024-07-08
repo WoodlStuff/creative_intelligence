@@ -282,13 +282,13 @@ public class NoiServlet extends BaseControllerServlet {
             story.add("category_images", catImages);
             Map<String, List<MetaKeyImages>> categoryImages = DbImageLabel.findCategoryImages(con, videoId);
             for (Map.Entry<String, List<MetaKeyImages>> entry : categoryImages.entrySet()) {
-                JsonObject categoryImageCounts = new JsonObject();
-                catImages.add(categoryImageCounts);
                 for (MetaKeyImages mki : entry.getValue()) {
+                    JsonObject categoryImageCounts = new JsonObject();
+                    catImages.add(categoryImageCounts);
                     categoryImageCounts.addProperty("category_name", entry.getKey());
                     categoryImageCounts.addProperty("key", mki.getMetaKey());
                     categoryImageCounts.addProperty("value", mki.getMetaValue());
-                    categoryImageCounts.add("image-ids", mki.getImageIds());
+                    categoryImageCounts.add("image_ids", mki.getImageIds());
                 }
             }
 

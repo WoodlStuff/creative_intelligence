@@ -56,7 +56,7 @@ function Prompts() {
                 <td className="id" width="2%">ID</td>
                 <td className="prompt_type" width="10%">Type</td>
                 <td className="nav_link" width="80%">Prompt</td>
-                  <td className="status" width="10%">Status</td>
+                {/* <td className="status" width="10%">Status</td> */}
                 </tr>
               </thead>
               <tbody>
@@ -77,10 +77,10 @@ function Prompts() {
                       <td className="prompt" width="80%">
                         <textarea disabled className="textarea_prompt" defaultValue={prompt.prompt}/>
                       </td>
-                      <td className="status" width="10%">
+                      {/* <td className="status" width="10%">
                         <span className="status"></span>
                         {prompt.status}
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 }

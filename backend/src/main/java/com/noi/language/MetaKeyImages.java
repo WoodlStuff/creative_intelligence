@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class MetaKeyImages {
     private final String metaKey, metaValue;
@@ -35,5 +36,27 @@ public class MetaKeyImages {
 
     public JsonArray getImageIds() {
         return ids;
+    }
+
+    @Override
+    public String toString() {
+        return "MetaKeyImages{" +
+                "metaKey='" + metaKey + '\'' +
+                ", metaValue='" + metaValue + '\'' +
+                ", ids=" + ids +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MetaKeyImages that = (MetaKeyImages) o;
+        return metaKey.equals(that.metaKey) && metaValue.equals(that.metaValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(metaKey, metaValue);
     }
 }

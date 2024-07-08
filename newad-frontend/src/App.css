@@ -191,6 +191,17 @@ img.image_detail {
   width: 650px;
 }
 
+.images-sub-table {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.images-sub-column {
+  margin: 1px;
+}
+
 @media (max-width: 600px) {
   
   .grid-container {

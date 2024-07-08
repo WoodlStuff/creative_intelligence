@@ -2,7 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { HiOutlineArrowSmRight } from "react-icons/hi";
-import { useParams } from "react-router-dom";
+import { useParams, NavLink } from "react-router-dom";
 
 function Story() {
   const params = useParams();
@@ -57,10 +57,19 @@ function Story() {
     return[]
   }
 
+  function filterImageCategories() {
+    // find the images for the currently selected category
+    if(Object.entries(storyData.category_images).length > 0){
+      return storyData.category_images.filter( (imageRow) => imageRow.category_name ==  selectedCategoryName);
+    }
+
+    return[]
+  }
+
   const StoryMomentRow = (props) => {
     return(
         <tr>
-          <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number}></a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></td>
+          <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></a></td>
           <td>{props.moment.image_id}</td>
           <td>{selectedCategoryName}</td>
           <td>{filterCategories(props.moment.image_id).length}</td>
@@ -68,18 +77,22 @@ function Story() {
     )
   }
 
+  // <ImageLink image_id={id} image_link_text={'xx'} />
+  const ImageLink = (props) => {
+    <NavLink
+      to={'/image/' + props.image_id }
+      key={props.image_id}
+      className="image-link"
+    >
+      <div className="image_link_text">{props.image_link_text}</div>
+    </NavLink>
+  }
+
   // render all rows for one moment / image, but all its category data (after the filter is applied)  
   const StoryCategoryRows = (props) => {
       return(
         props.categories.map((category) => (
           <tr key={category.key}>
-            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number}></a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></td>
-            <td>
-              {props.moment.video_frame_number}
-            </td>
-            <td>
-              {props.moment.seconds}
-            </td>
             <td>
               {category.category_name}
             </td>
@@ -88,6 +101,13 @@ function Story() {
             </td>
             <td>
               {category.values}
+            </td>
+            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></a></td>
+            <td>
+              {props.moment.video_frame_number} 
+            </td>
+            <td>
+              {props.moment.seconds}
             </td>
           </tr>
         ))
@@ -100,6 +120,35 @@ function Story() {
             props.storyData.moments.map((moment) => (
               <StoryCategoryRows key={moment.video_frame_number} moment={moment} categories={filterCategories(moment.image_id)} />
               // <StoryMomentRow moment={moment} />
+            ))
+        )
+    }
+    return <></>
+  }
+
+  const ImagesTable = (props) => {
+      return (
+        props.image_ids.map((image_id) => (
+          // <ImageLink image_id={image_id} image_link_text={props.moment.video_frame_number} />
+            <div key={image_id} className='images-sub-column'><a href={'/image/' + image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image_id } /></a></div>
+        ))
+      )
+  }
+
+  const ImageRows = (props) => {
+    if(props.hasStory == true){
+        return (
+          filterImageCategories().map((catKeyVal) => (
+              <tr key={catKeyVal.category_name + '-' + catKeyVal.key + '-' + catKeyVal.value}>
+                <td>{catKeyVal.category_name}</td>
+                <td>{catKeyVal.key}</td>
+                <td>{catKeyVal.value}</td>
+                <td>
+                  <div className='images-sub-table'>
+                      <ImagesTable image_ids={catKeyVal.image_ids}/>
+                  </div>
+                </td>
+              </tr>
             ))
         )
     }
@@ -138,35 +187,42 @@ function Story() {
     <div className='prompt'>
       <div className="card">
         <div className="card-header">
-          <h3>Video Story</h3>
+          <h3>Video Timeline</h3>
+          <CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/>
         </div>
+
+        <div className="card-body" style={{marginBottom: 25}}>
+          <div className="table-responsive">
+            <table width="90%">
+              <thead>
+                <tr>
+                  <td>Category</td>
+                  <td>Key</td>
+                  <td>Value</td>
+                  <td>Images</td>
+                </tr>
+              </thead>
+              <tbody>
+                <ImageRows hasStory={Object.entries(storyData).length > 0 } />
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div className="card-body">
           <div className="table-responsive">
             <table width="90%">
               <thead>
                 <tr>
-                  <td></td>
-                  <td>Frame</td>
-                  <td>Seconds</td>
-                  <td><CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/></td>
+                  <td>Category</td>
                   <td>Key</td>
                   <td>Values</td>
+                  <td>Image</td>
+                  <td>Frame</td>
+                  <td>Seconds</td>
                 </tr>
               </thead>
               <tbody>
-                {/* <tr>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/>
-                  </td>
-                  <td>
-                    {/* <KeySelector hasStory={Object.entries(storyData).length > 0 }/>  */}
-                    
-                  {/* </td> */}
-                  {/* <td></td> */}
-                  {/* </tr> */} 
                   <StoryRows hasStory={Object.entries(storyData).length > 0 } storyData={storyData}/>
               </tbody>
             </table>
