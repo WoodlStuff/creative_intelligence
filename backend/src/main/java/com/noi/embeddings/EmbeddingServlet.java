@@ -85,7 +85,10 @@ public class EmbeddingServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // create embeddings for one image (and optional only one category)
         // curl -X POST http://localhost:8080/noi-server/embeddings/(image-id)[/category-name]
+        // create embeddings for all images in the video (all images used to generate the summary!)
+        // curl -X POST http://localhost:8080/noi-server/video-embeddings/(video-id)[/category-name]
         Path path = Path.parse(req);
         if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -144,6 +147,13 @@ public class EmbeddingServlet extends HttpServlet {
         }
     }
 
+    /**
+     * write response to a GET request.
+     *
+     * @param imageEmbeddings
+     * @param resp
+     * @throws IOException
+     */
     private void writeEmbeddingResponse(Map<Long, EmbeddingService.ImageEmbeddings> imageEmbeddings, HttpServletResponse resp) throws IOException {
         // we haven't written to the vector db, so we only have the raw input for that.
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
@@ -166,6 +176,13 @@ public class EmbeddingServlet extends HttpServlet {
         out.flush();
     }
 
+    /**
+     * write response to a POST request.
+     *
+     * @param upsertCounts upsert counts by image id and category (==namespace)
+     * @param resp
+     * @throws IOException
+     */
     private void writeResponse(Map<Long, Map<String, Integer>> upsertCounts, HttpServletResponse resp) throws IOException {
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
         PrintWriter out = resp.getWriter();

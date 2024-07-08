@@ -5,6 +5,7 @@ import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.label.*;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.MetaKeyImages;
 import com.noi.language.MetaKeyValues;
 import com.noi.requests.NoiRequest;
 
@@ -463,5 +464,30 @@ public class DbImageLabel extends Model {
         }
 
         return kv;
+    }
+
+    public static Map<String, List<MetaKeyImages>> findCategoryImages(Connection con, Long videoId) throws SQLException {
+        Map<String, List<MetaKeyImages>> images = new HashMap<>();
+        // select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids from (select ai_image_id, name category_name, meta_key, meta_value, count(*) _count from (select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value from ai_image_label_meta_categories lmc join meta_categories c on c.id = lmc.meta_category_id join ai_images i on i.id = lmc.ai_image_id where i.ai_video_id=@video_id and name=@category)a group by 1,2,3,4)x group by 1,2,3 having count(distinct ai_image_id) > 1 order by count(distinct ai_image_id), category_name, meta_key, meta_value;
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids from (select ai_image_id, name category_name, meta_key, meta_value, count(*) _count from (select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value from ai_image_label_meta_categories lmc join meta_categories c on c.id = lmc.meta_category_id join ai_images i on i.id = lmc.ai_image_id where i.ai_video_id=?)a group by 1,2,3,4)x group by 1,2,3 having count(distinct ai_image_id) > 1 order by count(distinct ai_image_id), category_name, meta_key, meta_value");
+            stmt.setLong(1, videoId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String categoryName = rs.getString("category_name");
+                List<MetaKeyImages> catImages = images.get(categoryName);
+                if (catImages == null) {
+                    catImages = new ArrayList<>();
+                    images.put(categoryName, catImages);
+                }
+
+                catImages.add(MetaKeyImages.create(rs));
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return images;
     }
 }

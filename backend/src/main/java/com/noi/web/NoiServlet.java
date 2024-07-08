@@ -245,8 +245,6 @@ public class NoiServlet extends BaseControllerServlet {
                 momentsArray.add(mom);
             }
 
-            JsonArray categoryNames = new JsonArray();
-            story.add("category_names", categoryNames);
             Set<String> catNames = new TreeSet<>();
             JsonArray categories = new JsonArray();
             story.add("categories", categories);
@@ -277,7 +275,26 @@ public class NoiServlet extends BaseControllerServlet {
                     }
                 }
             }
+
+            // add a map of image counts by category
+            // select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids from (select ai_image_id, name category_name, meta_key, meta_value, count(*) _count from (select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value from ai_image_label_meta_categories lmc join meta_categories c on c.id = lmc.meta_category_id join ai_images i on i.id = lmc.ai_image_id where i.ai_video_id=@video_id and name=@category)a group by 1,2,3,4)x group by 1,2,3 having count(distinct ai_image_id) > 1 order by count(distinct ai_image_id), category_name, meta_key, meta_value;
+            JsonArray catImages = new JsonArray();
+            story.add("category_images", catImages);
+            Map<String, List<MetaKeyImages>> categoryImages = DbImageLabel.findCategoryImages(con, videoId);
+            for (Map.Entry<String, List<MetaKeyImages>> entry : categoryImages.entrySet()) {
+                JsonObject categoryImageCounts = new JsonObject();
+                catImages.add(categoryImageCounts);
+                for (MetaKeyImages mki : entry.getValue()) {
+                    categoryImageCounts.addProperty("category_name", entry.getKey());
+                    categoryImageCounts.addProperty("key", mki.getMetaKey());
+                    categoryImageCounts.addProperty("value", mki.getMetaValue());
+                    categoryImageCounts.add("image-ids", mki.getImageIds());
+                }
+            }
+
             // add unique category names as a separate array
+            JsonArray categoryNames = new JsonArray();
+            story.add("category_names", categoryNames);
             List<String> sorted = new ArrayList<>(catNames);
             System.out.println("sorted has a size of: " + sorted.size());
             Collections.sort(sorted);

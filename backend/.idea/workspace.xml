@@ -5,12 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/MetaKeyImages.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/OpenAIEmbeddingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/OpenAIEmbeddingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,6 +83,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.noi.language" />
       <recent name="com.noi.embeddings" />
       <recent name="com.noi.image" />
       <recent name="com.noi.video" />
@@ -150,7 +151,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java</url>
-          <line>828</line>
+          <line>845</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
