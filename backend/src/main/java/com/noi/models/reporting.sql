@@ -73,3 +73,20 @@ select v.frame_rate, s.ai_image_id, i.image_url, i.video_frame_number, round(i.v
  where s.status=1 and i.status != -1
    and s.ai_video_id = @video_id
  order by i.video_frame_number asc;
+
+-- most frequent labels/categories across the images of a video
+set @video_id = 23;
+select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids
+  from (
+    select ai_image_id, name category_name, meta_key, meta_value, count(*) _count
+      from (
+        select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value
+          from ai_image_label_meta_categories lmc
+          join meta_categories c on c.id = lmc.meta_category_id
+          join ai_images i on i.id = lmc.ai_image_id
+          where i.ai_video_id=@video_id
+      )a
+      group by 1,2,3,4
+    )x
+    group by 1,2,3
+    order by count(distinct ai_image_id);
