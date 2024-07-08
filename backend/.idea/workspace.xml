@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/MetaKeyImages.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
-    </list>
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -139,12 +132,28 @@
       <option name="project" value="LOCAL" />
       <updated>1719778008823</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="added a section of video-images that feature a category (and key and value) to the video label data response ( ...so we can present what category is most present across the scenes of a video)">
+      <created>1720447155029</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1720447155029</updated>
+    </task>
+    <task id="LOCAL-00003" summary="added a &quot;most frequent labels/categories across the images of a video&quot; query">
+      <created>1720447186363</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1720447186363</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)" />
-    <option name="LAST_COMMIT_MESSAGE" value="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)" />
+    <MESSAGE value="added a section of video-images that feature a category (and key and value) to the video label data response ( ...so we can present what category is most present across the scenes of a video)" />
+    <MESSAGE value="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
+    <option name="LAST_COMMIT_MESSAGE" value="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
