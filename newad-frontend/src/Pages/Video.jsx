@@ -118,11 +118,23 @@ function Video () {
       }
       showProgressbar();
       console.log("label images for video " + params.id);
-      // Note!: this requires the python server to be running!
       axios.post('http://localhost:8080/noi-server/api/labels/' + params.id).then((response) => {
         console.log(response.data);
         hideProgressbar();
       });
+    }
+
+    async function handleEmbeddingClick() {
+        if (Object.entries(videoData).length <= 0){
+          console.log("no videoData!");
+          return;
+        }
+        showProgressbar();
+        console.log("create embeddings for all images for video " + params.id);
+        axios.post('http://localhost:8080/noi-server/video-embeddings/' + params.id).then((response) => {
+          console.log(response.data);
+          hideProgressbar();
+        });
     }
 
     async function handleClick() {
@@ -191,6 +203,9 @@ function Video () {
             </div>
             <div className="card-button">
               <button onClick={async () => { await handleLabelClick();}}>Label All Images</button>
+            </div>
+            <div className="card-button">
+              <button onClick={async () => { await handleEmbeddingClick();}}>Create Embeddings for All Images</button>
             </div>
           </div>
           

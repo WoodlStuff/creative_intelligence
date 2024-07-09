@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;">
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
-    </list>
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
