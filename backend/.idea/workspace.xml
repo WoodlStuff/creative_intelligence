@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixed order by for images">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;">
       <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -161,7 +156,14 @@
       <option name="project" value="LOCAL" />
       <updated>1720448879459</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;">
+      <created>1720540723147</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1720540723147</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -169,7 +171,8 @@
     <MESSAGE value="added a section of video-images that feature a category (and key and value) to the video label data response ( ...so we can present what category is most present across the scenes of a video)" />
     <MESSAGE value="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
     <MESSAGE value="fixed order by for images" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed order by for images" />
+    <MESSAGE value="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

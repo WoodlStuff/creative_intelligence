@@ -32,7 +32,7 @@ function Video () {
             return (
                 props.videoData[0].orb_scenes.map((scene) => (
                     <tr key={scene.last_scene_frame}>
-                      <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
+                      <td className="image_thumb"><a id={scene.last_scene_frame} name={'frame-' + scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
                       <td>
                         <NavLink
                           to={image_path + scene.last_scene_image_id }

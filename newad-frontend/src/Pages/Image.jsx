@@ -12,8 +12,11 @@ function Image() {
   // const [currentVideoId, setCurrentVideoId] = useState();
 
   const [imageLabelData, setImageLabelData] = useState([]);
+  const [similarityData, setSimilarityData] = useState([]);
   const [imageAnnotationData, setImageAnnotationData] = useState([]);
   const [imageURL, setImageURL] = useState();
+  const [videoId, setVideoId] = useState();
+  const [videoFrameNumber, setVideoFrameNumber] = useState();
   
   const progress = document.getElementById('progressbar');
 
@@ -42,26 +45,27 @@ function Image() {
       let data = response.data; 
       setImageLabelData(data.categories);
       setImageAnnotationData(data.annotations);
+      
+      // todo call endpoint to create embeddings and send them to the vector db
+
       hideProgressbar();
     });
   }
 
   useEffect(() => {
-    let isCalled = false;
-    // Call the async function
     const fetchData = async (imageId) => {
-      // Perform async operations here
-      // call http endpoint and assign the resulting data to local array
       try {
         console.log("calling for image meta...")
         console.log(imageId);
         axios.get("http://localhost:8080/noi-server/categories/" + imageId).then((response) => {
           let data = response.data;
-          if (!isCalled) {
-            if (Object.entries(data).length >= 0) {
-              setImageURL(data.path)
-              setImageLabelData(data.categories);
-              setImageAnnotationData(data.annotations);
+          if (Object.entries(data).length >= 0) {
+            setImageURL(data.path)
+            setImageLabelData(data.categories);
+            setImageAnnotationData(data.annotations);
+            if(data.video_id != null){
+              setVideoId(data.video_id);
+              setVideoFrameNumber(data.video_frame_number);
             }
           }
         });
@@ -70,9 +74,25 @@ function Image() {
       }
     };
 
+    const fetchSimilarityData = async (imageId) => {
+      try {
+        console.log("calling for image similarity data ...")
+        console.log(imageId);
+        axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/image_objects?sameVideo=false").then((response) => {
+          let data = response.data;
+          if (Object.entries(data).length >= 0) {
+            setSimilarityData(data.results);
+          }
+        });
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     console.log({ params });
     fetchData(params.id);
-    return () => isCalled = true;
+    fetchSimilarityData(params.id);
   }, []);
 
   return (
@@ -84,6 +104,9 @@ function Image() {
         <div className="image_url">
           <span>{imageURL}</span>
         </div>
+        <div style={{paddingBottom: 10}}>
+          <span><label>Video Frame #</label><a href={'/video/' + videoId + "#frame-" + videoFrameNumber} >{videoFrameNumber}</a></span>
+        </div>
         <div className="card-button">
           <button onClick={async () => { await handleLabelClick();}}>Label Image</button>
         </div>
@@ -91,6 +114,30 @@ function Image() {
 
       <progress id='progressbar' value={null} hidden />
 
+      <div className="card">
+        <div className="card-header">
+          <h4>Similar Images in other videos</h4>
+        </div>
+        <div className="card-body">
+          <div className="table-responsive">
+            <table width="100%">
+              <tbody>
+                <tr>
+                {
+                  similarityData.map((image) => (
+                    <td key={image.image_id} className="image_thumb">
+                      <a id={image.image_id} name={image.frame_number} href={'/image/' + image.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } /></a>
+                      <div><span><label>Score:</label>{image.score}</span></div>
+                    </td>
+                  ))
+                }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
       <div className="card">
         <div className="card-header">
           <h3>Image Labels</h3>
