@@ -147,6 +147,13 @@ public class EmbeddingServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+
     /**
      * write response to a GET request.
      *
@@ -157,17 +164,19 @@ public class EmbeddingServlet extends HttpServlet {
     private void writeEmbeddingResponse(Map<Long, EmbeddingService.ImageEmbeddings> imageEmbeddings, HttpServletResponse resp) throws IOException {
         // we haven't written to the vector db, so we only have the raw input for that.
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
         PrintWriter out = resp.getWriter();
 
         JsonObject root = new JsonObject();
         JsonArray images = new JsonArray();
-        root.add("image-embeddings", images);
+        root.add("image_embeddings", images);
         for (Map.Entry<Long, EmbeddingService.ImageEmbeddings> entry : imageEmbeddings.entrySet()) {
             JsonObject emb = new JsonObject();
             images.add(emb);
             EmbeddingService.ImageEmbeddings embeddings = entry.getValue();
-            emb.addProperty("image-id", entry.getKey());
-            emb.addProperty("category-name", embeddings.getCategoryName());
+            emb.addProperty("image_id", entry.getKey());
+            emb.addProperty("category_name", embeddings.getCategoryName());
             emb.add("categories", embeddings.getCategories());
             emb.add("vectors", embeddings.getVectors());
         }
@@ -185,6 +194,8 @@ public class EmbeddingServlet extends HttpServlet {
      */
     private void writeResponse(Map<Long, Map<String, Integer>> upsertCounts, HttpServletResponse resp) throws IOException {
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
         PrintWriter out = resp.getWriter();
 
         JsonObject root = new JsonObject();
@@ -194,7 +205,7 @@ public class EmbeddingServlet extends HttpServlet {
             for (Map.Entry<String, Integer> entry : image.getValue().entrySet()) {
                 JsonObject count = new JsonObject();
                 a.add(count);
-                count.addProperty("image-id", image.getKey());
+                count.addProperty("image_id", image.getKey());
                 count.addProperty("category", entry.getKey());
                 count.addProperty("upsertCount", entry.getValue());
             }

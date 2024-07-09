@@ -82,6 +82,8 @@ public abstract class LabelService {
     public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName) {
         JsonObject i = new JsonObject();
         i.addProperty("path", image.getFilePath());
+        i.addProperty("video_frame_number", image.getVideoFrameNumber());
+        i.addProperty("video_id", image.getVideoId());
 
         // annotations
         JsonArray a = new JsonArray();

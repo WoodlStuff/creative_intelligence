@@ -6,12 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixed order by for images">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/MetaKeyImages.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/MetaKeyImages.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompts.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompts.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

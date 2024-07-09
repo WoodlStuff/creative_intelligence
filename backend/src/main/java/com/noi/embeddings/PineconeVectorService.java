@@ -184,8 +184,8 @@ public class PineconeVectorService extends VectorService {
         List<VectorMatch> vectorMatches = new ArrayList<>();
 
         String jsonResponse = FileTools.readToString(response.getEntity().getContent());
-        System.out.println("PineconeVestorService:httpResponse:" + response.getStatusLine().getStatusCode());
-        System.out.println("PineconeVestorService:httpResponse:" + jsonResponse);
+        System.out.println("PineconeVectorService:httpResponse:" + response.getStatusLine().getStatusCode());
+        System.out.println("PineconeVectorService:httpResponse:" + jsonResponse);
         if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
                 response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
             JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
@@ -235,12 +235,12 @@ public class PineconeVectorService extends VectorService {
         if (video != null) {
             JsonObject metaData = new JsonObject();
             v.add("metadata", metaData);
-            metaData.addProperty("video-id", video.getId());
-            metaData.addProperty("frame-number", image.getVideoFrameNumber());
+            metaData.addProperty("video_id", video.getId());
+            metaData.addProperty("frame_number", image.getVideoFrameNumber());
             double seconds = image.getVideoFrameNumber() / video.getFrameRate();
-            metaData.addProperty("frame-seconds", Math.round(seconds));
-            metaData.addProperty("video-frameCount", video.getFrameCount());
-            metaData.addProperty("video-seconds", video.getSeconds());
+            metaData.addProperty("frame_seconds", Math.round(seconds));
+            metaData.addProperty("video_frameCount", video.getFrameCount());
+            metaData.addProperty("video_seconds", video.getSeconds());
         }
 
         return root;
@@ -277,13 +277,18 @@ public class PineconeVectorService extends VectorService {
         //?? does this depend on weather or not we send a filter?
         root.addProperty("includeMetadata", true);
 
+        // if a video id is provided, we are looking for images not in this video (from other videos)!
         if (queryMeta.getVideoId() != null) {
             // "filter": {"genre": {"$in": ["comedy", "documentary", "drama"]}},
             JsonObject filter = new JsonObject();
             root.add("filter", filter);
             JsonObject filterClause = new JsonObject();
-            filterClause.addProperty("$ne", queryMeta.getVideoId());
-            filter.add("video-id", filterClause);
+            if (queryMeta.isSameVideo()) {
+                filterClause.addProperty("$eq", queryMeta.getVideoId());
+            } else {
+                filterClause.addProperty("$ne", queryMeta.getVideoId());
+            }
+            filter.add("video_id", filterClause);
         }
 
         return root;

@@ -48,10 +48,9 @@ public class VectorServlet extends HttpServlet {
             categoryName = pathTokens[1].trim();
         }
 
-        Long vId = null;
-        String videoId = req.getParameter("videoId");
-        if (videoId != null && !videoId.isEmpty()) {
-            vId = Long.valueOf(videoId.trim());
+        boolean sameVideo = false;
+        if (req.getParameter("sameVideo") != null) {
+            sameVideo = Boolean.valueOf(req.getParameter("sameVideo"));
         }
 
         Connection con = null;
@@ -67,7 +66,7 @@ public class VectorServlet extends HttpServlet {
 
                 // 2) use the namespace , the calculated vector, and the video id to query the topK matches
                 VectorService vectorService = VectorService.getService();
-                QueryMeta queryMeta = QueryMeta.create(vId);
+                QueryMeta queryMeta = QueryMeta.create(image.getVideoId(), sameVideo);
                 List<VectorMatch> matches = vectorService.querySimilarImages(embeddings, categoryName, queryMeta);
                 writeResponse(image, categoryName, queryMeta, matches, resp);
             }
@@ -81,16 +80,18 @@ public class VectorServlet extends HttpServlet {
 
     private void writeResponse(AiImage image, String categoryName, QueryMeta queryMeta, List<VectorMatch> matches, HttpServletResponse resp) throws IOException {
         resp.setContentType(ContentType.APPLICATION_JSON.toString());
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
         PrintWriter out = resp.getWriter();
 
         JsonObject root = new JsonObject();
         JsonObject q = new JsonObject();
         root.add("query", q);
 
-        q.addProperty("image-id", image.getId());
-        q.addProperty("category-name", categoryName);
+        q.addProperty("image_id", image.getId());
+        q.addProperty("category_name", categoryName);
         if (queryMeta != null) {
-            q.add("query-metadata", queryMeta.toJson());
+            q.add("query_metadata", queryMeta.toJson());
         }
 
         JsonArray r = new JsonArray();
@@ -99,10 +100,10 @@ public class VectorServlet extends HttpServlet {
         for (VectorMatch match : matches) {
             JsonObject m = new JsonObject();
             r.add(m);
-            m.addProperty("image-id", match.getId());
+            m.addProperty("image_id", match.getId());
             m.addProperty("score", match.getScore());
             //m.add("vector", match.getValues());
-            m.add("vector-metadata", match.getMeta());
+            m.add("vector_metadata", match.getMeta());
         }
 
         out.write(new Gson().toJson(root));
@@ -110,21 +111,9 @@ public class VectorServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Path path = Path.parse(req);
-        if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        System.out.println("POST:VectorServlet: " + path);
-
-        String[] pathTokens = path.getPathInfo().split("/");
-        if (pathTokens.length == 0) {
-            return;
-        }
-
-        // take an image id , a category name, and a vector, and store in the vector db index
-
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 }
