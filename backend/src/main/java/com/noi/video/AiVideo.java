@@ -1,5 +1,6 @@
 package com.noi.video;
 
+import com.noi.AiBrand;
 import com.noi.Status;
 import com.noi.image.AiImage;
 
@@ -13,16 +14,18 @@ public class AiVideo {
     private final double frameRate;
     private final int frameCount;
     private final Status status;
+    private final AiBrand brand;
 
-    private AiVideo(Long id, String url, double frameRate, int frameCount, Status status) {
+    private AiVideo(Long id, String url, double frameRate, int frameCount, Status status, AiBrand brand) {
         this.id = id;
         this.url = url;
         this.frameRate = frameRate;
         this.frameCount = frameCount;
         this.status = status;
+        this.brand = brand;
     }
 
-    public static AiVideo create(ResultSet rs) throws SQLException {
+    public static AiVideo create(ResultSet rs, AiBrand brand) throws SQLException {
         // id, video_url, frame_rate, frame_count, status
         Long id = rs.getLong("id");
         String url = rs.getString("video_url");
@@ -30,7 +33,7 @@ public class AiVideo {
         int frameCount = rs.getInt("frame_count");
         Status status = Status.parse(rs.getInt("status"));
 
-        return new AiVideo(id, url, frameRate, frameCount, status);
+        return new AiVideo(id, url, frameRate, frameCount, status, brand);
     }
 
     public Long getId() {
@@ -53,11 +56,16 @@ public class AiVideo {
         return status;
     }
 
+    public AiBrand getBrand() {
+        return brand;
+    }
+
     @Override
     public String toString() {
         return "AiVideo{" +
                 "id=" + id +
                 ", url='" + url + '\'' +
+                ", brand='" + brand + '\'' +
                 ", frameRate=" + frameRate +
                 ", frameCount=" + frameCount +
                 ", status=" + status +

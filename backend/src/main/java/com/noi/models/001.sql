@@ -517,6 +517,54 @@ CREATE TABLE `ai_upsert_requests` (
   KEY(model_name, uuid, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
+-- 20240710: add the concept of brands
+CREATE TABLE `ai_brand_types` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `status` tinyint default 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
+insert into ai_brand_types values(null, 'Personal', 1, now(), now());
+insert into ai_brand_types values(null, 'Product', 1, now(), now());
+insert into ai_brand_types values(null, 'Service', 1, now(), now());
+insert into ai_brand_types values(null, 'Retail', 1, now(), now());
+insert into ai_brand_types values(null, 'Cultural or Geographic', 1, now(), now());
+insert into ai_brand_types values(null, 'Corporate', 1, now(), now());
+insert into ai_brand_types values(null, 'Online', 1, now(), now());
+insert into ai_brand_types values(null, 'Offline', 1, now(), now());
+insert into ai_brand_types values(null, 'Performance', 1, now(), now());
+insert into ai_brand_types values(null, 'Luxury', 1, now(), now());
+insert into ai_brand_types values(null, 'Lifestyle', 1, now(), now());
+insert into ai_brand_types values(null, 'Experience', 1, now(), now());
+insert into ai_brand_types values(null, 'Event', 1, now(), now());
+insert into ai_brand_types values(null, 'Media', 1, now(), now());
+insert into ai_brand_types values(null, 'Consumer Electronics', 1, now(), now());
+
+CREATE TABLE `ai_brands` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `brand_type_id` bigint NULL,
+  `status` tinyint default 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`),
+  FOREIGN KEY(brand_type_id) references ai_brand_types(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
+insert into ai_brands values(null, 'Aceable', null, 1, now(), now());
+insert into ai_brands values(null, 'Apple', (select id from ai_brand_types where name='Consumer Electronics'), 1, now(), now());
+
+-- videos and images can be part of a brand
+alter table ai_videos add column ai_brand_id bigint NULL after frame_count;
+alter table ai_videos add foreign key (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT;
+alter table ai_images add column ai_brand_id bigint NULL after is_video_scene_snap;
+alter table ai_images add foreign key (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT;
+-- end: 20240710
+
+
 -- =======================================
 -- reset schema
 -- =======================================

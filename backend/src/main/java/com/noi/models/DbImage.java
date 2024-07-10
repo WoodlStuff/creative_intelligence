@@ -1,5 +1,6 @@
 package com.noi.models;
 
+import com.noi.AiBrand;
 import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DbImage extends Model {
-    private static final String COLUMNS = "i.id, p.id prompt_id, i.image_url, rp.prompt revised_prompt, i.status, i.ai_video_id, i.video_frame_number, i.is_new_video_scene, i.is_video_scene_snap";
+    private static final String COLUMNS = "i.id, p.id prompt_id, i.image_url, i.ai_brand_id, rp.prompt revised_prompt, i.status, i.ai_video_id, i.video_frame_number, i.is_new_video_scene, i.is_video_scene_snap";
 
     public static void insert(Connection con, AiImageRequest request, AiImage image) throws SQLException {
         // insert image details , and link it to the prompt the image came from
@@ -157,8 +158,7 @@ public class DbImage extends Model {
             stmt.setInt(1, status.getStatus());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                images.add(AiImage.create(rs, prompt));
+                images.add(assembleImage(con, rs));
             }
         } finally {
             close(stmt);
@@ -197,8 +197,7 @@ public class DbImage extends Model {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                return AiImage.create(rs, prompt);
+                return assembleImage(con, rs);
             }
         } finally {
             close(stmt);
@@ -216,8 +215,7 @@ public class DbImage extends Model {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                return AiImage.create(rs, prompt);
+                return assembleImage(con, rs);
             }
         } finally {
             close(stmt);
@@ -254,14 +252,23 @@ public class DbImage extends Model {
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                return AiImage.create(rs, prompt);
+                return assembleImage(con, rs);
             }
         } finally {
             close(stmt);
         }
 
         return null;
+    }
+
+    private static AiImage assembleImage(Connection con, ResultSet rs) throws SQLException {
+        AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
+        AiBrand brand = null;
+        if (rs.getString("ai_brand_id") != null) {
+            Long brandId = rs.getLong("ai_brand_id");
+            brand = DbBrand.find(con, brandId);
+        }
+        return AiImage.create(rs, prompt, brand);
     }
 
     /**
@@ -312,8 +319,7 @@ public class DbImage extends Model {
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                images.add(AiImage.create(rs, prompt));
+                images.add(assembleImage(con, rs));
             }
         } finally {
             close(stmt);
@@ -418,8 +424,7 @@ public class DbImage extends Model {
             stmt.setLong(1, videoId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                images.add(AiImage.create(rs, prompt));
+                images.add(assembleImage(con, rs));
             }
 
         } finally {
@@ -445,8 +450,7 @@ public class DbImage extends Model {
             stmt.setLong(1, videoId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("prompt_id"));
-                images.add(AiImage.create(rs, prompt));
+                images.add(assembleImage(con, rs));
             }
         } finally {
             close(stmt);

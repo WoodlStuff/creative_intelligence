@@ -67,12 +67,6 @@ public class CategoryServlet extends BaseControllerServlet {
                 throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>");
             }
             imgId = Long.valueOf(imageId);
-//        } else {
-//            String imageUrl = req.getParameter("image_url");
-//            AiImage image = DbImage.find(imageUrl);
-//            if (image != null) {
-//                imgId = image.getId();
-//            }
         }
 
         if (pathTokens.length > 1) {

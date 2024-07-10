@@ -603,7 +603,9 @@ public class NoiServlet extends BaseControllerServlet {
             i.addProperty("frame_count", video.getFrameCount());
             i.addProperty("seconds", video.getSeconds());
             i.addProperty("status", video.getStatus().getName());
-
+            if (video.getBrand() != null) {
+                i.addProperty("brand", video.getBrand().getName());
+            }
             addVideoScenes("orb", localVideoScenes.get(video), i);
             addVideoScenes("llm", llmVideoScenes.get(video), i);
 

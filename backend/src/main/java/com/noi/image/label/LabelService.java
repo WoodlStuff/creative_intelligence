@@ -84,7 +84,9 @@ public abstract class LabelService {
         i.addProperty("path", image.getFilePath());
         i.addProperty("video_frame_number", image.getVideoFrameNumber());
         i.addProperty("video_id", image.getVideoId());
-
+        if (image.getBrand() != null) {
+            i.addProperty("brand", image.getBrand().getName());
+        }
         // annotations
         JsonArray a = new JsonArray();
         i.add("annotations", a);

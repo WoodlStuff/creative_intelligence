@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiBrand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbBrand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -76,6 +91,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.noi.models" />
       <recent name="com.noi.language" />
       <recent name="com.noi.embeddings" />
       <recent name="com.noi.image" />
@@ -176,7 +192,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java</url>
-          <line>845</line>
+          <line>847</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
