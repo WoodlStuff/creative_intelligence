@@ -156,13 +156,11 @@ function Story() {
   }
 
   useEffect(() => {
-    // let isCalled = false;
     // Call the async function
     const fetchData = async (videoId) => {
       // Perform async operations here
       // call http endpoint and assign the resulting data to local array
       try {
-        // if (!isCalled) {
           console.log("calling for video story data...")
           console.log(videoId);
           axios.get("http://localhost:8080/noi-server/api/video-story/" + videoId).then((response) => {
@@ -172,7 +170,6 @@ function Story() {
               // isCalled = true;
             }
         });
-      // }
     } catch (error) {
         console.error(error);
       }
@@ -180,7 +177,6 @@ function Story() {
 
     console.log({ params });
     fetchData(params.id);
-    // return () => isCalled = true;
   }, []);
 
   return (

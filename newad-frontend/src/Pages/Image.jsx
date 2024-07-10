@@ -8,15 +8,13 @@ import { NavLink, useParams } from "react-router-dom";
 function Image() {
   const params = useParams();
 
-  // const [currentImageId, setCurrentImageId] = useState();
-  // const [currentVideoId, setCurrentVideoId] = useState();
-
   const [imageLabelData, setImageLabelData] = useState([]);
   const [similarityData, setSimilarityData] = useState([]);
   const [imageAnnotationData, setImageAnnotationData] = useState([]);
   const [imageURL, setImageURL] = useState();
   const [videoId, setVideoId] = useState();
   const [videoFrameNumber, setVideoFrameNumber] = useState();
+  const [brand, setBrand] = useState();
   
   const progress = document.getElementById('progressbar');
 
@@ -67,6 +65,9 @@ function Image() {
               setVideoId(data.video_id);
               setVideoFrameNumber(data.video_frame_number);
             }
+            if(data.brand != null){
+              setBrand(data.brand);
+            }
           }
         });
       } catch (error) {
@@ -103,6 +104,9 @@ function Image() {
         </div>
         <div className="image_url">
           <span>{imageURL}</span>
+        </div>
+        <div>
+        <span><label>Brand:</label>{brand}</span>
         </div>
         <div style={{paddingBottom: 10}}>
           <span><label>Video Frame #</label><a href={'/video/' + videoId + "#frame-" + videoFrameNumber} >{videoFrameNumber}</a></span>

@@ -221,6 +221,7 @@ function Video () {
                   <thead>
                     <tr>
                       <td>URL</td>
+                      <td>Brand</td>
                       <td>Frame Rate</td>
                       <td>Frame Count</td>
                       <td>Length (s)</td>
@@ -233,6 +234,9 @@ function Video () {
                         <tr key={video.url}>
                           <td>
                             {video.url}
+                          </td>
+                          <td>
+                            {video.brand}
                           </td>
                           <td>
                             {video.frame_rate}
