@@ -84,14 +84,21 @@ public class DbImage extends Model {
         return insert(con, null, 0, url);
     }
 
-    public static AiImage insert(Connection con, Long videoId, int frame, String url) throws SQLException {
+    public static AiImage insert(Connection con, AiVideo video, int frame, String url) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("insert into ai_images(ai_video_id, video_frame_number, image_url, status, created_at, updated_at) values(?,?,?, ?, now(), now())");
-            if (videoId != null) {
-                stmt.setLong(1, videoId);
+            stmt = con.prepareStatement("insert ignore into ai_images(ai_video_id, video_frame_number, image_url, ai_brand_id, status, created_at, updated_at) values(?,?,?,?,?, now(), now())");
+            if (video != null) {
+                stmt.setLong(1, video.getId());
+                if(video.getBrand() != null) {
+                    stmt.setLong(4, video.getBrand().getId());
+                }
+                else {
+                    stmt.setString(4, null);
+                }
             } else {
                 stmt.setString(1, null);
+                stmt.setString(4, null);
             }
 
             if (frame >= 0) {
@@ -101,10 +108,10 @@ public class DbImage extends Model {
             }
 
             stmt.setString(3, url);
-            stmt.setInt(4, Status.NEW.getStatus());
+            stmt.setInt(5, Status.NEW.getStatus());
             Long id = executeWithLastId(stmt);
             if (id > 0L) {
-                return AiImage.create(id, videoId, frame, url, Status.NEW);
+                return AiImage.create(id, video, frame, url, Status.NEW);
             }
         } finally {
             close(stmt);
@@ -268,7 +275,8 @@ public class DbImage extends Model {
             Long brandId = rs.getLong("ai_brand_id");
             brand = DbBrand.find(con, brandId);
         }
-        return AiImage.create(rs, prompt, brand);
+        AiVideo video = DbVideo.find(con, rs.getLong("ai_video_id"));
+        return AiImage.create(rs, video, prompt, brand);
     }
 
     /**
@@ -371,13 +379,13 @@ public class DbImage extends Model {
         return insert(con, path);
     }
 
-    public static AiImage ensure(Connection con, Long videoId, int frame, String path) throws SQLException {
-        Long id = exists(con, videoId, frame);
+    public static AiImage ensure(Connection con, AiVideo video, int frame, String path) throws SQLException {
+        Long id = exists(con, video.getId(), frame);
         if (id != null) {
             return find(con, id);
         }
 
-        return insert(con, videoId, frame, path);
+        return insert(con, video, frame, path);
     }
 
     public static List<AiImage> findVideoScenes(Long videoId) throws SQLException, NamingException {
@@ -511,21 +519,32 @@ public class DbImage extends Model {
         return scenes;
     }
 
-    public static void createOrUpdate(Connection con, Long videoId, int frame, String url, boolean isNewScene, boolean isSceneSnap) throws SQLException {
+    public static void createOrUpdate(Connection con, AiVideo video, int frame, String url, boolean isNewScene, boolean isSceneSnap) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("insert into ai_images(image_url, status, ai_video_id, video_frame_number, is_new_video_scene, is_video_scene_snap, created_at, updated_at) values(?,?,?,?,?,?,now(),now()) ON DUPLICATE KEY UPDATE updated_at=now(), image_url=?, status=?, is_new_video_scene=?, is_video_scene_snap=?");
+            stmt = con.prepareStatement("insert into ai_images(image_url, status, ai_video_id, ai_brand_id, video_frame_number, is_new_video_scene, is_video_scene_snap, created_at, updated_at) values(?,?,?,?,?,?,?,now(),now()) ON DUPLICATE KEY UPDATE updated_at=now(), image_url=?, status=?, is_new_video_scene=?, is_video_scene_snap=?, ai_brand_id=?");
             stmt.setString(1, url);
             stmt.setInt(2, Status.NEW.getStatus());
-            stmt.setLong(3, videoId);
-            stmt.setInt(4, frame);
-            stmt.setBoolean(5, isNewScene);
-            stmt.setBoolean(6, isSceneSnap);
+            stmt.setLong(3, video.getId());
 
-            stmt.setString(7, url);
-            stmt.setInt(8, Status.NEW.getStatus());
-            stmt.setBoolean(9, isNewScene);
-            stmt.setBoolean(10, isSceneSnap);
+            if (video.getBrand() != null) {
+                stmt.setLong(4, video.getBrand().getId());
+            } else {
+                stmt.setString(4, null);
+            }
+            stmt.setInt(5, frame);
+            stmt.setBoolean(6, isNewScene);
+            stmt.setBoolean(7, isSceneSnap);
+
+            stmt.setString(8, url);
+            stmt.setInt(9, Status.NEW.getStatus());
+            stmt.setBoolean(10, isNewScene);
+            stmt.setBoolean(11, isSceneSnap);
+            if (video.getBrand() != null) {
+                stmt.setLong(12, video.getBrand().getId());
+            } else {
+                stmt.setString(12, null);
+            }
             stmt.executeUpdate();
         } finally {
             close(stmt);

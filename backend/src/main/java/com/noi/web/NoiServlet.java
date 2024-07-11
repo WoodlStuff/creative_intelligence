@@ -1024,7 +1024,7 @@ public class NoiServlet extends BaseControllerServlet {
                 double fps = JsonTools.getAsDouble(videoLabels, "frames_per_second");
 
                 // update the ai_videos record for this video
-                DbVideo.update(con, videoId, frames, fps);
+                AiVideo video = DbVideo.update(con, videoId, frames, fps);
 
                 // read the raw scored scene changes and persist the frames as ai_images
                 JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");
@@ -1032,12 +1032,12 @@ public class NoiServlet extends BaseControllerServlet {
                     JsonObject score = scores.get(i).getAsJsonObject();
                     int frame = JsonTools.getAsInt(score, "frame");
                     String url = JsonTools.getAsString(score, "image_url");
-                    DbImage.createOrUpdate(con, videoId, frame, url, true, false);
+                    DbImage.createOrUpdate(con, video, frame, url, true, false);
                     Long imageId = DbImage.exists(con, videoId, frame);
 
                     int frameBefore = JsonTools.getAsInt(score, "frame_before");
                     String urlBefore = JsonTools.getAsString(score, "image_url_before");
-                    Long imageIdBefore = DbImage.ensure(con, videoId, frameBefore, urlBefore).getId();
+                    Long imageIdBefore = DbImage.ensure(con, video, frameBefore, urlBefore).getId();
 
                     double similarity = JsonTools.getAsDouble(score, "similarity_score");
 

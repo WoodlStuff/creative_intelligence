@@ -46,6 +46,10 @@ public class DbVideo extends Model {
     }
 
     public static AiVideo find(Connection con, Long id) throws SQLException {
+        if (id == null || id <= 0L) {
+            return null;
+        }
+
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("select " + COLUMNS + " from ai_videos where id=?");
@@ -70,7 +74,7 @@ public class DbVideo extends Model {
         return AiVideo.create(rs, brand);
     }
 
-    public static void update(Connection con, Long videoId, int frames, double fps) throws SQLException {
+    public static AiVideo update(Connection con, Long videoId, int frames, double fps) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("update ai_videos set frame_count=?, frame_rate=?, updated_at=now() where id=?");
@@ -78,6 +82,7 @@ public class DbVideo extends Model {
             stmt.setDouble(2, fps);
             stmt.setLong(3, videoId);
             stmt.executeUpdate();
+            return find(con, videoId);
         } finally {
             close(stmt);
         }

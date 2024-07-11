@@ -12,6 +12,7 @@ import com.noi.models.DbRequest;
 import com.noi.models.Model;
 import com.noi.requests.ImageLabelResponse;
 import com.noi.tools.FileTools;
+import com.noi.video.AiVideo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,12 +37,16 @@ public class AiImage {
         this(id, request != null ? request.getPrompt() : null, url, revisedPrompt, null, null, false, false, Status.ACTIVE, null);
     }
 
-    private AiImage(Long id, AiPrompt prompt, String url, String revisedPrompt, Long videoId, Integer videoFrameNumber, boolean isNewVideoScene, boolean isVideoSceneSnap, Status status, AiBrand brand) {
+    private AiImage(Long id, AiPrompt prompt, String url, String revisedPrompt, AiVideo video, Integer videoFrameNumber, boolean isNewVideoScene, boolean isVideoSceneSnap, Status status, AiBrand brand) {
         this.id = id;
         this.prompt = prompt;
         this.url = url;
         this.revisedPrompt = revisedPrompt;
-        this.videoId = videoId;
+        if (video != null) {
+            this.videoId = video.getId();
+        } else {
+            this.videoId = null;
+        }
         this.videoFrameNumber = videoFrameNumber;
         this.newVideoScene = isNewVideoScene;
         this.videoSceneSnap = isVideoSceneSnap;
@@ -53,34 +58,29 @@ public class AiImage {
         return new AiImage(id, prompt, url, revisedPrompt, null, null, false, false, Status.ACTIVE, null);
     }
 
-    public static AiImage create(Long id, Long videId, int frame, String url, Status status) {
-        return new AiImage(id, null, url, null, videId, frame, false, false, status, null);
+    public static AiImage create(Long id, AiVideo video, int frame, String url, Status status) {
+        AiBrand brand = null;
+        if (video != null) {
+            brand = video.getBrand();
+        }
+        return new AiImage(id, null, url, null, video, frame, false, false, status, brand);
     }
 
     public static AiImage create(AiImageRequest request, String url, String revisedPrompt) {
         return new AiImage(null, request, url, revisedPrompt);
     }
 
-    public static AiImage create(ResultSet rs, AiPrompt prompt, AiBrand brand) throws SQLException {
+    public static AiImage create(ResultSet rs, AiVideo video, AiPrompt prompt, AiBrand brand) throws SQLException {
         Long id = rs.getLong("id");
         String url = rs.getString("image_url");
         String revisedPrompt = rs.getString("revised_prompt");
         Status status = Status.parse(rs.getInt("status"));
-
-        Long videoId = rs.getLong("ai_video_id");
-        if (videoId != null && videoId <= 0L) {
-            videoId = null;
-        }
-
         Integer videoFrameNumber = rs.getInt("video_frame_number");
-        if (videoFrameNumber != null && videoFrameNumber <= 0) {
-            videoFrameNumber = null;
-        }
 
         boolean isNewVideoScene = rs.getBoolean("is_new_video_scene");
         boolean isVideoSceneSnap = rs.getBoolean("is_video_scene_snap");
 
-        return new AiImage(id, prompt, url, revisedPrompt, videoId, videoFrameNumber, isNewVideoScene, isVideoSceneSnap, status, brand);
+        return new AiImage(id, prompt, url, revisedPrompt, video, videoFrameNumber, isNewVideoScene, isVideoSceneSnap, status, brand);
     }
 
     public String getUrl() {
