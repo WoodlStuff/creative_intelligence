@@ -434,7 +434,7 @@ CREATE TABLE `ai_image_label_meta_objects` (
   `color` varchar(255) NULL,
   `background_color` varchar(50) NULL,
   `brand` varchar(255) NULL,
-  `gender` varchar(10) NULL,
+  `gender` varchar(15) NULL,
   `status` tinyint default 1,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,

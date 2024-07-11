@@ -113,18 +113,10 @@ public class CategoryServlet extends BaseControllerServlet {
         System.out.println("POST:CategoryServlet: " + path);
 
         String[] pathTokens = path.getPathInfo().split("/");
-        if (pathTokens.length == 0) {
+        if (pathTokens.length == 0 && req.getParameter("image_url") == null) {
             return;
         }
-
-        if (pathTokens.length <= 1) {
-            throw new IllegalArgumentException("image id param is missing!");
-        }
-
-        // send request to label the images of a specific request (or prompt within a request ... )
-        if (pathTokens.length <= 1 && req.getParameter("image_url") == null) {
-            throw new IllegalArgumentException("image id or image_url param is missing!");
-        }
+        System.out.println("CategoryServlet: pathToken length=" + pathTokens.length);
 
         try {
             handleSingleImageLabelRequest(req, resp, path, pathTokens);
@@ -141,16 +133,16 @@ public class CategoryServlet extends BaseControllerServlet {
         Long imgId = null;
         AiPrompt prompt = null;
 
-        if (pathTokens.length > 1) {
-            String imageId = pathTokens[1].trim();
+        if (pathTokens.length >= 1) {
+            String imageId = pathTokens[0].trim();
             if (imageId.isEmpty()) {
                 throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>/<prompt-id>");
             }
             imgId = Long.valueOf(imageId);
 
-            if (pathTokens.length > 2) {
+            if (pathTokens.length > 1) {
                 // todo: revisit! (case: no id in url, but type and prompt as posted json)
-                prompt = handlePrompt(req, path, 2);
+                prompt = handlePrompt(req, path, 1);
             }
         } else {
             String imageUrl = req.getParameter("image_url");
