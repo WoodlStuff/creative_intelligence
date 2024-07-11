@@ -36,9 +36,9 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         return SimpleCookie(self.headers.get("Cookie"))
         
     def get_response(self):
-        
         postData = self.post_data.decode("utf-8")
         jsonData = json.loads(postData)
+
         videoName = jsonData['video_name']
         
         path = '/Users/martin/work/tmp/ai-data/videos/'
@@ -49,44 +49,69 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         if 'refresh' in jsonData:
             refresh = jsonData['refresh']
 
+        callLLM = False
+        if 'llm' in jsonData:
+            callLLM = jsonData['llm']
+
         verbose = False
         if 'verbose' in jsonData:
             verbose = jsonData['verbose']
 
+        # TODO: make those params!
+        maxDistanceForSimilarity=60 
+        scoreThreshold=.80
+
+        llmSceneChanges = []
+        sceneChanges = []
+        totalFrames = 0
+        fps = 0.0
+
         if refresh:
-            [sceneChanges, labelSceneChanges] = video_extractor.scoreFramesAndLabelSceneChanges(path, videoName, verbose=verbose)
+            # split the calls!
+            if callLLM:
+                scoredMetaPath = os.path.join(path, videoName, videoName + "-scenes-orb.json")
+                with open(scoredMetaPath, 'r') as f:
+                    orbScores = json.loads(f.read())
+                    sceneChanges = orbScores['scored_scene_changes']
+
+                llmSceneChanges = video_extractor.labelSceneChanges(sceneChanges, path, videoName)
+            else:
+                [sceneChanges, totalFrames, fps] = video_extractor.process_video3(path, videoName,
+                                                    max_distance_for_similarity=maxDistanceForSimilarity,
+                                                    scene_change_threshold=scoreThreshold, verbose=verbose)
 
         # file at <folder>/<video_name>/<video_name>_scenes.json
-        metaPath = os.path.join(path, videoName, videoName + "-scenes.json")
+        if callLLM:
+            metaPath = os.path.join(path, videoName, videoName + "-scenes-llm.json")
+        else:
+            metaPath = os.path.join(path, videoName, videoName + "-scenes-orb.json")
         with open(metaPath, 'r') as f:
             jsonResponse = json.loads(f.read())
-    
-        # extract audio from the video
-        # if refresh:
-        video_extractor.extractAudio(path, videoName)
-        
-        audio_path = os.path.join(path, videoName, videoName + '.mp3')
-        jsonResponse.update({"audio_path": audio_path})
 
-        # ask the model to transcribe the sound , and create a summary for it
-        if refresh:
+        if refresh and callLLM:
+            # extract audio from the video
+            video_extractor.extractAudio(path, videoName)
+            
+            audio_path = os.path.join(path, videoName, videoName + '.mp3')
+            jsonResponse.update({"audio_path": audio_path})
+
+            # ask the model to transcribe the sound , and create a summary for it
             openAI_caller.transcribeVideo(path, videoName)
 
-        # read transcripts and add them to the json response
-        textPath = os.path.join(path, videoName, videoName + '_transcript.json')
-        textSummaryPath = os.path.join(path, videoName, videoName + '_transcript_summary.json')
-        jsonResponse.update({"audio_transcript": textPath})
-        jsonResponse.update({"audio_summary": textSummaryPath})
+            # read transcripts and add them to the json response
+            textPath = os.path.join(path, videoName, videoName + '_transcript.json')
+            textSummaryPath = os.path.join(path, videoName, videoName + '_transcript_summary.json')
+            jsonResponse.update({"audio_transcript": textPath})
+            jsonResponse.update({"audio_summary": textSummaryPath})
 
-        # summarize the video based on a set of scene images
-        # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
-        # if we have more than max_scenes_for_summary scenes, then filter the list by score until we get to no more than max_scenes_for_summary
-        max_scenes_for_summary = 16
-        if refresh: 
-            video_extractor.summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary)
+            # summarize the video based on a set of scene images
+            # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
+            # if we have more than max_scenes_for_summary scenes, then filter the list by score until we get to no more than max_scenes_for_summary
+            max_scenes_for_summary = 16
+            video_extractor.summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary)
         
-        summaryPath = os.path.join(path, videoName, videoName + '_scene_summary.json')
-        jsonResponse.update({"video_summary": summaryPath})
+            summaryPath = os.path.join(path, videoName, videoName + '_scene_summary.json')
+            jsonResponse.update({"video_summary": summaryPath})
         
         return json.dumps(jsonResponse)
 

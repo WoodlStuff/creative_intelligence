@@ -129,6 +129,7 @@ def process_video2(path, videoName, frames_to_skip=0, max_distance_for_similarit
 # look for scene changes in this video, and store first scene frame(s) as jpg file(s)
 # returns a dict with format: {'frame': 99, 'image_url': '/local file URL', 'similarity_score': 0.88}
 def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarity=70, scene_change_threshold=.75, verbose=False):
+    response = {}
     ensureVideoFolder(path, videoName)
     sceneChangeImages = []
     videoPath = os.path.join(path, videoName + '.mp4')
@@ -198,6 +199,20 @@ def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarit
     if os.path.exists(seekImageURL):
         os.remove(seekImageURL)
     print(f"Extracted {len(sceneChangeImages)} scene changes")
+
+    response['video_length_seconds'] = int(totalFrames / fps)
+    response['total_frames'] = totalFrames
+    response['frames_per_second'] = fps
+    response['score_threshold'] = scene_change_threshold
+    response['max_distance_for_similarity'] = max_distance_for_similarity
+    response['scored_scene_changes'] = sceneChangeImages
+
+    # write this to file
+    metaPath = os.path.join(path, videoName, videoName + "-scenes-orb.json")
+    with open(metaPath, 'w') as f:
+        json.dump(response, f)
+        f.close()
+
     return [sceneChangeImages, totalFrames, fps]
 
 def saveFrameToFile(path, videoName, video, frameNumber):
@@ -267,17 +282,17 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
     frame_new = sceneChanges[position]['frame']
 
     [same_scene, explanation] = openAI_caller.labelForSameVideoScene(url_old, url_new)
-    return [same_scene, frame_old, frame_new, explanation, url_old]
+    return [same_scene, frame_old, frame_new, explanation]
 
 
 # summarize the video based on a set of scenes we send.
-# LabelSceneChanges trump the raw sceneChanges (i.e. if there are enough of them, we use those over the raw)
+# llmSceneChanges trump the raw sceneChanges (i.e. if there are enough of them, we use those over the raw)
 # if there are too many scenes (count > max_scenes_for_summary), we filter them by score, lowering the threshold until we get to the max count
-def summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary):
+def summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary):
     scoreFilterThreshold = 0.25
-    scenes = labelSceneChanges
-    if len(labelSceneChanges) <= 2 and len(sceneChanges) > 0:
-        print(f"WARNING: not enough labeled scene changes {len(labelSceneChanges)}: attempting a fallback ...")
+    scenes = llmSceneChanges
+    if len(llmSceneChanges) <= 2 and len(sceneChanges) > 0:
+        print(f"WARNING: not enough labeled scene changes {len(llmSceneChanges)}: attempting a fallback ...")
         scenes = sceneChanges
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes
     while len(scenes) > max_scenes_for_summary:
@@ -296,18 +311,27 @@ def downloadYouTubeVideo(videoURL, outputPath, fileName):
 
 
 def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60, scoreThreshold=.80, verbose=False):
-    response = {}
-    labelSceneChanges = []
-    labelSceneRejections = []
     [sceneChanges, totalFrames, fps] = process_video3(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
+
+    llmSceneChanges = labelSceneChanges(sceneChanges, path, videoName)
+
+    return [sceneChanges, llmSceneChanges]
+
+def labelSceneChanges(sceneChanges, path, videoName):
+    response = {}
+    llmSceneChanges = []
+    llmSceneRejections = []
     
+    if len(sceneChanges) <= 0:
+        return llmSceneChanges;
+
     for counter, sceneChange in enumerate(sceneChanges):
         try:
             # generate uuid for this request
             uid = uuid.uuid4()
-            [is_same_scene, frame_old, frame_new, explanation, url_old] = labelForSameVideoScene(openAI_caller, sceneChanges, counter)
+            [is_same_scene, frame_old, frame_new, explanation] = labelForSameVideoScene(openAI_caller, sceneChanges, counter)
             if sceneChange['frame'] != frame_new:
                 print(f"ERROR: sceneChange['frame'] is not equal to frame_new: {sceneChange['frame']} <-> {frame_new}")
 
@@ -315,40 +339,36 @@ def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60
             # labeledImageScore = sift_sim2(sceneChange['image_url'], url_old, maxDistanceForSimilarity)
 
             label_dict = {'uuid': str(uid), 'frame': frame_new, 'frame_before': frame_old, 'image_url': sceneChange['image_url'],
-                            'image_url_before': url_old, 'explanation': explanation, 'similarity_score': sceneChange['similarity_score']}
+                            'image_url_before': sceneChange['image_url_before'], 'explanation': explanation, 'similarity_score': sceneChange['similarity_score']}
             print(
                 f"{counter + 1}/{len(sceneChanges)}: label found scene change from frame {frame_old} to {frame_new}? {not is_same_scene}")
             if not is_same_scene:
                 # the model thinks this is a new scene!
                 print(f"{counter + 1}/{len(sceneChanges)}: frame {sceneChange['frame']}: {explanation}")
-                labelSceneChanges.append(label_dict)
+                llmSceneChanges.append(label_dict)
             else:
-                labelSceneRejections.append(label_dict)
+                llmSceneRejections.append(label_dict)
         except Exception as e:
             print(f"error labeling for frame={sceneChange['frame']}: {sceneChange['image_url']}")
             print(e)
-            labelSceneChanges.append(
-                {'frame': sceneChange['frame'], 'image_url': sceneChange['image_url'],
+            llmSceneChanges.append(
+                {'frame': sceneChange['frame'], 'image_url': sceneChange['image_url'], 'frame_before': sceneChange['frame_before'], 'image_url_before': sceneChange['image_url_before'],
                 'explanation': 'fallback: encountered labeling error for this frame!', 'similarity_score': sceneChange['similarity_score']})
     
     response["same_scene_prompt_user"] = openAI_caller.USER_PROMPT
     response["same_scene_prompt_system"] = openAI_caller.SYSTEM_PROMPT
     response["same_scene_model"] = openAI_caller.MODEL_NAME
 
-    response['video_length_seconds'] = int(totalFrames / fps)
-    response['total_frames'] = totalFrames
-    response['frames_per_second'] = fps
-    response['score_threshold'] = scoreThreshold
-    response['max_distance_for_similarity'] = maxDistanceForSimilarity
-    response['labeled_changes'] = labelSceneChanges
-    response['labeled_rejections'] = labelSceneRejections
-    response['scored_scene_changes'] = sceneChanges
+    response['labeled_changes'] = llmSceneChanges
+    response['labeled_rejections'] = llmSceneRejections
 
-    metaPath = os.path.join(path, videoName, videoName + "-scenes.json")
+    # write llm label responses to scenes meta file
+    metaPath = os.path.join(path, videoName, videoName + "-scenes-llm.json")
     with open(metaPath, 'w') as f:
         json.dump(response, f)
         f.close()
-    return [sceneChanges, labelSceneChanges]
+    
+    return llmSceneChanges
 
 def main():
     print("extracting video details ...")
@@ -386,7 +406,7 @@ def main():
 
 
     # get a list of first images of a new scene in the video
-    # [sceneChanges, labelSceneChanges] = scoreFramesAndLabelSceneChanges(path, videoName,
+    # [sceneChanges, llmSceneChanges] = scoreFramesAndLabelSceneChanges(path, videoName,
     #                                                                     maxDistanceForSimilarity=maxDistanceForSimilarity,
     #                                                                     scoreThreshold=scoreThreshold)
     # extractAudio(path, videoName)
@@ -395,7 +415,7 @@ def main():
     # summarize the video based on a set of scene images
     # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
     # max_scenes_for_summary = 16
-    # summarizeVideo(path, videoName, sceneChanges, labelSceneChanges, max_scenes_for_summary)
+    # summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary)
 
 
 # usage:

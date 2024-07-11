@@ -121,6 +121,7 @@ def videoSummaryURL(sceneChanges, folderPath, videoName, model=MODEL_NAME):
     for sceneChange in sceneChanges:
         base64Frames.append(imageURLToBase64String(sceneChange['image_url']))
 
+    print(f"done summarizing scenes for {videoName}")
     return videoSummary(sceneChanges, base64Frames, folderPath, videoName, model)
 
 def imageURLToBase64String(image_url):

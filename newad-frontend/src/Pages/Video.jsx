@@ -67,8 +67,15 @@ function Video () {
 
       const LLMVideoScenes = (props) => {
         if(props.hasScenes == true){
-            return (
-                props.videoData[0].llm_scenes.map((scene) => (
+          var scenes = props.videoData[0].llm_scenes 
+          var isLLM = true
+          if(Object.entries(scenes).length <= 0){
+            scenes = props.videoData[0].orb_scenes
+            isLLM = false
+          }
+
+          return (
+              scenes.map((scene) => (
                     <tr key={scene.last_scene_image_id}>
                       <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
                       <td>
@@ -98,7 +105,7 @@ function Video () {
                       </td>
                       <td className="image_checkbox">
                         <div className="tooltip-wrap">
-                          <Checkbox value={scene.is_new_video_scene}/>
+                          <Checkbox value={scene.is_new_video_scene && isLLM}/>
                            <div className="tooltip-content">
                             {scene.explanation}
                            </div> 
@@ -147,8 +154,8 @@ function Video () {
       console.log("process video " + params.id);
       console.log("process video " + videoData[0].name);
       // curl -v -X POST http://localhost:8000/video -d '{"video_name": "big_buck_bunny", "refresh": false}'
-      let postData = {"video_name": videoData[0].name, "refresh": true}
-      // Note!: this requires the python server to be running!
+      var postData = {"video_name": videoData[0].name, "refresh": true}
+      // Note!: this requires the python server to be running (on port 8000)!
       axios.post('http://localhost:8000/video', postData).then((response) => {
         console.log(response.data);
         let videoJson = response.data;
@@ -157,11 +164,26 @@ function Video () {
             // we posted the json to be parsed and written into the db, now what? 
             let data = sqlResponse.data;
             setVideoData(data.videos);
-            hideProgressbar();
+
+            // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
+            console.log('now call the LLMs ...');
+            postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
+            axios.post('http://localhost:8000/video', postData).then((response) => {
+              console.log(response.data);
+              let videoJson = response.data;
+              if (Object.entries(videoJson).length > 0){
+                axios.post('http://localhost:8080/noi-server/api/video/' + params.id, videoJson).then((sqlResponse) => {
+                  // we posted the json to be parsed and written into the db, now what? 
+                  let data = sqlResponse.data;
+                  setVideoData(data.videos);
+                  hideProgressbar();
+                })
+              }
+            });
           })
         }
       });
-    } 
+    }
 
     useEffect(() => {
       let isCalled = false;
@@ -264,13 +286,16 @@ function Video () {
                   <thead>
                     <tr>
                       <td width="60%">
-                        <NavLink
-                          to={story_path + params.id }
-                          key={params.id}
-                          className="story-link">
-                            <span className="story_link_text">Video Summary</span>
+                        <span>Video Summary</span>
+                        {/* <div style={{float: "right", paddingRight: 25}}>
+                          <NavLink
+                            to={story_path + params.id }
+                            key={params.id}
+                            className="story-link">
+                              <span className="story_link_text">Video Timeline</span>
                           </NavLink>
-                        </td>
+                        </div> */}
+                      </td>
                       <td width="40%">Sound Transcript Summary</td>
                     </tr>
                   </thead>
@@ -298,7 +323,16 @@ function Video () {
           {/* list labeled (by LLM) scene change scores */}
           <div className="card">
             <div className="card-header">
-              <h3>LLM Scene Changes</h3>
+              <h3>Scene Changes</h3>
+              <div style={{float: "right", paddingRight: 50}}>
+                          <NavLink
+                            to={story_path + params.id }
+                            key={params.id}
+                            className="story-link">
+                              <span className="story_link_text">Video Timeline</span>
+                          </NavLink>
+                        </div>
+
             </div>
 
             <div className="card-body">
@@ -312,11 +346,11 @@ function Video () {
                       <td></td>
                       <td>First Frame</td>
                       <td>Similarity Score</td>
-                      <td>New Scene?</td>
+                      <td>LLM New Scene?</td>
                     </tr>
                   </thead>
                   <tbody>
-                      <LLMVideoScenes hasScenes={Object.entries(videoData).length > 0 && Object.entries(videoData[0].llm_scenes).length >= 0 } videoData={videoData}/>
+                      <LLMVideoScenes hasScenes={Object.entries(videoData).length > 0 } videoData={videoData}/>
                   </tbody>
                 </table>
               </div>
@@ -324,7 +358,7 @@ function Video () {
           </div>
     
           {/* list local scene change scores */}
-          <div className="card">
+          {/* <div className="card">
             <div className="card-header">
               <h3>ORB Scene Changes</h3>
             </div>
@@ -348,7 +382,7 @@ function Video () {
                 </table>
               </div>
             </div>
-          </div>
+          </div> */}
           
         </div>
       );
