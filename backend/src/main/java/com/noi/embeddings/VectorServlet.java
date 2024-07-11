@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "VectorServlet", urlPatterns = {"/vectors/*"}, loadOnStartup = 0)
@@ -59,17 +60,17 @@ public class VectorServlet extends HttpServlet {
 
             // namespace, vector,TopK, metadata: video-id !=
             AiImage image = DbImage.find(con, id);
+            QueryMeta queryMeta = QueryMeta.create(image.getVideoId(), sameVideo);
+            List<VectorMatch> matches = new ArrayList<>();
             // 1) calculate the vector for the image id and category (to use as part of the query)
             EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
             if (embeddings.hasVectors()) {
                 System.out.println("VectorServlet: created embeddings with vector for image=" + image.getId() + " and cat=" + categoryName);
-
                 // 2) use the namespace , the calculated vector, and the video id to query the topK matches
                 VectorService vectorService = VectorService.getService();
-                QueryMeta queryMeta = QueryMeta.create(image.getVideoId(), sameVideo);
-                List<VectorMatch> matches = vectorService.querySimilarImages(embeddings, categoryName, queryMeta);
-                writeResponse(image, categoryName, queryMeta, matches, resp);
+                matches.addAll(vectorService.querySimilarImages(embeddings, categoryName, queryMeta));
             }
+            writeResponse(image, categoryName, queryMeta, matches, resp);
 
         } catch (SQLException | NamingException | EmbeddingException e) {
             throw new ServletException(e);

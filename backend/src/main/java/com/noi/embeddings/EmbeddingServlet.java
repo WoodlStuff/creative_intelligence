@@ -128,6 +128,8 @@ public class EmbeddingServlet extends HttpServlet {
                 images.add(DbImage.find(con, id));
             }
 
+            System.out.println("EmbeddingServlet: processing " + images.size() + " images ...");
+
             Map<Long, Map<String, Integer>> upsertCounts = new HashMap<>();
             for (AiImage image : images) {
                 EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);

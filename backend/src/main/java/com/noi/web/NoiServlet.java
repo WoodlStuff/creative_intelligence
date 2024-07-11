@@ -744,6 +744,12 @@ public class NoiServlet extends BaseControllerServlet {
         // curl -X POST http://localhost:8080/noi-server/api/nlp/12345
         // or: send prompt in post payload:
         // curl -X POST http://localhost:8080/noi-server/api/nlp -d "{"prompt": "some text goes here"}"
+
+        // video meta data: write to db what we get sent
+        // post the score results (local scores)
+        // curl -X POST http://localhost:8080/noi-server/api/video/<video-id> -d '{"video_length_seconds": 26, "total_frames": 652, "frames_per_second": 25.0, "score_threshold": 0.8, "max_distance_for_similarity": 60, "scored_scene_changes": [{"frame": 8, "frame_before": 0, ...}'
+        // post the llm results
+        // curl -X POST http://localhost:8080/noi-server/api/video/<video-id> -d '{"labeled_changes": [{"frame": 8, "frame_before": 0, ...}, {}], ...}'
         */
         try {
             Path path = Path.parse(req);
@@ -1006,166 +1012,148 @@ public class NoiServlet extends BaseControllerServlet {
         try {
             con = Model.connectX();
 
-            // int videoLength = JsonTools.getAsInt(videoLabels, "video_length_seconds", 0);
-            int frames = JsonTools.getAsInt(videoLabels, "total_frames", 0);
-            double fps = JsonTools.getAsDouble(videoLabels, "frames_per_second");
+            // if the post contains 'scored_scene_changes', we are getting local scoring results,
+            // otherwise we are getting the llm results
 
-            // update the ai_videos record for this video
-            DbVideo.update(con, videoId, frames, fps);
-
-            // what text prompt was used to generate the same scene LLM answers
-            String sameScenePrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_user");
-            String sameSceneSystemPrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_system");
-            String sameSceneModel = JsonTools.getAsString(videoLabels, "same_scene_model");
             // lookup the model id for our local scoring alg.
             AiModel orbModel = DbModel.ensure(con, "ORB");
-            AiModel sceneModel = DbModel.ensure(con, sameSceneModel);
-            AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE.getType());
 
-            // read the raw scored scene changes and persist the frames as ai_images
-            JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");
-            for (int i = 0; i < scores.size(); i++) {
-                JsonObject score = scores.get(i).getAsJsonObject();
-                int frame = JsonTools.getAsInt(score, "frame");
-                String url = JsonTools.getAsString(score, "image_url");
-                DbImage.createOrUpdate(con, videoId, frame, url, true, false);
-                Long imageId = DbImage.exists(con, videoId, frame);
+            if(videoLabels.has("scored_scene_changes")){
+                // int videoLength = JsonTools.getAsInt(videoLabels, "video_length_seconds", 0);
+                int frames = JsonTools.getAsInt(videoLabels, "total_frames", 0);
+                double fps = JsonTools.getAsDouble(videoLabels, "frames_per_second");
 
-                int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                String urlBefore = JsonTools.getAsString(score, "image_url_before");
-                Long imageIdBefore = DbImage.ensure(con, videoId, frameBefore, urlBefore).getId();
+                // update the ai_videos record for this video
+                DbVideo.update(con, videoId, frames, fps);
 
-                double similarity = JsonTools.getAsDouble(score, "similarity_score");
+                // read the raw scored scene changes and persist the frames as ai_images
+                JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");
+                for (int i = 0; i < scores.size(); i++) {
+                    JsonObject score = scores.get(i).getAsJsonObject();
+                    int frame = JsonTools.getAsInt(score, "frame");
+                    String url = JsonTools.getAsString(score, "image_url");
+                    DbImage.createOrUpdate(con, videoId, frame, url, true, false);
+                    Long imageId = DbImage.exists(con, videoId, frame);
 
-                // persist the request and the score
-                DbSimilarity.insertRequest(con, null, imageId, imageIdBefore, orbModel, null, similarity, null, true);
-            }
+                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
+                    String urlBefore = JsonTools.getAsString(score, "image_url_before");
+                    Long imageIdBefore = DbImage.ensure(con, videoId, frameBefore, urlBefore).getId();
 
-            // read the labeled_changes () scene changes the LLM agreed to) and persist the model results
-            JsonArray lScores = videoLabels.getAsJsonArray("labeled_changes");
-            for (int i = 0; i < lScores.size(); i++) {
-                JsonObject score = lScores.get(i).getAsJsonObject();
-                String uuid = JsonTools.getAsString(score, "uuid");
-                int frame = JsonTools.getAsInt(score, "frame");
-                Long imageId = DbImage.exists(con, videoId, frame);
+                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
 
-                int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
-
-                double similarity = JsonTools.getAsDouble(score, "similarity_score");
-                String explanation = JsonTools.getAsString(score, "explanation");
-                if (imageId == null || imageIdBefore == null) {
-                    System.out.println("WARNING: unable to log similarity for " + new Gson().toJson(score));
-                    continue;
+                    // persist the request and the score
+                    DbSimilarity.insertRequest(con, null, imageId, imageIdBefore, orbModel, null, similarity, null, true);
                 }
-                DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
             }
+            else {
+                // handle posted LLM responses
+                // what text prompt was used to generate the same scene LLM answers
+                String sameScenePrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_user");
+                String sameSceneSystemPrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_system");
+                String sameSceneModel = JsonTools.getAsString(videoLabels, "same_scene_model");
+                AiModel sceneModel = DbModel.ensure(con, sameSceneModel);
+                AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE.getType());
 
-            // read the rejected_changes (LLM does not agree to the scene change) and persist the model results
-            JsonArray rScores = videoLabels.getAsJsonArray("labeled_rejections");
-            for (int i = 0; i < rScores.size(); i++) {
-                JsonObject score = rScores.get(i).getAsJsonObject();
-                String uuid = JsonTools.getAsString(score, "uuid");
-                int frame = JsonTools.getAsInt(score, "frame");
-                Long imageId = DbImage.exists(con, videoId, frame);
+                // read the labeled_changes () scene changes the LLM agreed to) and persist the model results
+                JsonArray lScores = videoLabels.getAsJsonArray("labeled_changes");
+                for (int i = 0; i < lScores.size(); i++) {
+                    JsonObject score = lScores.get(i).getAsJsonObject();
+                    String uuid = JsonTools.getAsString(score, "uuid");
+                    int frame = JsonTools.getAsInt(score, "frame");
+                    Long imageId = DbImage.exists(con, videoId, frame);
 
-                int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
+                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
+                    Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
 
-                double similarity = JsonTools.getAsDouble(score, "similarity_score");
-                String explanation = JsonTools.getAsString(score, "explanation");
-                DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
-            }
-
-            // process the media meta files (sound and video summaries)
-            Long transcriptId = null;
-            Long soundId = null;
-
-            File media = new File(JsonTools.getAsString(videoLabels, "audio_transcript"));
-            if (media.exists()) {
-                String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                String soundURL = JsonTools.getAsString(meta, "sound_url");
-                String uuid = JsonTools.getAsString(meta, "uuid");
-                String modelName = JsonTools.getAsString(meta, "model_name");
-                String transcript = JsonTools.getAsString(meta, "transcription");
-
-                soundId = DbMedia.ensureSound(con, videoId, soundURL);
-                AiModel model = DbModel.ensure(con, modelName);
-                Long requestId = DbMedia.insertTranscriptRequest(con, videoId, soundId, uuid, model);
-                transcriptId = DbMedia.insertTranscript(con, soundId, requestId, transcript);
-            }
-
-            media = new File(JsonTools.getAsString(videoLabels, "audio_summary"));
-            if (media.exists() && transcriptId != null && soundId != null) {
-                String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                String uuid = JsonTools.getAsString(meta, "uuid");
-                String modelName = JsonTools.getAsString(meta, "model_name");
-                String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
-                String userPrompt = JsonTools.getAsString(meta, "user_prompt");
-                String audioSummary = JsonTools.getAsString(meta, "summary");
-
-                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY.getType());
-                AiModel model = DbModel.ensure(con, modelName);
-                Long requestId = DbMedia.insertTranscriptSummaryRequest(con, uuid, transcriptId, prompt, model);
-                DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
-            }
-
-            media = new File(JsonTools.getAsString(videoLabels, "video_summary"));
-            if (media.exists()) {
-                String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                String uuid = JsonTools.getAsString(meta, "uuid");
-                String modelName = JsonTools.getAsString(meta, "model_name");
-                String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
-                String userPrompt = JsonTools.getAsString(meta, "user_prompt");
-                String videoSummary = JsonTools.getAsString(meta, "summary");
-                JsonArray scenes = meta.getAsJsonArray("scenes");
-
-                AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY.getType());
-                AiModel model = DbModel.ensure(con, modelName);
-                Long requestId = DbMedia.insertVideoSummaryRequest(con, uuid, videoId, prompt, model);
-
-                // loop through images / scenes used to create the summary and persist the relations
-                for (int i = 0; i < scenes.size(); i++) {
-                    String sceneImageURL = scenes.get(i).getAsString();
-                    AiImage image = DbImage.findForVideo(con, videoId, sceneImageURL);
-                    DbMedia.insertVideoSummaryScene(con, videoId, image, requestId);
+                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
+                    String explanation = JsonTools.getAsString(score, "explanation");
+                    if (imageId == null || imageIdBefore == null) {
+                        System.out.println("WARNING: unable to log similarity for " + new Gson().toJson(score));
+                        continue;
+                    }
+                    DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
                 }
 
-                DbMedia.insertVideoSummary(con, requestId, videoId, videoSummary);
-            }
+                // read the rejected_changes (LLM does not agree to the scene change) and persist the model results
+                JsonArray rScores = videoLabels.getAsJsonArray("labeled_rejections");
+                for (int i = 0; i < rScores.size(); i++) {
+                    JsonObject score = rScores.get(i).getAsJsonObject();
+                    String uuid = JsonTools.getAsString(score, "uuid");
+                    int frame = JsonTools.getAsInt(score, "frame");
+                    Long imageId = DbImage.exists(con, videoId, frame);
 
+                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
+                    Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
+
+                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
+                    String explanation = JsonTools.getAsString(score, "explanation");
+                    DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
+                }
+
+                // process the media meta files (sound and video summaries)
+                Long transcriptId = null;
+                Long soundId = null;
+
+                File media = new File(JsonTools.getAsString(videoLabels, "audio_transcript"));
+                if (media.exists()) {
+                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
+                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+                    String soundURL = JsonTools.getAsString(meta, "sound_url");
+                    String uuid = JsonTools.getAsString(meta, "uuid");
+                    String modelName = JsonTools.getAsString(meta, "model_name");
+                    String transcript = JsonTools.getAsString(meta, "transcription");
+
+                    soundId = DbMedia.ensureSound(con, videoId, soundURL);
+                    AiModel model = DbModel.ensure(con, modelName);
+                    Long requestId = DbMedia.insertTranscriptRequest(con, videoId, soundId, uuid, model);
+                    transcriptId = DbMedia.insertTranscript(con, soundId, requestId, transcript);
+                }
+
+                media = new File(JsonTools.getAsString(videoLabels, "audio_summary"));
+                if (media.exists() && transcriptId != null && soundId != null) {
+                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
+                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+                    String uuid = JsonTools.getAsString(meta, "uuid");
+                    String modelName = JsonTools.getAsString(meta, "model_name");
+                    String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
+                    String userPrompt = JsonTools.getAsString(meta, "user_prompt");
+                    String audioSummary = JsonTools.getAsString(meta, "summary");
+
+                    AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY.getType());
+                    AiModel model = DbModel.ensure(con, modelName);
+                    Long requestId = DbMedia.insertTranscriptSummaryRequest(con, uuid, transcriptId, prompt, model);
+                    DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
+                }
+
+                media = new File(JsonTools.getAsString(videoLabels, "video_summary"));
+                if (media.exists()) {
+                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
+                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+                    String uuid = JsonTools.getAsString(meta, "uuid");
+                    String modelName = JsonTools.getAsString(meta, "model_name");
+                    String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
+                    String userPrompt = JsonTools.getAsString(meta, "user_prompt");
+                    String videoSummary = JsonTools.getAsString(meta, "summary");
+                    JsonArray scenes = meta.getAsJsonArray("scenes");
+
+                    AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY.getType());
+                    AiModel model = DbModel.ensure(con, modelName);
+                    Long requestId = DbMedia.insertVideoSummaryRequest(con, uuid, videoId, prompt, model);
+
+                    // loop through images / scenes used to create the summary and persist the relations
+                    for (int i = 0; i < scenes.size(); i++) {
+                        String sceneImageURL = scenes.get(i).getAsString();
+                        AiImage image = DbImage.findForVideo(con, videoId, sceneImageURL);
+                        DbMedia.insertVideoSummaryScene(con, videoId, image, requestId);
+                    }
+
+                    DbMedia.insertVideoSummary(con, requestId, videoId, videoSummary);
+                }
+            }
         } finally {
             Model.close(con);
         }
     }
-
-//    private String handleModelName(HttpServletRequest req, String defaultName) {
-//        String modelName = defaultName; // set default model to generate images
-//        if (req.getParameter("modelName") != null) {
-//            modelName = req.getParameter("modelName");
-//        }
-//        return modelName;
-//    }
-
-//    private AiPrompt handlePrompt(HttpServletRequest req, Path path, int promptIdIndex) throws IOException, SQLException, NamingException {
-//        AiPrompt prompt = AiPrompt.parse(req, path, promptIdIndex);
-//        if (prompt.getId() == null) {
-//            // we need to insert the prompt!
-//            prompt = DbLanguage.insertPrompt(prompt);
-//        } else {
-//            // we need to look up the actual prompt text
-//            prompt = DbLanguage.findPrompt(prompt.getId());
-//        }
-//
-//        if (prompt == null) {
-//            throw new IllegalStateException();
-//        }
-//
-//        return prompt;
-//    }
 
     private NLPResponse requestPromptAnalysis(AiPrompt prompt, String modelName) throws IOException, SQLException, NamingException {
         System.out.println("NOI: request prompt analysis...");
