@@ -50,6 +50,21 @@ function Image() {
     });
   }
 
+  async function handleEmbeddingClick() {
+    if (Object.entries(params.id).length <= 0){
+      console.log("no image Id!");
+      return;
+    }
+
+    // set the progress bar to visible
+    showProgressbar();
+    console.log("create embeddings for image id: " + params.id);
+    axios.post('http://localhost:8080/noi-server/embeddings/' + params.id).then((response) => {
+      console.log(response.data);
+      hideProgressbar();
+    });
+  }
+
   useEffect(() => {
     const fetchData = async (imageId) => {
       try {
@@ -113,6 +128,9 @@ function Image() {
         </div>
         <div className="card-button">
           <button onClick={async () => { await handleLabelClick();}}>Label Image</button>
+        </div>
+        <div className="card-button">
+          <button onClick={async () => { await handleEmbeddingClick();}}>Create Embeddings</button>
         </div>
       </div>
 
