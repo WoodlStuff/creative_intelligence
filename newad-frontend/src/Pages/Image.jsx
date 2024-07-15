@@ -44,6 +44,7 @@ function Image() {
 
   function changeCategory(newValue) {
     setSelectedCategoryName(newValue);
+    fetchSimilarityData(params.id, newValue);
   }
 
   const LabelRows = (props) => {
@@ -128,6 +129,8 @@ function Image() {
       // todo call endpoint to create embeddings and send them to the vector db
 
       hideProgressbar();
+
+      fetchSimilarityData(params.id, selectedCategoryName);
     });
   }
 
@@ -145,6 +148,26 @@ function Image() {
       hideProgressbar();
     });
   }
+
+  const fetchSimilarityData = async (imageId, category) => {
+    try {
+      console.log("calling for image similarity data ...")
+      console.log(imageId);
+      if(category === "- all -"){
+        setSimilarityData([]);
+        return;
+      }
+      axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/" + category + "?sameVideo=false").then((response) => {
+        let data = response.data;
+        if (Object.entries(data).length >= 0) {
+          setSimilarityData(data.results);
+        }
+      });
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async (imageId) => {
@@ -174,25 +197,9 @@ function Image() {
       }
     };
 
-    const fetchSimilarityData = async (imageId) => {
-      try {
-        console.log("calling for image similarity data ...")
-        console.log(imageId);
-        axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/situation?sameVideo=false").then((response) => {
-          let data = response.data;
-          if (Object.entries(data).length >= 0) {
-            setSimilarityData(data.results);
-          }
-        });
-
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
     console.log({ params });
     fetchData(params.id);
-    fetchSimilarityData(params.id);
+    fetchSimilarityData(params.id, selectedCategoryName);
   }, []);
 
   return (
