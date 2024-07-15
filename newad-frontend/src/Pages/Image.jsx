@@ -14,6 +14,7 @@ function Image() {
   const [videoId, setVideoId] = useState();
   const [videoFrameNumber, setVideoFrameNumber] = useState();
   const [brand, setBrand] = useState();
+  const [embedding, setEmbedding] = useState(false);
   
   const progress = document.getElementById('progressbar');
 
@@ -145,6 +146,13 @@ function Image() {
     console.log("create embeddings for image id: " + params.id);
     axios.post('http://localhost:8080/noi-server/embeddings/' + params.id).then((response) => {
       console.log(response.data);
+      if(Object.entries(response.data.upsertCounts.length > 0)){
+        setEmbedding(true);
+      }
+      else{
+        setEmbedding(false);
+      }
+      
       hideProgressbar();
     });
   }
@@ -190,6 +198,7 @@ function Image() {
             if(data.brand != null){
               setBrand(data.brand);
             }
+            setEmbedding(data.has_embedding)
           }
         });
       } catch (error) {
@@ -222,6 +231,7 @@ function Image() {
         </div>
         <div className="card-button">
           <button onClick={async () => { await handleEmbeddingClick();}}>Create Embeddings</button>
+          <span><label>Hash Embeddings</label><input type="checkbox" checked={embedding}/></span>
         </div>
       </div>
 
