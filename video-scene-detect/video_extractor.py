@@ -291,7 +291,7 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
 def summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary):
     scoreFilterThreshold = 0.25
     scenes = llmSceneChanges
-    if len(llmSceneChanges) <= 2 and len(sceneChanges) > llmSceneChanges:
+    if len(llmSceneChanges) <= 2 and len(sceneChanges) > len(llmSceneChanges):
         print(f"WARNING: not enough labeled scene changes {len(llmSceneChanges)}: attempting a fallback ...")
         scenes = sceneChanges
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes

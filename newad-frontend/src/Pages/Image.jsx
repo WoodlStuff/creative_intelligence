@@ -118,8 +118,11 @@ function Image() {
       console.log(response.data);
       let data = response.data; 
       setImageLabelData(data.categories);
-      let filterData = data.category_names.push("- all -");
+
+      var filterData = data.category_names;
+      filterData.push("- all -");
       setCatSelectorData(filterData);
+
       setImageAnnotationData(data.annotations);
       
       // todo call endpoint to create embeddings and send them to the vector db
