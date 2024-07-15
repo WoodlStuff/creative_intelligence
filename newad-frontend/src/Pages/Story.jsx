@@ -1,14 +1,13 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { HiOutlineArrowSmRight } from "react-icons/hi";
-import { useParams, NavLink } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 function Story() {
   const params = useParams();
   const [storyData, setStoryData] = useState({}) 
   const [selectedCategoryName, setSelectedCategoryName] = useState('situation')
-  const [selectedKeyName, setSelectedKeyName] = useState('*')
+  // const [selectedKeyName, setSelectedKeyName] = useState('*')
 
   const CategoryOptions = (props) => {
     if(Object.entries(props).length > 0 && Object.entries(props.categories).length > 0){
@@ -28,7 +27,7 @@ function Story() {
 
   // render a drop down for category selection
   const  CategorySelector = (props) => {
-    if(props.hasStory == true){
+    if(props.hasStory === true){
       return(
           <label>
             Filter Categories:
@@ -49,9 +48,9 @@ function Story() {
   function filterCategories(ai_image_id) {
     // return [{name, key, values}, ...]
     // find the category data for this image
-    let categories = storyData.categories.filter( (img_categories) => img_categories.image_id == ai_image_id );
+    let categories = storyData.categories.filter( (img_categories) => img_categories.image_id === ai_image_id );
     if(Object.entries(categories).length > 0){
-      return categories[0].story_elements.filter( (elements) => elements.category_name == selectedCategoryName);
+      return categories[0].story_elements.filter( (elements) => elements.category_name === selectedCategoryName);
     }
     
     return[]
@@ -60,32 +59,10 @@ function Story() {
   function filterImageCategories() {
     // find the images for the currently selected category
     if(Object.entries(storyData.category_images).length > 0){
-      return storyData.category_images.filter( (imageRow) => imageRow.category_name ==  selectedCategoryName);
+      return storyData.category_images.filter( (imageRow) => imageRow.category_name === selectedCategoryName);
     }
 
     return[]
-  }
-
-  const StoryMomentRow = (props) => {
-    return(
-        <tr>
-          <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></a></td>
-          <td>{props.moment.image_id}</td>
-          <td>{selectedCategoryName}</td>
-          <td>{filterCategories(props.moment.image_id).length}</td>
-        </tr>
-    )
-  }
-
-  // <ImageLink image_id={id} image_link_text={'xx'} />
-  const ImageLink = (props) => {
-    <NavLink
-      to={'/image/' + props.image_id }
-      key={props.image_id}
-      className="image-link"
-    >
-      <div className="image_link_text">{props.image_link_text}</div>
-    </NavLink>
   }
 
   // render all rows for one moment / image, but all its category data (after the filter is applied)  
@@ -102,7 +79,7 @@ function Story() {
             <td>
               {category.values}
             </td>
-            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } /></a></td>
+            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } alt={props.moment.image_id} /></a></td>
             <td>
               {props.moment.video_frame_number} 
             </td>
@@ -115,7 +92,7 @@ function Story() {
   }
 
   const StoryRows = (props) => {
-    if(props.hasStory == true){
+    if(props.hasStory === true){
         return (
             props.storyData.moments.map((moment) => (
               <StoryCategoryRows key={moment.video_frame_number} moment={moment} categories={filterCategories(moment.image_id)} />
@@ -130,13 +107,13 @@ function Story() {
       return (
         props.image_ids.map((image_id) => (
           // <ImageLink image_id={image_id} image_link_text={props.moment.video_frame_number} />
-            <div key={image_id} className='images-sub-column'><a href={'/image/' + image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image_id } /></a></div>
+            <div key={image_id} className='images-sub-column'><a href={'/image/' + image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image_id } alt={image_id} /></a></div>
         ))
       )
   }
 
   const ImageRows = (props) => {
-    if(props.hasStory == true){
+    if(props.hasStory === true){
         return (
           filterImageCategories().map((catKeyVal) => (
               <tr key={catKeyVal.category_name + '-' + catKeyVal.key + '-' + catKeyVal.value}>
@@ -194,24 +171,6 @@ function Story() {
                 <tr>
                   <td>Category</td>
                   <td>Key</td>
-                  <td>Value</td>
-                  <td>Images</td>
-                </tr>
-              </thead>
-              <tbody>
-                <ImageRows hasStory={Object.entries(storyData).length > 0 } />
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="card-body">
-          <div className="table-responsive">
-            <table width="90%">
-              <thead>
-                <tr>
-                  <td>Category</td>
-                  <td>Key</td>
                   <td>Values</td>
                   <td>Image</td>
                   <td>Frame</td>
@@ -224,6 +183,25 @@ function Story() {
             </table>
           </div>
         </div>
+
+        <div className="card-body" style={{marginBottom: 25}}>
+          <div className="table-responsive">
+            <table width="90%">
+              <thead>
+                <tr>
+                  <td>Category</td>
+                  <td>Key</td>
+                  <td>Value</td>
+                  <td>Images</td>
+                </tr>
+              </thead>
+              <tbody>
+                <ImageRows hasStory={Object.entries(storyData).length > 0 } />
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   );

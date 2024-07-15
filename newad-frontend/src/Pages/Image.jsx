@@ -1,9 +1,8 @@
 import React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
-import { NavLink, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 function Image() {
   const params = useParams();
@@ -18,6 +17,9 @@ function Image() {
   
   const progress = document.getElementById('progressbar');
 
+  const [selectedCategoryName, setSelectedCategoryName] = useState("- all -");
+  const [catSelectorData, setCatSelectorData] = useState(["- all -"]);
+
   function showProgressbar(){
     // find progress bar with id='progressbar' and show it
     progress.hidden=false;
@@ -28,6 +30,80 @@ function Image() {
     progress.hidden=true;
   }
 
+  const CategoryOptions = (props) => {
+    if(Object.entries(props).length > 0 && Object.entries(props.categories).length > 0){
+      return(
+        props.categories.map( (o) => (
+          <option key={o} value={o}>{o}</option>
+        ))
+      )
+    }
+
+    return(<></>)
+  }
+
+  function changeCategory(newValue) {
+    setSelectedCategoryName(newValue);
+  }
+
+  const LabelRows = (props) => {
+    if(props.hasLabels === true){
+        return (
+          props.categories.map((meta) => (
+            <tr key={meta.key + '-'+ meta.value + '-' + meta.request_uuid}>
+              <td>
+                {meta.category_name}
+              </td>
+              <td>
+                {meta.key}
+              </td>
+              <td>
+                {meta.value}
+              </td>
+              <td>
+                {meta.request_uuid}
+              </td>
+              <td>
+                {meta.model_name}
+              </td>
+            </tr>
+          // }
+          ))
+        )
+    }
+    return <></>
+  }
+
+  function filterCategories() {
+    // allow only rows with the selected category name (or '- all -')
+    let categories = imageLabelData.filter( (label_category) => (label_category.category_name === selectedCategoryName || selectedCategoryName === '- all -' ));
+    if(Object.entries(categories).length > 0){
+      return categories;
+    }
+    
+    return[]
+  }
+
+  // render a drop down for category selection
+  const  CategorySelector = (props) => {
+    if(props.hasLabels === true){
+      return(
+          <label>
+            Filter Categories:
+            <select
+              name="selectedCategory"
+              value={selectedCategoryName}
+              multiple={false}
+              onChange={e => changeCategory(e.target.value) }
+            >
+                <CategoryOptions categories={props.categories}/>
+            </select>
+          </label>
+      )
+    }
+    return(<label>no categories loaded!</label>)
+  }
+  
   async function handleLabelClick() {
     if (Object.entries(params.id).length <= 0){
       console.log("no image Id!");
@@ -42,6 +118,8 @@ function Image() {
       console.log(response.data);
       let data = response.data; 
       setImageLabelData(data.categories);
+      let filterData = data.category_names.push("- all -");
+      setCatSelectorData(filterData);
       setImageAnnotationData(data.annotations);
       
       // todo call endpoint to create embeddings and send them to the vector db
@@ -75,6 +153,9 @@ function Image() {
           if (Object.entries(data).length >= 0) {
             setImageURL(data.path)
             setImageLabelData(data.categories);
+            var filterData = data.category_names;
+            filterData.push("- all -");
+            setCatSelectorData(filterData);
             setImageAnnotationData(data.annotations);
             if(data.video_id != null){
               setVideoId(data.video_id);
@@ -94,7 +175,7 @@ function Image() {
       try {
         console.log("calling for image similarity data ...")
         console.log(imageId);
-        axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/image_objects?sameVideo=false").then((response) => {
+        axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/situation?sameVideo=false").then((response) => {
           let data = response.data;
           if (Object.entries(data).length >= 0) {
             setSimilarityData(data.results);
@@ -115,7 +196,7 @@ function Image() {
     <div className='image'>
       <div className="card">
         <div className="card-body">
-          <img className="image_detail" src={"http://localhost:8080/noi-server/api/image/" + params.id} />
+          <img className="image_detail" src={"http://localhost:8080/noi-server/api/image/" + params.id} alt={params.id}/>
         </div>
         <div className="image_url">
           <span>{imageURL}</span>
@@ -148,7 +229,7 @@ function Image() {
                 {
                   similarityData.map((image) => (
                     <td key={image.image_id} className="image_thumb">
-                      <a id={image.image_id} name={image.frame_number} href={'/image/' + image.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } /></a>
+                      <a id={image.image_id} name={image.frame_number} href={'/image/' + image.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } alt={image.image_id} /></a>
                       <div><span><label>Score:</label>{image.score}</span></div>
                     </td>
                   ))
@@ -163,6 +244,7 @@ function Image() {
       <div className="card">
         <div className="card-header">
           <h3>Image Labels</h3>
+          <CategorySelector hasLabels={Object.entries(imageLabelData).length > 0 } categories={catSelectorData}/>
         </div>
         <div className="card-body">
           <div className="table-responsive">
@@ -178,25 +260,7 @@ function Image() {
               </thead>
               <tbody>
                 {
-                  imageLabelData.map((meta) => (
-                    <tr key={meta.key + '-'+ meta.value + '-' + meta.request_uuid}>
-                      <td>
-                        {meta.category_name}
-                      </td>
-                      <td>
-                        {meta.key}
-                      </td>
-                      <td>
-                        {meta.value}
-                      </td>
-                      <td>
-                        {meta.request_uuid}
-                      </td>
-                      <td>
-                        {meta.model_name}
-                      </td>
-                    </tr>
-                  ))
+                  <LabelRows hasLabels={Object.entries(imageLabelData).length > 0 } categories={filterCategories(imageLabelData)}/>
                 }
               </tbody>
             </table>

@@ -7,6 +7,10 @@ function Video () {
 
     const [videoData, setVideoData] = useState([]);
 
+    const [similarityDistance, setSimilarityDistance] = useState(60)
+    const [scoreThreshold, setScoreThreshold] = useState(.70)
+    const [callLLMs, setCallLLMs] = useState({selected: false})
+
     const image_path = '/image/';
     const story_path = '/story/';
 
@@ -27,46 +31,46 @@ function Video () {
         return <input type="checkbox" checked={props.value} disabled/>
       }
     
-      const ORBVideoScenes = (props) => {
-        if(props.hasScenes == true){
-            return (
-                props.videoData[0].orb_scenes.map((scene) => (
-                    <tr key={scene.last_scene_frame}>
-                      <td className="image_thumb"><a id={scene.last_scene_frame} name={'frame-' + scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
-                      <td>
-                        <NavLink
-                          to={image_path + scene.last_scene_image_id }
-                          key={scene.last_scene_image_id}
-                          className="image-link"
-                        >
-                          {/* <div className="icon">{image.icon}</div> */}
-                          <div className="image_link_text">{scene.last_scene_frame}</div>
-                        </NavLink>
-                      </td>
+      // const ORBVideoScenes = (props) => {
+      //   if(props.hasScenes == true){
+      //       return (
+      //           props.videoData[0].orb_scenes.map((scene) => (
+      //               <tr key={scene.last_scene_frame}>
+      //                 <td className="image_thumb"><a id={scene.last_scene_frame} name={'frame-' + scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
+      //                 <td>
+      //                   <NavLink
+      //                     to={image_path + scene.last_scene_image_id }
+      //                     key={scene.last_scene_image_id}
+      //                     className="image-link"
+      //                   >
+      //                     {/* <div className="icon">{image.icon}</div> */}
+      //                     <div className="image_link_text">{scene.last_scene_frame}</div>
+      //                   </NavLink>
+      //                 </td>
 
-                      <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
-                      <td>
-                        <NavLink
-                          to={image_path + scene.first_scene_image_id }
-                          key={scene.first_scene_image_id}
-                          className="image-link"
-                        >
-                          {/* <div className="icon">{image.icon}</div> */}
-                          <div className="image_link_text">{scene.first_scene_frame}</div>
-                        </NavLink>
-                      </td>
-                      <td>
-                        <span>{scene.score}</span>
-                      </td>
-                    </tr>
-                ))
-            )
-        }
-        return <></>
-      }
+      //                 <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
+      //                 <td>
+      //                   <NavLink
+      //                     to={image_path + scene.first_scene_image_id }
+      //                     key={scene.first_scene_image_id}
+      //                     className="image-link"
+      //                   >
+      //                     {/* <div className="icon">{image.icon}</div> */}
+      //                     <div className="image_link_text">{scene.first_scene_frame}</div>
+      //                   </NavLink>
+      //                 </td>
+      //                 <td>
+      //                   <span>{scene.score}</span>
+      //                 </td>
+      //               </tr>
+      //           ))
+      //       )
+      //   }
+      //   return <></>
+      // }
 
       const LLMVideoScenes = (props) => {
-        if(props.hasScenes == true){
+        if(props.hasScenes === true){
           var scenes = props.videoData[0].llm_scenes 
           var isLLM = true
           if(Object.entries(scenes).length <= 0){
@@ -77,7 +81,7 @@ function Video () {
           return (
               scenes.map((scene) => (
                     <tr key={scene.last_scene_image_id}>
-                      <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
+                      <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame} href="#"> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } alt={scene.last_scene_image_id}/></td>
                       <td>
                         <NavLink
                           to={image_path + scene.last_scene_image_id }
@@ -89,7 +93,7 @@ function Video () {
                         </NavLink>
                       </td>
 
-                      <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
+                      <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame} href="#"> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } alt={scene.first_scene_image_id} /></td>
                       <td>
                         <NavLink
                           to={image_path + scene.first_scene_image_id }
@@ -153,9 +157,10 @@ function Video () {
       showProgressbar();
       console.log("process video " + params.id);
       console.log("process video " + videoData[0].name);
-      // curl -v -X POST http://localhost:8000/video -d '{"video_name": "big_buck_bunny", "refresh": false}'
-      var postData = {"video_name": videoData[0].name, "refresh": true}
+      // curl -v -X POST http://localhost:8000/video -d '{"video_name": "big_buck_bunny", "refresh": false, "llm": false, "maxSimilarityDistance": 60, "sceneChangeScoreThreshold": .70}'
+      var postData = {"video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
       // Note!: this requires the python server to be running (on port 8000)!
+      setVideoData([]);
       axios.post('http://localhost:8000/video', postData).then((response) => {
         console.log(response.data);
         let videoJson = response.data;
@@ -166,20 +171,25 @@ function Video () {
             setVideoData(data.videos);
 
             // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
-            console.log('now call the LLMs ...');
-            postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
-            axios.post('http://localhost:8000/video', postData).then((response) => {
-              console.log(response.data);
-              let videoJson = response.data;
-              if (Object.entries(videoJson).length > 0){
-                axios.post('http://localhost:8080/noi-server/api/video/' + params.id, videoJson).then((sqlResponse) => {
-                  // we posted the json to be parsed and written into the db, now what? 
-                  let data = sqlResponse.data;
-                  setVideoData(data.videos);
-                  hideProgressbar();
-                })
-              }
-            });
+            if(callLLMs.selected === true){
+              console.log('now call the LLMs ...');
+              postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
+              axios.post('http://localhost:8000/video', postData).then((response) => {
+                console.log(response.data);
+                let videoJson = response.data;
+                if (Object.entries(videoJson).length > 0){
+                  axios.post('http://localhost:8080/noi-server/api/video/' + params.id, videoJson).then((sqlResponse) => {
+                    // we posted the json to be parsed and written into the db, now what? 
+                    let data = sqlResponse.data;
+                    setVideoData(data.videos);
+                    hideProgressbar();
+                  })
+                }
+              });
+            }
+            else{
+              hideProgressbar();
+            }
           })
         }
       });
@@ -222,6 +232,16 @@ function Video () {
             </div>
             <div className="card-button">
               <button onClick={async () => { await handleClick();}}>Process Video</button>
+              <div className="left-padding">
+                <label className="label-padding">Call LLMs</label><input name='llms' type="checkbox" checked={callLLMs.selected} onChange={(event) => {setCallLLMs({selected: !callLLMs.selected});}}></input>
+              </div>
+              <div className="left-padding">
+                <label className="label-padding">Max Similarity Distance</label><input name='maxSimilarityDistance' defaultValue={similarityDistance}></input>
+              </div>
+              <div className="left-padding">
+                <label className="label-padding">Similarity Score Threshold</label>
+                <input name='sceneChangeScoreThreshold' defaultValue={scoreThreshold} onChange={(event) => {setScoreThreshold(parseFloat(event.target.value));}}></input>
+              </div>
             </div>
             <div className="card-button">
               <button onClick={async () => { await handleLabelClick();}}>Label All Images</button>
