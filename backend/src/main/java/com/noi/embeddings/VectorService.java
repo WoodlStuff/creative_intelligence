@@ -16,4 +16,6 @@ public abstract class VectorService {
     protected abstract Map<String, Integer> upsert(Connection con, EmbeddingService.ImageEmbeddings embeddings, String indexName) throws EmbeddingException, IOException;
 
     protected abstract List<VectorMatch> querySimilarImages(EmbeddingService.ImageEmbeddings embeddings, String categoryName, QueryMeta queryMeta) throws EmbeddingException, IOException;
+
+    protected abstract boolean hasVector(Long imageId, String category) throws EmbeddingException, IOException;
 }

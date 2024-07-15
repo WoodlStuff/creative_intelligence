@@ -63,9 +63,10 @@ public abstract class LabelService {
         return modelName;
     }
 
-    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, HttpServletResponse response) throws IOException {
+    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, boolean hasEmbedding, HttpServletResponse response) throws IOException {
         // create the json doc
         JsonObject root = addImageLabels(image, annotations, metaValues, categoryName);
+        root.addProperty("has_embedding", hasEmbedding);
 
         response.setContentType(ContentType.APPLICATION_JSON.toString());
         response.setHeader("Access-Control-Allow-Origin", "*");

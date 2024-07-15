@@ -28,7 +28,8 @@ public class VectorServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // curl -X GET http://localhost:8080/noi-server/vectors/<image-id>/categoryName?videoId=123
+        // curl -X GET http://localhost:8080/noi-server/vectors/<image-id>/<categoryName>?videoId=123
+        // curl -X GET http://localhost:8080/noi-server/vectors/<image-id>/<categoryName>?exists=1
         Path path = Path.parse(req);
         if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -57,23 +58,38 @@ public class VectorServlet extends HttpServlet {
             sameVideo = Boolean.valueOf(req.getParameter("sameVideo"));
         }
 
+        boolean checkEmbeddingExists = false;
+        if (req.getParameter("exists") != null) {
+            checkEmbeddingExists = true;
+        }
+
         Connection con = null;
         try {
             con = Model.connectX();
 
-            // namespace, vector,TopK, metadata: video-id !=
             AiImage image = DbImage.find(con, id);
-            QueryMeta queryMeta = QueryMeta.create(image, sameVideo);
-            List<VectorMatch> matches = new ArrayList<>();
-            // 1) calculate the vector for the image id and category (to use as part of the query)
-            EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
-            if (embeddings.hasVectors()) {
-                System.out.println("VectorServlet: created embeddings with vector for image=" + image.getId() + " and cat=" + categoryName);
-                // 2) use the namespace , the calculated vector, and the video id to query the topK matches
-                VectorService vectorService = VectorService.getService();
-                matches.addAll(vectorService.querySimilarImages(embeddings, categoryName, queryMeta));
+            if (image == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
             }
-            writeResponse(image, categoryName, queryMeta, matches, resp);
+
+            VectorService vectorService = VectorService.getService();
+
+            if (checkEmbeddingExists) {
+                boolean hasEmbedding = vectorService.hasVector(image.getId(), categoryName);
+                writeResponse(image, categoryName, hasEmbedding, resp);
+            } else {
+                QueryMeta queryMeta = QueryMeta.create(image, sameVideo);
+                List<VectorMatch> matches = new ArrayList<>();
+                // 1) calculate the vector for the image id and category (to use as part of the query)
+                EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
+                if (embeddings.hasVectors()) {
+                    System.out.println("VectorServlet: created embeddings with vector for image=" + image.getId() + " and cat=" + categoryName);
+                    // 2) use the namespace , the calculated vector, and the video id to query the topK matches
+                    matches.addAll(vectorService.querySimilarImages(embeddings, categoryName, queryMeta));
+                }
+                writeResponse(image, categoryName, queryMeta, matches, resp);
+            }
 
         } catch (SQLException | NamingException | EmbeddingException e) {
             throw new ServletException(e);
@@ -109,6 +125,27 @@ public class VectorServlet extends HttpServlet {
             //m.add("vector", match.getValues());
             m.add("vector_metadata", match.getMeta());
         }
+
+        out.write(new Gson().toJson(root));
+        out.flush();
+    }
+
+    private void writeResponse(AiImage image, String categoryName, boolean hasEmbedding, HttpServletResponse resp) throws IOException {
+        resp.setContentType(ContentType.APPLICATION_JSON.toString());
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        PrintWriter out = resp.getWriter();
+
+        JsonObject root = new JsonObject();
+        JsonObject q = new JsonObject();
+        root.add("query", q);
+
+        q.addProperty("image_id", image.getId());
+        q.addProperty("category_name", categoryName);
+
+        JsonObject r = new JsonObject();
+        root.add("result", r);
+        r.addProperty("has_embedding", hasEmbedding);
 
         out.write(new Gson().toJson(root));
         out.flush();

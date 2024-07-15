@@ -165,6 +165,33 @@ public class PineconeVectorService extends VectorService {
         }
     }
 
+    @Override
+    protected boolean hasVector(Long imageId, String category) throws EmbeddingException, IOException {
+        CloseableHttpClient client = null;
+        CloseableHttpResponse response = null;
+        try {
+            client = HttpClients.createDefault();
+
+            String hostName = getIndexHostURL(INDEX_NAME);
+            String postUrl = String.format("https://%s/query", hostName);
+            HttpPost httpPost = createHttpPost(postUrl, apiKey);
+
+            StringEntity entity = createQueryEntity(imageId, category);
+            httpPost.setEntity(entity);
+            response = client.execute(httpPost);
+
+            return parseResponse(imageId, response);
+
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+            if (client != null) {
+                client.close();
+            }
+        }
+    }
+
     private int parseUpsertResponse(CloseableHttpResponse response) throws IOException {
         String jsonResponse = FileTools.readToString(response.getEntity().getContent());
         if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
@@ -178,6 +205,28 @@ public class PineconeVectorService extends VectorService {
             }
         }
         return -1;
+    }
+
+
+    private boolean parseResponse(Long imageId, CloseableHttpResponse response) throws IOException {
+        String jsonResponse = FileTools.readToString(response.getEntity().getContent());
+        System.out.println("PineconeVectorService:httpResponse:" + response.getStatusLine().getStatusCode());
+        System.out.println("PineconeVectorService:httpResponse:" + jsonResponse);
+        if (response.getStatusLine().getStatusCode() == HttpServletResponse.SC_CREATED ||
+                response.getStatusLine().getStatusCode() == HttpServletResponse.SC_OK) {
+            JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
+            if (root != null) {
+                JsonArray matches = root.get("matches").getAsJsonArray();
+                for (int i = 0; i < matches.size(); i++) {
+                    JsonObject match = matches.get(i).getAsJsonObject();
+                    //"matches":[{"id":"2651","score":1,"values":[]},{"id":"1986","score":
+                    if (imageId.equals(match.get("id").getAsLong()) && match.get("score").getAsInt() == 1) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private List<VectorMatch> parseQueryResponse(CloseableHttpResponse response) throws IOException {
@@ -250,6 +299,22 @@ public class PineconeVectorService extends VectorService {
         JsonObject payload = createQueryPayload(embeddings, categoryName, queryMeta);
         System.out.println("PineconeVectorService:query with: \r\n" + new Gson().toJson(payload));
         return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
+    }
+
+    private StringEntity createQueryEntity(Long imageId, String categoryName) {
+        JsonObject payload = createQueryPayload(imageId, categoryName);
+        System.out.println("PineconeVectorService:query with: \r\n" + new Gson().toJson(payload));
+        return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
+    }
+
+    private JsonObject createQueryPayload(Long imageId, String categoryName) {
+        JsonObject root = new JsonObject();
+        root.addProperty("namespace", categoryName);
+        root.addProperty("id", imageId.toString());
+        root.addProperty("topK", 3);
+        root.addProperty("includeValues", false);
+
+        return root;
     }
 
     private JsonObject createQueryPayload(EmbeddingService.ImageEmbeddings embeddings, String categoryName, QueryMeta queryMeta) {

@@ -86,7 +86,13 @@ public class CategoryServlet extends BaseControllerServlet {
             List<AiImageLabel> annotations = DbImageLabel.findAnnotations(con, image);
             Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
 
-            LabelService.writeLabelReport(image, annotations, metaValues, categoryName, resp);
+            VectorService vectorService = VectorService.getService();
+            String cat = categoryName != null ? categoryName : "situation"; // todo: do we define a 'DEFAULT_CATEGORY' ?
+            boolean hasEmbedding = vectorService.hasVector(image.getId(), cat);
+
+            LabelService.writeLabelReport(image, annotations, metaValues, categoryName, hasEmbedding, resp);
+        } catch (EmbeddingException e) {
+            throw new IOException(e);
         } finally {
             Model.close(con);
         }
