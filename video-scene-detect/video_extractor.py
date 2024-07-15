@@ -128,7 +128,7 @@ def process_video2(path, videoName, frames_to_skip=0, max_distance_for_similarit
 
 # look for scene changes in this video, and store first scene frame(s) as jpg file(s)
 # returns a dict with format: {'frame': 99, 'image_url': '/local file URL', 'similarity_score': 0.88}
-def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarity=70, scene_change_threshold=.75, verbose=False):
+def findSceneChanges(path, videoName, frames_to_skip=0, max_distance_for_similarity=70, scene_change_threshold=.75, verbose=False):
     response = {}
     ensureVideoFolder(path, videoName)
     sceneChangeImages = []
@@ -139,7 +139,7 @@ def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarit
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = video.get(cv2.CAP_PROP_FPS)
     print(
-        f"process_video3: max_distance_for_similarity={max_distance_for_similarity}, scene_change_threshold={scene_change_threshold}")
+        f"findSceneChanges: max_distance_for_similarity={max_distance_for_similarity}, scene_change_threshold={scene_change_threshold}")
     print(f"total frames: {totalFrames}; fps: {fps}")
     # Loop through the video and extract frames at specified sampling rate
     currentFrame = 0
@@ -213,7 +213,7 @@ def process_video3(path, videoName, frames_to_skip=0, max_distance_for_similarit
         json.dump(response, f)
         f.close()
 
-    return [sceneChangeImages, totalFrames, fps]
+    return sceneChangeImages
 
 def saveFrameToFile(path, videoName, video, frameNumber):
     imgURL = constructImageURL(path, videoName, frameNumber)
@@ -291,7 +291,7 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
 def summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary):
     scoreFilterThreshold = 0.25
     scenes = llmSceneChanges
-    if len(llmSceneChanges) <= 2 and len(sceneChanges) > 0:
+    if len(llmSceneChanges) <= 2 and len(sceneChanges) > llmSceneChanges:
         print(f"WARNING: not enough labeled scene changes {len(llmSceneChanges)}: attempting a fallback ...")
         scenes = sceneChanges
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes
@@ -311,7 +311,7 @@ def downloadYouTubeVideo(videoURL, outputPath, fileName):
 
 
 def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60, scoreThreshold=.80, verbose=False):
-    [sceneChanges, totalFrames, fps] = process_video3(path, videoName,
+    sceneChanges = findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
 
@@ -400,7 +400,7 @@ def main():
     print(
         f'scoring similarities with threshold: {scoreThreshold} and max distance for similarity: {maxDistanceForSimilarity}')
 
-    [sceneChanges, totalFrames, fps] = process_video3(path, videoName,
+    sceneChanges = findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold)
 

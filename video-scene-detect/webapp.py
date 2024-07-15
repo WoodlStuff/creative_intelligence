@@ -12,6 +12,7 @@ import video_extractor
 import openAI_caller
 
 import os
+import logging
 
 class WebRequestHandler(BaseHTTPRequestHandler):
     @cached_property
@@ -37,6 +38,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         
     def get_response(self):
         postData = self.post_data.decode("utf-8")
+        logging.info("Video Processor: " + postData)
         jsonData = json.loads(postData)
 
         videoName = jsonData['video_name']
@@ -57,14 +59,16 @@ class WebRequestHandler(BaseHTTPRequestHandler):
         if 'verbose' in jsonData:
             verbose = jsonData['verbose']
 
-        # TODO: make those params!
         maxDistanceForSimilarity=60 
-        scoreThreshold=.80
+        if 'maxSimilarityDistance' in jsonData:
+            maxDistanceForSimilarity = jsonData['maxSimilarityDistance']
+
+        scoreThreshold=.70
+        if 'sceneChangeScoreThreshold' in jsonData:
+            scoreThreshold = jsonData['sceneChangeScoreThreshold']
 
         llmSceneChanges = []
         sceneChanges = []
-        totalFrames = 0
-        fps = 0.0
 
         if refresh:
             # split the calls!
@@ -76,7 +80,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 
                 llmSceneChanges = video_extractor.labelSceneChanges(sceneChanges, path, videoName)
             else:
-                [sceneChanges, totalFrames, fps] = video_extractor.process_video3(path, videoName,
+                sceneChanges = video_extractor.findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
 
