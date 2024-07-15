@@ -461,7 +461,6 @@ public class NoiServlet extends BaseControllerServlet {
         Connection con = null;
         try {
             con = Model.connectX();
-            // todo: add handling of multiple request (only use the most recent here!)
             videoScenes.putAll(DbImage.findVideoScenes(con, videos, llmChanges));
         } finally {
             Model.close(con);
@@ -949,6 +948,8 @@ public class NoiServlet extends BaseControllerServlet {
             throw new IllegalArgumentException("no video id found in path");
         }
 
+        // retire older scene change requests (we don't want to see old pairs that are no longer relevant)
+        DbSimilarity.retireScenes(videoId);
         handleScenePost(videoId, videoScenes);
 
         List<AiVideo> videos = new ArrayList<>();
@@ -1018,7 +1019,10 @@ public class NoiServlet extends BaseControllerServlet {
             // lookup the model id for our local scoring alg.
             AiModel orbModel = DbModel.ensure(con, "ORB");
 
-            if(videoLabels.has("scored_scene_changes")){
+            double scoreThreshold = JsonTools.getAsDouble(videoLabels, "score_threshold");
+            int maxSimilarityDistance = JsonTools.getAsInt(videoLabels, "max_distance_for_similarity");
+
+            if (videoLabels.has("scored_scene_changes")) {
                 // int videoLength = JsonTools.getAsInt(videoLabels, "video_length_seconds", 0);
                 int frames = JsonTools.getAsInt(videoLabels, "total_frames", 0);
                 double fps = JsonTools.getAsDouble(videoLabels, "frames_per_second");
@@ -1042,10 +1046,9 @@ public class NoiServlet extends BaseControllerServlet {
                     double similarity = JsonTools.getAsDouble(score, "similarity_score");
 
                     // persist the request and the score
-                    DbSimilarity.insertRequest(con, null, imageId, imageIdBefore, orbModel, null, similarity, null, true);
+                    DbSimilarity.insertRequest(con, null, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, orbModel, null, similarity, null, true);
                 }
-            }
-            else {
+            } else {
                 // handle posted LLM responses
                 // what text prompt was used to generate the same scene LLM answers
                 String sameScenePrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_user");
@@ -1071,7 +1074,7 @@ public class NoiServlet extends BaseControllerServlet {
                         System.out.println("WARNING: unable to log similarity for " + new Gson().toJson(score));
                         continue;
                     }
-                    DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
+                    DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
                 }
 
                 // read the rejected_changes (LLM does not agree to the scene change) and persist the model results
@@ -1087,7 +1090,7 @@ public class NoiServlet extends BaseControllerServlet {
 
                     double similarity = JsonTools.getAsDouble(score, "similarity_score");
                     String explanation = JsonTools.getAsString(score, "explanation");
-                    DbSimilarity.insertRequest(con, uuid, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
+                    DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
                 }
 
                 // process the media meta files (sound and video summaries)

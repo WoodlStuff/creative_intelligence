@@ -55,6 +55,7 @@ public class OpenAIEmbeddingService extends EmbeddingService {
 
             Map<String, Long> imageCategories = DbImageLabel.findAllCategories(con);
 
+            // loop the json array (of category documents)
             for (int i = 0; i < categories.size(); i++) {
                 JsonObject category = categories.get(i).getAsJsonObject();
                 String categoryName = category.get("category").getAsString();

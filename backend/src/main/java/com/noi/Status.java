@@ -16,6 +16,7 @@ public class Status {
         statusMap.put(status, this);
     }
 
+    public static final Status RETIRED = new Status(-2, "retired") ;
     public static final Status DELETED = new Status(-1, "deleted");
     public static final Status NEW = new Status(0, "new");
     public static final Status ACTIVE = new Status(1, "active");

@@ -4,12 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="small fix for gender db column size; &#10;fix for single image label request">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="link the video and brand id automatically when we create images in the process of analyzing a video;">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/OpenAIEmbeddingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/OpenAIEmbeddingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/QueryMeta.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,6 +104,9 @@
       <recent name="com.noi.embeddings" />
       <recent name="com.noi.image" />
       <recent name="com.noi.video" />
+    </key>
+    <key name="MoveMembersDialog.RECENTS_KEY">
+      <recent name="com.noi.embeddings.VectorService" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.noi.language" />
@@ -188,7 +208,14 @@
       <option name="project" value="LOCAL" />
       <updated>1720730672171</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="link the video and brand id automatically when we create images in the process of analyzing a video;">
+      <created>1720734328937</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1720734328937</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -200,14 +227,15 @@
     <MESSAGE value="added a brand concept to videos and images" />
     <MESSAGE value="split out video processing into two steps: ORB scene changes, and LLM scene changes (plus other LLM calls for video and sound summary)" />
     <MESSAGE value="small fix for gender db column size; &#10;fix for single image label request" />
-    <option name="LAST_COMMIT_MESSAGE" value="small fix for gender db column size; &#10;fix for single image label request" />
+    <MESSAGE value="link the video and brand id automatically when we create images in the process of analyzing a video;" />
+    <option name="LAST_COMMIT_MESSAGE" value="link the video and brand id automatically when we create images in the process of analyzing a video;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java</url>
-          <line>853</line>
+          <line>852</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

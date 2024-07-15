@@ -1,6 +1,7 @@
 package com.noi.models;
 
 import com.noi.AiBrand;
+import com.noi.AiModel;
 import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
@@ -479,7 +480,7 @@ public class DbImage extends Model {
             StringBuilder query = new StringBuilder();
             query.append("select distinct m.name, r.ai_image_before_id last_image_id, r.ai_image_id first_image_id, r.is_scene_change, r.ai_image_id, last.image_url last_scene_url, last.video_frame_number last_frame, first.image_url first_scene_url, first.video_frame_number first_frame, r.score, r.explanation from ai_similarity_requests r join ai_models m on m.id = r.ai_model_id join ai_images last on r.ai_image_before_id = last.id join ai_images first on r.ai_image_id = first.id");
             // we only want the most recent requests per image pair, model and prompt
-            query.append(" join (select max(r.id) _max_id, r.ai_image_id, r.ai_image_before_id, r.ai_model_id, r.ai_prompt_id from ai_similarity_requests r join ai_images i on i.id = r.ai_image_id where i.ai_video_id=? group by 2,3,4,5 order by r.ai_model_id, r.ai_prompt_id, r.ai_image_id, r.ai_image_before_id)recent on recent._max_id = r.id");
+            query.append(" join (select max(r.id) _max_id, r.ai_image_id, r.ai_image_before_id, r.ai_model_id, r.ai_prompt_id from ai_similarity_requests r where r.ai_video_id=? and r.status !=? group by 2,3,4,5 order by r.ai_model_id, r.ai_prompt_id, r.ai_image_id, r.ai_image_before_id)recent on recent._max_id = r.id");
             query.append("  where last.ai_video_id = first.ai_video_id and first.ai_video_id=?");
             if (llmChanges) {
                 query.append(" and m.name !=?");
@@ -493,11 +494,11 @@ public class DbImage extends Model {
             for (AiVideo video : videos) {
                 List<AiVideo.SceneChange> changes = new ArrayList<>();
                 stmt.setLong(1, video.getId());
-                stmt.setLong(2, video.getId());
-                stmt.setString(3, "ORB"); // ORB is our internal scoring model for scene changes
+                stmt.setInt(2, Status.RETIRED.getStatus());
+                stmt.setLong(3, video.getId());
+                stmt.setString(4, AiModel.PY_INTERNAL_SCORING.getName());
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    // AiPrompt prompt = DbLanguage.findPrompt(con, rs.getLong("ai_prompt_id"));
                     AiImage lastImage = DbImage.find(con, rs.getLong("last_image_id"));
                     AiImage firstImage = DbImage.find(con, rs.getLong("first_image_id"));
                     double score = rs.getDouble("score");

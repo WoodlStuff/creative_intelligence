@@ -25,6 +25,7 @@ public class AiModel {
 
     public static final AiModel MID_JOURNEY = new AiModel("midjourney");
 
+    public static final AiModel PY_INTERNAL_SCORING = new AiModel("ORB");
     public static final AiModel DEFAULT_VISION_MODEL = GPT_4o;
 
     private AiModel(Long id, String name) {

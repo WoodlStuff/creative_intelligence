@@ -13,8 +13,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class LabelService {
     public static final String OPEN_AI_COMPLETION = "OpenAiLabels";
@@ -100,22 +99,38 @@ public abstract class LabelService {
             a.add(l);
         }
 
+        // collect distinct category names (for filter functions in the UI ... )
+        Set<String> catNames = new TreeSet<>();
+
         // categories
         JsonArray categories = new JsonArray();
         i.add("categories", categories);
         for (Map.Entry<String, List<LabelMetaData>> cat : metaValues.entrySet()) {
             // if a filter is provided: only the matching category will be added to the response
-            if (categoryName == null || categoryName.equalsIgnoreCase(cat.getKey())) {
+            String catName = cat.getKey();
+            if (categoryName == null || categoryName.equalsIgnoreCase(catName)) {
+                if (!catNames.contains(catName)) {
+                    catNames.add(catName);
+                }
                 for (LabelMetaData meta : cat.getValue()) {
                     JsonObject label = new JsonObject();
                     categories.add(label);
-                    label.addProperty("category_name", cat.getKey());
+                    label.addProperty("category_name", catName);
                     label.addProperty("request_uuid", meta.getRequestUUID());
                     label.addProperty("model_name", meta.getModelName());
                     label.addProperty("key", meta.getKey());
                     label.addProperty("value", meta.getValue());
                 }
             }
+        }
+
+        // now add in the unique category names as a separate element
+        JsonArray categoryNames = new JsonArray();
+        i.add("category_names", categoryNames);
+        List<String> sorted = new ArrayList<>(catNames);
+        Collections.sort(sorted);
+        for (String catName : sorted) {
+            categoryNames.add(catName);
         }
 
         return i;

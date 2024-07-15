@@ -4,6 +4,7 @@ import com.noi.AiModel;
 import com.noi.Status;
 import com.noi.language.AiPrompt;
 
+import javax.naming.NamingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -25,10 +26,10 @@ public class DbSimilarity extends Model {
         }
     }
 
-    public static Long insertRequest(Connection con, String uuid, Long imageId, Long imageIdBefore, AiModel model, AiPrompt prompt, double similarity, String explanation, boolean isSceneChange) throws SQLException {
+    public static Long insertRequest(Connection con, String uuid, Integer maxSimilarityDistance, Double scoreThreshold, Long videoId, Long imageId, Long imageIdBefore, AiModel model, AiPrompt prompt, double similarity, String explanation, boolean isSceneChange) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("insert ignore into ai_similarity_requests (uuid, ai_image_id, ai_image_before_id, ai_model_id, ai_prompt_id, score, explanation, is_scene_change, status, created_at, updated_at) values(?,?,?, ?,?,?, ?,?,?, now(), now()) ON DUPLICATE KEY update updated_at=now(), score=?, explanation=?, is_scene_change=?, id=LAST_INSERT_ID(id)");
+            stmt = con.prepareStatement("insert ignore into ai_similarity_requests (uuid, ai_image_id, ai_image_before_id, ai_model_id, ai_prompt_id, max_distance, score_threshold, score, explanation, is_scene_change, status, ai_video_id, created_at, updated_at) values(?,?,?,?,?,?,?,?,?,?,?,?, now(), now()) ON DUPLICATE KEY update updated_at=now(), max_distance=?, score_threshold=?, score=?, explanation=?, is_scene_change=?, id=LAST_INSERT_ID(id)");
             stmt.setString(1, uuid);
             stmt.setLong(2, imageId);
             stmt.setLong(3, imageIdBefore);
@@ -45,20 +46,65 @@ public class DbSimilarity extends Model {
                 stmt.setString(5, null);
             }
 
-            stmt.setDouble(6, similarity);
-            stmt.setString(7, explanation != null && explanation.length() > 255 ? explanation.substring(0, 254) : explanation);
-            stmt.setBoolean(8, isSceneChange);
+            if (maxSimilarityDistance != null) {
+                stmt.setInt(6, maxSimilarityDistance);
+            } else {
+                stmt.setString(6, null);
+            }
 
-            stmt.setInt(9, Status.ACTIVE.getStatus());
+            if (scoreThreshold != null) {
+                stmt.setDouble(7, scoreThreshold);
+            } else {
+                stmt.setString(7, null);
+            }
+
+            stmt.setDouble(8, similarity);
+            stmt.setString(9, explanation != null && explanation.length() > 255 ? explanation.substring(0, 254) : explanation);
+            stmt.setBoolean(10, isSceneChange);
+
+            stmt.setInt(11, Status.ACTIVE.getStatus());
+            if (videoId != null) {
+                stmt.setLong(12, videoId);
+            } else {
+                stmt.setString(12, null);
+            }
 
             // on duplicate
-            stmt.setDouble(10, similarity);
-            stmt.setString(11, explanation != null && explanation.length() > 255 ? explanation.substring(0, 254) : explanation);
-            stmt.setBoolean(12, isSceneChange);
+            if (maxSimilarityDistance != null) {
+                stmt.setInt(13, maxSimilarityDistance);
+            } else {
+                stmt.setString(13, null);
+            }
+
+            if (scoreThreshold != null) {
+                stmt.setDouble(14, scoreThreshold);
+            } else {
+                stmt.setString(14, null);
+            }
+
+
+            stmt.setDouble(15, similarity);
+            stmt.setString(16, explanation != null && explanation.length() > 255 ? explanation.substring(0, 254) : explanation);
+            stmt.setBoolean(17, isSceneChange);
 
             return executeWithLastId(stmt);
         } finally {
             close(stmt);
+        }
+    }
+
+    public static void retireScenes(Long videoId) throws SQLException, NamingException {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        try {
+            con = Model.connectX();
+            stmt = con.prepareStatement("update ai_similarity_requests set status=?, updated_at=now() where ai_video_id=?");
+            stmt.setInt(1, Status.RETIRED.getStatus());
+            stmt.setLong(2, videoId);
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+            close(con);
         }
     }
 

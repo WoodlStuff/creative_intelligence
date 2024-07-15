@@ -36,10 +36,10 @@ public abstract class EmbeddingService {
 
         Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
 
-        // then get the embeddings for the categories
+        // then get the embeddings for the categories ...
         EmbeddingService embeddingService = getService();
 
-        // by formatting a json doc with all the category data contained
+        // ... by formatting a json doc with all the category data contained
         JsonObject inputDoc = new JsonObject();
         JsonArray categories = new JsonArray();
         inputDoc.add("categories", categories);

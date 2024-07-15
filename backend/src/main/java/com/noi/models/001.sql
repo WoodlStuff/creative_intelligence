@@ -564,6 +564,14 @@ alter table ai_images add column ai_brand_id bigint NULL after is_video_scene_sn
 alter table ai_images add foreign key (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT;
 -- end: 20240710
 
+-- 20240712
+alter table ai_similarity_requests add column ai_video_id bigint NULL after uuid;
+alter table ai_similarity_requests add foreign key (ai_video_id) references ai_videos(id) ON DELETE RESTRICT;
+
+-- 20240715
+alter table ai_similarity_requests add column max_distance int NULL after ai_prompt_id;
+alter table ai_similarity_requests add column score_threshold decimal(4,2) NULL after max_distance;
+
 
 -- =======================================
 -- reset schema

@@ -26,8 +26,6 @@ import java.util.Map;
 
 @WebServlet(name = "EmbeddingServlet", urlPatterns = {"/embeddings/*", "/video-embeddings/*"}, loadOnStartup = 0)
 public class EmbeddingServlet extends HttpServlet {
-    private static final String INDEX_NAME = "categories";
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Path path = Path.parse(req);
@@ -135,7 +133,7 @@ public class EmbeddingServlet extends HttpServlet {
                 EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);
                 if (embeddings.hasVectors()) {
                     VectorService vectorService = VectorService.getService();
-                    Map<String, Integer> imageCategoryCounts = vectorService.upsert(con, embeddings, INDEX_NAME);
+                    Map<String, Integer> imageCategoryCounts = vectorService.upsert(con, embeddings, VectorService.INDEX_NAME);
                     upsertCounts.put(image.getId(), imageCategoryCounts);
                 }
             }

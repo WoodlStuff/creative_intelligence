@@ -418,6 +418,12 @@ public class DbImageLabel extends Model {
         }
     }
 
+    /**
+     * return a map of category name to its id.
+     * @param con
+     * @return
+     * @throws SQLException
+     */
     public static Map<String, Long> findAllCategories(Connection con) throws SQLException {
         Map<String, Long> categories = new HashMap<>();
 

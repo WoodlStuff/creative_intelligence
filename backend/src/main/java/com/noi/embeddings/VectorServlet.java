@@ -24,6 +24,8 @@ import java.util.List;
 
 @WebServlet(name = "VectorServlet", urlPatterns = {"/vectors/*"}, loadOnStartup = 0)
 public class VectorServlet extends HttpServlet {
+    private static final String DEFAULT_CATEGORY = "situation";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // curl -X GET http://localhost:8080/noi-server/vectors/<image-id>/categoryName?videoId=123
@@ -44,7 +46,8 @@ public class VectorServlet extends HttpServlet {
         Long id;
         id = Long.valueOf(pathTokens[0].trim());
 
-        String categoryName = null;
+        // we need a category to query! (that's a Pinecone limitation!)
+        String categoryName = DEFAULT_CATEGORY;
         if (pathTokens.length > 1) {
             categoryName = pathTokens[1].trim();
         }
@@ -60,7 +63,7 @@ public class VectorServlet extends HttpServlet {
 
             // namespace, vector,TopK, metadata: video-id !=
             AiImage image = DbImage.find(con, id);
-            QueryMeta queryMeta = QueryMeta.create(image.getVideoId(), sameVideo);
+            QueryMeta queryMeta = QueryMeta.create(image, sameVideo);
             List<VectorMatch> matches = new ArrayList<>();
             // 1) calculate the vector for the image id and category (to use as part of the query)
             EmbeddingService.ImageEmbeddings embeddings = EmbeddingService.getEmbeddings(con, image.getId(), categoryName);

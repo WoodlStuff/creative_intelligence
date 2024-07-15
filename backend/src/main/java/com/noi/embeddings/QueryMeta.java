@@ -1,22 +1,23 @@
 package com.noi.embeddings;
 
 import com.google.gson.JsonObject;
+import com.noi.image.AiImage;
 
 public class QueryMeta {
-    private final Long videoId;
+    private final AiImage image;
     private final boolean sameVideo;
 
-    private QueryMeta(Long videoId, boolean sameVideo) {
-        this.videoId = videoId;
+    private QueryMeta(AiImage image, boolean sameVideo) {
+        this.image = image;
         this.sameVideo = sameVideo;
     }
 
-    public static QueryMeta create(Long videoId, boolean sameVideo) {
-        return new QueryMeta(videoId, sameVideo);
+    public static QueryMeta create(AiImage image, boolean sameVideo) {
+        return new QueryMeta(image, sameVideo);
     }
 
     public Long getVideoId() {
-        return videoId;
+        return image.getVideoId();
     }
 
     public boolean isSameVideo() {
@@ -26,13 +27,17 @@ public class QueryMeta {
     @Override
     public String toString() {
         return "QueryMeta{" +
-                "videoId=" + videoId +
+                "image=" + image +
+                "sameVideo=" + sameVideo +
                 '}';
     }
 
     public JsonObject toJson() {
         JsonObject meta = new JsonObject();
-        meta.addProperty("video_id", videoId);
+        meta.addProperty("video_id", image.getVideoId());
+        if (image.getBrand() != null) {
+            meta.addProperty("brand", image.getBrand().getName());
+        }
         return meta;
     }
 }

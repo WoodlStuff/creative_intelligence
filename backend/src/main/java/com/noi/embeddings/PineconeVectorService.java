@@ -137,7 +137,7 @@ public class PineconeVectorService extends VectorService {
     }
 
     @Override
-    protected List<VectorMatch> querySimilarImages(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) throws EmbeddingException, IOException {
+    protected List<VectorMatch> querySimilarImages(EmbeddingService.ImageEmbeddings embeddings, String categoryName, QueryMeta queryMeta) throws EmbeddingException, IOException {
         // query the vector db for matches in this category
 
         CloseableHttpClient client = null;
@@ -145,11 +145,11 @@ public class PineconeVectorService extends VectorService {
         try {
             client = HttpClients.createDefault();
 
-            String hostName = getIndexHostURL(indexName);
+            String hostName = getIndexHostURL(INDEX_NAME);
             String postUrl = String.format("https://%s/query", hostName);
             HttpPost httpPost = createHttpPost(postUrl, apiKey);
 
-            StringEntity entity = createQueryEntity(embeddings, indexName, queryMeta);
+            StringEntity entity = createQueryEntity(embeddings, categoryName, queryMeta);
             httpPost.setEntity(entity);
             response = client.execute(httpPost);
 
@@ -246,20 +246,20 @@ public class PineconeVectorService extends VectorService {
         return root;
     }
 
-    private StringEntity createQueryEntity(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) {
-        JsonObject payload = createQueryPayload(embeddings, indexName, queryMeta);
+    private StringEntity createQueryEntity(EmbeddingService.ImageEmbeddings embeddings, String categoryName, QueryMeta queryMeta) {
+        JsonObject payload = createQueryPayload(embeddings, categoryName, queryMeta);
         System.out.println("PineconeVectorService:query with: \r\n" + new Gson().toJson(payload));
         return new StringEntity(new Gson().toJson(payload), ContentType.APPLICATION_JSON);
     }
 
-    private JsonObject createQueryPayload(EmbeddingService.ImageEmbeddings embeddings, String indexName, QueryMeta queryMeta) {
+    private JsonObject createQueryPayload(EmbeddingService.ImageEmbeddings embeddings, String categoryName, QueryMeta queryMeta) {
         JsonObject root = new JsonObject();
         // vectors is array of {"category":"paralanguage","vector":[....]}, {"category": ...}]
         JsonArray vectors = embeddings.getVectors();
         JsonArray vector = null;
         for (int i = 0; i < vectors.size(); i++) {
             JsonObject categoryVector = vectors.get(i).getAsJsonObject();
-            if (indexName.equalsIgnoreCase(categoryVector.get("category").getAsString())) {
+            if (categoryName.equalsIgnoreCase(categoryVector.get("category").getAsString())) {
                 // found it!
                 vector = categoryVector.get("vector").getAsJsonArray();
                 break;
@@ -267,10 +267,10 @@ public class PineconeVectorService extends VectorService {
         }
 
         if (vector == null) {
-            throw new IllegalArgumentException("no category found for index[" + indexName + "]");
+            throw new IllegalArgumentException("no category found for index[" + INDEX_NAME + "] and category[" + categoryName + "]");
         }
 
-        root.addProperty("namespace", indexName);
+        root.addProperty("namespace", categoryName);
         root.add("vector", vector);
         root.addProperty("topK", 3);
 
@@ -293,5 +293,4 @@ public class PineconeVectorService extends VectorService {
 
         return root;
     }
-
 }
