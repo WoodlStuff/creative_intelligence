@@ -147,8 +147,16 @@ public class CategoryServlet extends BaseControllerServlet {
             imgId = Long.valueOf(imageId);
 
             if (pathTokens.length > 1) {
+                // /noi-server/categories/<image-id>[/<prompt-id>]
+                String promptId = pathTokens[1].trim();
+                if (promptId.isEmpty()) {
+                    throw new IllegalArgumentException("prompt id is invalid in the path: /label/<image-id>/<prompt-id>: " + path);
+                }
+
+                Long aiPromptId = Long.valueOf(promptId);
+                prompt = DbLanguage.findPrompt(aiPromptId);
                 // todo: revisit! (case: no id in url, but type and prompt as posted json)
-                prompt = handlePrompt(req, path, 1);
+                // prompt = handlePrompt(req, path, 1);
             }
         } else {
             String imageUrl = req.getParameter("image_url");
@@ -172,7 +180,7 @@ public class CategoryServlet extends BaseControllerServlet {
             modelPrompts.put(prompt.getModel(), prompts);
         } else {
             // otherwise: use all active label prompts
-            modelPrompts.putAll(readPrompts());
+            modelPrompts.putAll(LabelService.readPrompts());
         }
 
         List<NoiResponse> responses = new ArrayList<>();

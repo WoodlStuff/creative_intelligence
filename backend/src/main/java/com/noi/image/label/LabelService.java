@@ -3,11 +3,16 @@ package com.noi.image.label;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.noi.AiModel;
 import com.noi.image.AiImage;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.AiPrompt;
+import com.noi.models.DbLanguage;
+import com.noi.models.Model;
 import com.noi.requests.ImageLabelResponse;
 import org.apache.http.entity.ContentType;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
@@ -63,10 +68,11 @@ public abstract class LabelService {
         return modelName;
     }
 
-    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, boolean hasEmbedding, HttpServletResponse response) throws IOException {
+    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, boolean hasEmbedding, HttpServletResponse response) throws IOException, SQLException, NamingException {
         // create the json doc
         JsonObject root = addImageLabels(image, annotations, metaValues, categoryName);
         root.addProperty("has_embedding", hasEmbedding);
+        addPromptsForLookup(root);
 
         response.setContentType(ContentType.APPLICATION_JSON.toString());
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -77,6 +83,28 @@ public abstract class LabelService {
         out.write(gson.toJson(root));
         out.flush();
         out.close();
+    }
+
+    private static void addPromptsForLookup(JsonObject root) throws SQLException, NamingException {
+        Map<AiModel, List<AiPrompt>> labelPrompts = LabelService.readPrompts();
+        JsonArray prompts = new JsonArray();
+        root.add("prompts", prompts);
+        for (Map.Entry<AiModel, List<AiPrompt>> entry : labelPrompts.entrySet()) {
+            for (AiPrompt aiPrompt : entry.getValue()) {
+                JsonObject prompt = new JsonObject();
+                prompts.add(prompt);
+                AiModel model = entry.getKey();
+                prompt.addProperty("model_id", model.getId());
+                prompt.addProperty("model_name", model.getName());
+
+                prompt.addProperty("prompt_id", aiPrompt.getId());
+                String name = "" + aiPrompt.getId(); // default, in case we don't have a name)
+                if (aiPrompt.getName() != null && !aiPrompt.getName().isEmpty()) {
+                    name = aiPrompt.getName();
+                }
+                prompt.addProperty("prompt_name", name);
+            }
+        }
     }
 
     public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName) {
@@ -135,6 +163,35 @@ public abstract class LabelService {
         }
 
         return i;
+    }
+
+    public static Map<AiModel, List<AiPrompt>> readPrompts() throws SQLException, NamingException {
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            return readPrompts(con);
+        } finally {
+            Model.close(con);
+        }
+    }
+
+    public static Map<AiModel, List<AiPrompt>> readPrompts(Connection con) throws SQLException {
+        Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
+        List<AiPrompt.Type> promptTypes = new ArrayList<>();
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+        List<AiPrompt> dbPrompts = DbLanguage.findPrompts(con, promptTypes);
+        for (AiPrompt p : dbPrompts) {
+            List<AiPrompt> prompts = modelPrompts.get(p.getModel());
+            if (prompts == null) {
+                prompts = new ArrayList<>();
+                modelPrompts.put(p.getModel(), prompts);
+            }
+            prompts.add(p);
+        }
+
+        return modelPrompts;
     }
 
     /**
