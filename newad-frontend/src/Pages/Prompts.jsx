@@ -46,6 +46,7 @@ function Prompts() {
       <div className="card">
         <div className="card-header">
           <h3>Prompts</h3>
+          <div className="new_button"><a href="/prompt/new">New Prompt ...</a></div>
         </div>
 
         <div className="card-body">
@@ -53,9 +54,11 @@ function Prompts() {
             <table width="100%">
               <thead>
                 <tr>
-                <td className="id" width="2%">ID</td>
+                <td className="id" width="10%">Name</td>
+                <td className="status" width="10%">Status</td>
+                <td className="model" width="10%">Model</td>
                 <td className="prompt_type" width="10%">Type</td>
-                <td className="nav_link" width="80%">Prompt</td>
+                <td className="nav_link" width="70%">Prompt</td>
                 {/* <td className="status" width="10%">Status</td> */}
                 </tr>
               </thead>
@@ -69,10 +72,11 @@ function Prompts() {
                           key={prompt.id}
                           className="prompt-link"
                         >
-                          <span className="prompt_link_text">{prompt.id}</span>
+                          <span className="prompt_link_text">{prompt.hasOwnProperty('name') ? prompt.name : prompt.id}</span>
                         </NavLink>
                       </td>
-
+                      <td className="status" width="10%">{prompt.status}</td>
+                      <td className="model" width="10%">{prompt.model_name}</td>
                       <td className="prompt_type" width="10%">{prompt.type_name}</td>
                       <td className="prompt" width="80%">
                         <textarea disabled className="textarea_prompt" defaultValue={prompt.prompt}/>

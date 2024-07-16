@@ -152,7 +152,7 @@ function Image() {
       else{
         setEmbedding(false);
       }
-      
+
       hideProgressbar();
     });
   }
@@ -231,7 +231,7 @@ function Image() {
         </div>
         <div className="card-button">
           <button onClick={async () => { await handleEmbeddingClick();}}>Create Embeddings</button>
-          <span><label>Hash Embeddings</label><input type="checkbox" checked={embedding}/></span>
+          <span><label>Has Embeddings</label><input type="checkbox" checked={embedding}/></span>
         </div>
       </div>
 
