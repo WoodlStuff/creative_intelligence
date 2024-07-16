@@ -258,7 +258,7 @@ public class GoogleVisionLabelService extends LabelService {
         Long promptId = -1L;
         String promptText = "A prompt to generate an image.";
         AiPrompt prompt = AiPrompt.create(promptId, promptText);
-        AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, MODEL_NAME);
+        AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, AiModel.GOOGLE_VISION);
         AiImageRequest imageRequest = AiImageRequest.create(prompt, AiModel.DALL_E_3.getName());
         // String fileName = "1.jpg";
         //String imgUrl = String.format("%s" + requestUUID + "/%s", AiImageService.FILE_ROOT_FOLDER, fileName);

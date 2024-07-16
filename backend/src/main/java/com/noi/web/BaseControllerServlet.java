@@ -1,5 +1,6 @@
 package com.noi.web;
 
+import com.noi.AiModel;
 import com.noi.image.label.LabelService;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiPrompt;
@@ -17,7 +18,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class BaseControllerServlet extends HttpServlet {
 
@@ -46,12 +49,12 @@ public abstract class BaseControllerServlet extends HttpServlet {
         return modelName;
     }
 
-    protected static List<ImageLabelResponse> requestImageLabels(Long imageId, String modelName, AiPrompt[] prompts) throws SQLException, NamingException {
+    protected static List<ImageLabelResponse> requestImageLabels(Long imageId, AiModel model, List<AiPrompt> prompts) throws SQLException, NamingException {
         List<ImageLabelResponse> responses = new ArrayList<>();
         // handle a GoogleVision request (has no prompt!)
         if (prompts == null) {
             try {
-                AiImageLabelRequest request = AiImageLabelRequest.create(imageId, null, modelName);
+                AiImageLabelRequest request = AiImageLabelRequest.create(imageId, null, model);
                 responses.add(requestImageLabels(request));
             } catch (IOException e) {
                 // todo:
@@ -65,7 +68,7 @@ public abstract class BaseControllerServlet extends HttpServlet {
                     continue;
                 }
                 try {
-                    AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, modelName);
+                    AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, model);
                     responses.add(requestImageLabels(request));
                 } catch (IOException e) {
                     // todo:
@@ -94,6 +97,35 @@ public abstract class BaseControllerServlet extends HttpServlet {
         } finally {
             Model.close(con);
         }
+    }
+
+    protected static Map<AiModel, List<AiPrompt>> readPrompts() throws SQLException, NamingException {
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            return readPrompts(con);
+        } finally {
+            Model.close(con);
+        }
+    }
+
+    protected static Map<AiModel, List<AiPrompt>> readPrompts(Connection con) throws SQLException {
+        Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
+        List<AiPrompt.Type> promptTypes = new ArrayList<>();
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
+        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
+        List<AiPrompt> dbPrompts = DbLanguage.findPrompts(con, promptTypes);
+        for (AiPrompt p : dbPrompts) {
+            List<AiPrompt> prompts = modelPrompts.get(p.getModel());
+            if (prompts == null) {
+                prompts = new ArrayList<>();
+                modelPrompts.put(p.getModel(), prompts);
+            }
+            prompts.add(p);
+        }
+
+        return modelPrompts;
     }
 
     @Override

@@ -16,8 +16,8 @@ import java.sql.SQLException;
 import java.util.*;
 
 public abstract class LabelService {
-    public static final String OPEN_AI_COMPLETION = "OpenAiLabels";
-    public static final String GOOGLE_VISION = "GoogleVisionLabels";
+    public static final String OPEN_AI = "OpenAI";
+    public static final String GOOGLE_VISION = "GoogleVision";
     private final String serviceName;
 
     protected LabelService(String serviceName) {
@@ -31,7 +31,7 @@ public abstract class LabelService {
     public static LabelService getService(AiImageLabelRequest request) {
         String serviceName = getServiceName(request.getModelName());
 
-        if (serviceName == null || OPEN_AI_COMPLETION.equalsIgnoreCase(serviceName)) {
+        if (serviceName == null || OPEN_AI.equalsIgnoreCase(serviceName)) {
             return new OpenAILabelService(request.getModelName());
 
         } else if (GOOGLE_VISION.equalsIgnoreCase(serviceName)) {
@@ -46,7 +46,7 @@ public abstract class LabelService {
             return LabelService.GOOGLE_VISION;
         }
         // default!
-        return LabelService.OPEN_AI_COMPLETION;
+        return LabelService.OPEN_AI;
     }
 
     public static String getModelName(String serviceName, String modelName) {

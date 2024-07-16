@@ -1,10 +1,8 @@
 package com.noi;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-public class Status {
+public class Status implements Comparable<Status> {
     private final int status;
     private final String name;
 
@@ -16,7 +14,7 @@ public class Status {
         statusMap.put(status, this);
     }
 
-    public static final Status RETIRED = new Status(-2, "retired") ;
+    public static final Status RETIRED = new Status(-2, "retired");
     public static final Status DELETED = new Status(-1, "deleted");
     public static final Status NEW = new Status(0, "new");
     public static final Status ACTIVE = new Status(1, "active");
@@ -27,6 +25,10 @@ public class Status {
 
     public static Status parse(int status) {
         return statusMap.get(status);
+    }
+
+    public static List<Status> getAll() {
+        return new ArrayList<>(statusMap.values());
     }
 
     public int getStatus() {
@@ -53,5 +55,10 @@ public class Status {
     @Override
     public int hashCode() {
         return Objects.hash(status);
+    }
+
+    @Override
+    public int compareTo(Status o) {
+        return this.name.compareTo(o.name);
     }
 }

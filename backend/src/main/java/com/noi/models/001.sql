@@ -572,6 +572,12 @@ alter table ai_similarity_requests add foreign key (ai_video_id) references ai_v
 alter table ai_similarity_requests add column max_distance int NULL after ai_prompt_id;
 alter table ai_similarity_requests add column score_threshold decimal(4,2) NULL after max_distance;
 
+-- add a relationship between the prompt and the model to send it to
+alter table ai_prompts add column ai_model_id bigint NULL after id;
+alter table ai_prompts add column name varchar(100) NULL after ai_model_id;
+alter table ai_prompts add foreign key (ai_model_id) references ai_models(id) ON DELETE RESTRICT;
+alter table ai_prompts add unique key(name);
+
 
 -- =======================================
 -- reset schema

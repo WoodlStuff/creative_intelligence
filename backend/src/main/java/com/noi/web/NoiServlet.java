@@ -1,16 +1,13 @@
 package com.noi.web;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.noi.AiModel;
+import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
 import com.noi.image.AiImageResponse;
 import com.noi.image.AiImageService;
 import com.noi.image.label.AiImageLabel;
-import com.noi.image.label.GoogleVisionLabelService;
 import com.noi.image.label.LabelMetaData;
 import com.noi.image.label.LabelService;
 import com.noi.language.*;
@@ -58,31 +55,27 @@ public class NoiServlet extends BaseControllerServlet {
 
         File dir = new File(folder);
         if (dir.isDirectory()) {
+            Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
+
             Connection con = null;
             try {
                 con = Model.connectX();
 
                 // read the prompts once
-                List<AiPrompt.Type> promptTypes = new ArrayList<>();
-                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
-                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
-                promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
-                List<AiPrompt> dbPrompts = DbLanguage.findPrompts(con, promptTypes);
-                AiPrompt[] prompts = new AiPrompt[dbPrompts.size()];
-                dbPrompts.toArray(prompts);
+                modelPrompts.putAll(readPrompts(con));
 
-                System.out.println("processing folder " + folder + " for " + prompts.length + " prompts ...");
+                System.out.println("processing folder " + folder + " for " + modelPrompts.size() + " models ...");
                 for (File f : dir.listFiles()) {
                     if (f.isFile() && f.getName().toLowerCase().endsWith(".jpg")) {
                         System.out.println("\r\nprocessing image: " + f.getAbsolutePath());
                         AiImage image = DbImage.ensure(con, f.getAbsolutePath());
 
-                        // GoogleVision has no concept of a prompt, so we only send one request there!
-                        if (!GoogleVisionLabelService.MODEL_NAME.equalsIgnoreCase(modelName)) {
-                            requestImageLabels(image.getId(), modelName, prompts);
-                        } else {
-                            requestImageLabels(image.getId(), modelName, null);
+                        for (Map.Entry<AiModel, List<AiPrompt>> entry : modelPrompts.entrySet()) {
+                            requestImageLabels(image.getId(), entry.getKey(), entry.getValue());
                         }
+
+                        // GoogleVision has no concept of a prompt, so we only send one request there!
+                        requestImageLabels(image.getId(), AiModel.GOOGLE_VISION, null);
 
                         // read the combined labels and annotations for this image (for all completed requests)
                         List<AiImageLabel> annotations = DbImageLabel.findAnnotations(con, image);
@@ -145,7 +138,7 @@ public class NoiServlet extends BaseControllerServlet {
             return;
         }
 
-        System.out.println("NoiServlet: " + path);
+        System.out.println("NoiServlet:GET: " + path);
 
         String[] pathTokens = path.getPathInfo().split("/");
         if (pathTokens.length == 0) {
@@ -202,6 +195,9 @@ public class NoiServlet extends BaseControllerServlet {
 
                 Long promptId = Long.parseLong(pathTokens[1].trim());
                 writePrompt(promptId, req, resp);
+                return;
+            } else if ("prompt-lookup".equalsIgnoreCase(pathTokens[0])) {
+                writePrompt(null, req, resp);
                 return;
             } else if ("video-story".equalsIgnoreCase(pathTokens[0])) {
                 if (pathTokens.length <= 1) {
@@ -318,10 +314,69 @@ public class NoiServlet extends BaseControllerServlet {
             AiPrompt prompt = DbLanguage.findPrompt(con, promptId);
             if (prompt != null) {
                 addPromptToJson(root, prompt);
+            } else {
+                addDefaultPromptValuesToJson(con, root);
             }
+
+            addCollections(con, root);
             writeResponse(resp, root);
         } finally {
             Model.close(con);
+        }
+    }
+
+    private static void addDefaultPromptValuesToJson(Connection con, JsonObject root) throws SQLException {
+        AiModel model = DbModel.find(con, AiModel.DEFAULT_VISION_MODEL.getName());
+        if (model != null) {
+            root.addProperty("model_id", model.getId());
+        }
+        root.addProperty("type", AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
+        root.addProperty("status_code", Status.NEW.getStatus());
+        root.addProperty("system_prompt", "You are an advertising expert.");
+        root.addProperty("prompt", " ... ");
+    }
+
+    /**
+     * add all relevant lookup tables for: models, prompt types, and status
+     *
+     * @param con
+     * @param root
+     */
+    private void addCollections(Connection con, JsonObject root) throws SQLException {
+        List<AiModel> models = DbModel.findAll(con);
+        ArrayList<AiModel> sorted = new ArrayList(models);
+        Collections.sort(sorted);
+        JsonArray m = new JsonArray();
+        root.add("models", m);
+        for (AiModel model : sorted) {
+            JsonObject mod = new JsonObject();
+            m.add(mod);
+            mod.addProperty("id", model.getId());
+            mod.addProperty("name", model.getName());
+        }
+
+        List<AiPrompt.Type> types = AiPrompt.getTypes();
+        ArrayList<AiPrompt.Type> sortedTypes = new ArrayList(types);
+        Collections.sort(sortedTypes);
+        JsonArray t = new JsonArray();
+        root.add("types", t);
+        for (AiPrompt.Type type : sortedTypes) {
+            JsonObject tp = new JsonObject();
+            t.add(tp);
+            tp.addProperty("code", type.getType());
+            tp.addProperty("name", type.getName());
+        }
+
+        List<Status> statuses = Status.getAll();
+        ArrayList<Status> sortedStatuses = new ArrayList(statuses);
+        Collections.sort(sortedStatuses);
+        JsonArray s = new JsonArray();
+        root.add("statuses", s);
+        for (Status status : sortedStatuses) {
+            JsonObject st = new JsonObject();
+            s.add(st);
+            st.addProperty("code", status.getStatus());
+            st.addProperty("name", status.getName());
         }
     }
 
@@ -339,7 +394,17 @@ public class NoiServlet extends BaseControllerServlet {
             root.addProperty("system_prompt", prompt.getSystemPrompt());
         }
 
+        if (prompt.getName() != null) {
+            root.addProperty("name", prompt.getName());
+        }
+
+        if (prompt.getModel() != null) {
+            root.addProperty("model_id", prompt.getModel().getId());
+            root.addProperty("model_name", prompt.getModel().getName());
+        }
+
         root.addProperty("status", prompt.getStatus().getName());
+        root.addProperty("status_code", prompt.getStatus().getStatus());
     }
 
     private void writePromptList(HttpServletRequest req, HttpServletResponse resp) throws SQLException, NamingException, IOException {
@@ -683,7 +748,7 @@ public class NoiServlet extends BaseControllerServlet {
         if (noiResponse instanceof ImageLabelResponse) {
             ImageLabelResponse ilp = (ImageLabelResponse) noiResponse;
             root.addProperty("label_count", ilp.getImageLabels().size());
-            List<AiImageLabel> annotations = new ArrayList();
+            List<AiImageLabel> annotations = new ArrayList<>();
             long categorySize = 0;
             for (AiImageLabel label : ilp.getImageLabels()) {
                 categorySize += label.getLabelCategories().size();
@@ -757,7 +822,7 @@ public class NoiServlet extends BaseControllerServlet {
                 return;
             }
 
-            System.out.println("NoiServlet: " + path);
+            System.out.println("NoiServlet:POST: " + path);
             String[] pathTokens = path.getPathInfo().split("/");
             if (pathTokens.length == 0) {
                 return;
@@ -817,6 +882,9 @@ public class NoiServlet extends BaseControllerServlet {
                 out.close();
                 resp.setStatus(HttpServletResponse.SC_OK);
                 return;
+            } else if ("prompt".equalsIgnoreCase(pathTokens[0])) {
+                // post / update a prompt
+                handlePostedPrompt(req, resp, pathTokens);
             }
         } catch (SQLException | NamingException e) {
             throw new ServletException(e);
@@ -824,6 +892,66 @@ public class NoiServlet extends BaseControllerServlet {
 
         // DEFAULT: DENY EVERYTHING
         resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    }
+
+    private void handlePostedPrompt(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws IOException, SQLException, NamingException {
+        String jsonPayload = FileTools.readToString(req.getInputStream());
+        JsonObject promptData = new JsonParser().parse(jsonPayload).getAsJsonObject();
+        if (promptData == null || promptData.isJsonNull()) {
+            throw new IllegalArgumentException("No valid json posted!");
+        }
+
+        // the video id is in the path
+        Long promptId = null;
+        if (pathTokens.length > 1) {
+            if(!"new".equalsIgnoreCase(pathTokens[1].trim())){
+                promptId = Long.parseLong(pathTokens[1].trim());
+            }
+        }
+
+        // postData={id: promptId, name: name, model_id: modelId, prompt_type: promptType, status: status, prompt: prompt, system_prompt: systemPrompt};
+        Long id = null;
+        if(!"new".equalsIgnoreCase(JsonTools.getAsString(promptData, "id"))){
+            id = JsonTools.getAsLong(promptData, "id", null);
+        }
+        if ((id == null && promptId != null) ||
+                (promptId == null && id != null)) {
+            throw new IllegalArgumentException("id != posted id");
+        }
+
+        String name = JsonTools.getAsString(promptData, "name");
+        if (name != null && name.isEmpty()) {
+            name = null;
+        }
+
+        Long modelId = JsonTools.getAsLong(promptData, "model_id", null);
+        int promptType = JsonTools.getAsInt(promptData, "prompt_type", -1);
+        int status = JsonTools.getAsInt(promptData, "status", 0);
+        String prompt = JsonTools.getAsString(promptData, "prompt", null);
+        String systemPrompt = JsonTools.getAsString(promptData, "system_prompt");
+
+        Connection con = null;
+        try {
+            con = Model.connectX();
+            AiModel model = DbModel.find(con, modelId);
+            AiPrompt aiPrompt = AiPrompt.create(id, name, model, prompt, promptType, systemPrompt, Status.parse(status));
+
+            // no id? -> new record
+            // else   -> update
+            if (promptId == null) {
+                // insert
+                AiPrompt newPrompt = DbLanguage.insertPrompt(con, aiPrompt);
+                promptId = newPrompt.getId();
+            } else {
+                // update
+                DbLanguage.updatePrompt(con, aiPrompt);
+            }
+        } finally {
+            Model.close(con);
+        }
+
+        // respond like a get
+        writePrompt(promptId, req, resp);
     }
 
     private void handlePromptAnalysis(HttpServletRequest req, HttpServletResponse resp, Path path) throws IOException, SQLException, NamingException {
@@ -836,37 +964,30 @@ public class NoiServlet extends BaseControllerServlet {
     private void handleVideoImagesLabelRequest(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
         Long videoId = Long.parseLong(pathTokens[1].trim());
         List<AiImage> images = new ArrayList<>();
-        List<AiPrompt> dbPrompts = new ArrayList<>();
+        Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
 
         // the model dictates what service we'll call
-        String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
-
-        List<AiPrompt.Type> promptTypes = new ArrayList<>();
-        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
-        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
-        promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
-
         Connection con = null;
         try {
             con = Model.connectX();
+            images.addAll(DbImage.findVideoSummaryScenes(con, videoId));
+            // split all prompts by their models
             // get all active prompts
-            dbPrompts.addAll(DbLanguage.findPrompts(con, promptTypes));
-            images.addAll(DbImage.findVideoSummaryScenes(videoId));
+            modelPrompts.putAll(readPrompts(con));
         } finally {
             Model.close(con);
         }
 
-        AiPrompt[] prompts = new AiPrompt[dbPrompts.size()];
-        dbPrompts.toArray(prompts);
-
-        System.out.println("NoiServlet: labels for video " + videoId + ": processing " + images.size() + " images with " + dbPrompts.size() + " prompts ...");
+        System.out.println("NoiServlet: labels for video " + videoId + ": processing " + images.size() + " images with " + modelPrompts.size() + " models ...");
         List<NoiResponse> responses = new ArrayList<>();
         for (AiImage image : images) {
             try {
                 System.out.println("NoiServlet: labels for video " + videoId + " image: " + image.getUrl() + " ...");
-                responses.addAll(requestImageLabels(image.getId(), modelName, prompts));
+                for (Map.Entry<AiModel, List<AiPrompt>> entry : modelPrompts.entrySet()) {
+                    responses.addAll(requestImageLabels(image.getId(), entry.getKey(), entry.getValue()));
+                }
                 // call GoogleVision separately (no prompt here!)
-                responses.addAll(requestImageLabels(image.getId(), GoogleVisionLabelService.MODEL_NAME, null));
+                responses.addAll(requestImageLabels(image.getId(), AiModel.GOOGLE_VISION, null));
             } catch (SQLException | NamingException e) {
                 e.printStackTrace();
             }
@@ -874,63 +995,6 @@ public class NoiServlet extends BaseControllerServlet {
 
         writeResponses(resp, responses);
     }
-
-//    private void handleSingleImageLabelRequest(HttpServletRequest req, HttpServletResponse resp, Path path, String[] pathTokens) throws IOException, SQLException, NamingException {
-//        // either the image and prompt id are provided in the path,
-//        // or the prompt id and image url are provided as parameters
-//        Long imgId = null;
-//        AiPrompt prompt = null;
-//
-//        if (pathTokens.length > 1) {
-//            String imageId = pathTokens[1].trim();
-//            if (imageId.isEmpty()) {
-//                throw new IllegalArgumentException("image id is missing in the path: /label/<image-id>/<prompt-id>");
-//            }
-//            imgId = Long.valueOf(imageId);
-//
-//            if (pathTokens.length > 2) {
-//                // todo: revisit! (case: no id in url, but type and prompt as posted json)
-//                prompt = handlePrompt(req, path, 2);
-//            }
-//        } else {
-//            String imageUrl = req.getParameter("image_url");
-//            AiImage image = DbImage.findOrCreate(imageUrl);
-//            if (image != null) {
-//                imgId = image.getId();
-//            }
-//
-//            String promptId = req.getParameter("prompt_id");
-//            if (promptId != null) {
-//                Long id = Long.valueOf(promptId.trim());
-//                prompt = DbLanguage.findPrompt(id);
-//            }
-//        }
-//
-//        // the model dictates what service we'll call
-//        String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
-//
-//        AiPrompt[] prompts;
-//        // one specific prompt requested?
-//        if (prompt != null) {
-//            prompts = new AiPrompt[]{prompt};
-//        } else {
-//            // otherwise: use all active label prompts
-//            List<AiPrompt.Type> promptTypes = new ArrayList<>();
-//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
-//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
-//            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
-//            List<AiPrompt> dbPrompts = DbLanguage.findPrompts(promptTypes);
-//            prompts = new AiPrompt[dbPrompts.size()];
-//            dbPrompts.toArray(prompts);
-//        }
-//
-//        List<NoiResponse> responses = new ArrayList<>();
-//        responses.addAll(requestImageLabels(imgId, modelName, prompts));
-//        responses.addAll(requestImageLabels(imgId, GoogleVisionLabelService.MODEL_NAME, null));
-//
-//        //writeResponses(resp, responses);
-//        writeLabelResponse(imgId, resp);
-//    }
 
     private void handlePostedVideoMeta(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws IOException, SQLException, NamingException {
         String jsonPayload = FileTools.readToString(req.getInputStream());

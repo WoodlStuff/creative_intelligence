@@ -1,5 +1,6 @@
 package com.noi.models;
 
+import com.noi.AiModel;
 import com.noi.Status;
 import com.noi.language.*;
 
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DbLanguage extends Model {
-    private static final String PROMPT_COLUMNS = "id, prompt, prompt_type, system_prompt, status";
+    private static final String PROMPT_COLUMNS = "id, prompt, prompt_type, system_prompt, status, ai_model_id, name";
 
     public static void persistClassificationResponse(NLPRequest request, ClassificationResponse classificationResponse, String type) throws SQLException, NamingException {
         Connection con = null;
@@ -157,6 +158,14 @@ public class DbLanguage extends Model {
         }
     }
 
+    private static AiPrompt populatePrompt(Connection con, ResultSet rs) throws SQLException {
+        AiModel model = null;
+        if (rs.getLong("ai_model_id") > 0L) {
+            model = DbModel.find(con, rs.getLong("ai_model_id"));
+        }
+        return AiPrompt.create(rs, model);
+    }
+
     public static AiPrompt findPrompt(Connection con, Long promptId) throws SQLException {
         if (promptId == null || promptId <= 0L) {
             return null;
@@ -168,7 +177,7 @@ public class DbLanguage extends Model {
             stmt.setLong(1, promptId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return AiPrompt.create(rs);
+                return populatePrompt(con, rs);
             }
         } finally {
             close(stmt);
@@ -195,22 +204,12 @@ public class DbLanguage extends Model {
             stmt.setString(1, prompt);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return AiPrompt.create(rs.getLong("id"), prompt, rs.getInt("prompt_type"));
+                return populatePrompt(con, rs);
             }
         } finally {
             close(stmt);
         }
         return null;
-    }
-
-    public static List<AiPrompt> findPrompts(List<AiPrompt.Type> types) throws SQLException, NamingException {
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            return findPrompts(con, types);
-        } finally {
-            Model.close(con);
-        }
     }
 
     /**
@@ -225,12 +224,14 @@ public class DbLanguage extends Model {
 
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?)");
+            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?,?,?) order by status desc, name");
             stmt.setInt(1, Status.ACTIVE.getStatus());
             stmt.setInt(2, Status.NEW.getStatus());
+            stmt.setInt(3, Status.RETIRED.getStatus());
+            stmt.setInt(4, Status.DELETED.getStatus());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                prompts.add(AiPrompt.create(rs));
+                prompts.add(populatePrompt(con, rs));
             }
         } finally {
             close(stmt);
@@ -259,7 +260,8 @@ public class DbLanguage extends Model {
             stmt.setInt(2, Status.NEW.getStatus());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                prompts.add(AiPrompt.create(rs));
+                AiPrompt prompt = populatePrompt(con, rs);
+                prompts.add(prompt);
             }
         } finally {
             close(stmt);
@@ -270,12 +272,12 @@ public class DbLanguage extends Model {
     public static AiPrompt findPrompt(Connection con, String prompt, int promptType) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select id, prompt, prompt_type from ai_prompts where prompt_type=? and prompt=?");
+            stmt = con.prepareStatement("select " + PROMPT_COLUMNS + " from ai_prompts where prompt_type=? and prompt=?");
             stmt.setInt(1, promptType);
             stmt.setString(2, prompt);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return AiPrompt.create(rs.getLong("id"), prompt, promptType);
+                return populatePrompt(con, rs);
             }
         } finally {
             close(stmt);
@@ -295,7 +297,49 @@ public class DbLanguage extends Model {
     }
 
     public static AiPrompt insertPrompt(Connection con, AiPrompt prompt) throws SQLException {
-        return insertPrompt(con, prompt.getPrompt(), prompt.getSystemPrompt(), prompt.getPromptType());
+        return insertPrompt(con, prompt.getName(), prompt.getModel(), prompt.getPromptType(), prompt.getPrompt(), prompt.getSystemPrompt(), prompt.getStatus());
+    }
+
+    private static AiPrompt insertPrompt(Connection con, String name, AiModel model, int promptType, String prompt, String systemPrompt, Status status) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("insert into ai_prompts(ai_model_id, name, prompt, system_prompt, prompt_type, status, created_at, updated_at) values(?,?,?,?,?,?, now(), now())");
+            stmt.setLong(1, model.getId());
+            stmt.setString(2, name);
+            stmt.setString(3, prompt);
+            stmt.setString(4, systemPrompt);
+            stmt.setInt(5, promptType);
+            stmt.setInt(6, status.getStatus());
+            Long id = executeWithLastId(stmt);
+            if (id > 0L) {
+                return AiPrompt.create(id, name, model, prompt, promptType, systemPrompt, status);
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return null;
+    }
+
+    public static AiPrompt updatePrompt(Connection con, AiPrompt prompt) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_prompts set ai_model_id=?, name=?, prompt=?, system_prompt=?, prompt_type=?, status=?, updated_at=now() where id=?");
+            stmt.setLong(1, prompt.getModel().getId());
+            stmt.setString(2, prompt.getName());
+            stmt.setString(3, prompt.getPrompt());
+            stmt.setString(4, prompt.getSystemPrompt());
+            stmt.setInt(5, prompt.getPromptType());
+            stmt.setInt(6, prompt.getStatus().getStatus());
+            stmt.setLong(7, prompt.getId());
+            if (stmt.executeUpdate() > 0L) {
+                return AiPrompt.create(prompt.getId(), prompt);
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return prompt;
     }
 
     public static AiPrompt insertPrompt(Connection con, String prompt, String systemPrompt, int promptType) throws SQLException {

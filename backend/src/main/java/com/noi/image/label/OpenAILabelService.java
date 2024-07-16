@@ -42,7 +42,7 @@ public class OpenAILabelService extends LabelService {
     private String API_KEY = null;
 
     public OpenAILabelService(String modelName) {
-        super(LabelService.OPEN_AI_COMPLETION);
+        super(LabelService.OPEN_AI);
         if (modelName == null) {
             this.modelName = MODEL_NAME;
         } else {

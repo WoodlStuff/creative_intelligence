@@ -4,14 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added video score params to similarity requests and UI to allow to change them in the UI; &#10;added separation of ORB and LLM calls so we can 'tune' the ORB scene changes before we call the LLM for scene change detection;&#10;added filter option to Image dialog to allow filtering of the label data in that dialog">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added call to vector service for category request (so we can determine if the image already has a vector for this category);">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/PineconeVectorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiImageLabelRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiImageLabelRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompts.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompts.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -207,7 +219,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721062584834</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="added call to vector service for category request (so we can determine if the image already has a vector for this category);">
+      <created>1721077238352</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1721077238352</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -221,17 +240,7 @@
     <MESSAGE value="small fix for gender db column size; &#10;fix for single image label request" />
     <MESSAGE value="link the video and brand id automatically when we create images in the process of analyzing a video;" />
     <MESSAGE value="added video score params to similarity requests and UI to allow to change them in the UI; &#10;added separation of ORB and LLM calls so we can 'tune' the ORB scene changes before we call the LLM for scene change detection;&#10;added filter option to Image dialog to allow filtering of the label data in that dialog" />
-    <option name="LAST_COMMIT_MESSAGE" value="added video score params to similarity requests and UI to allow to change them in the UI; &#10;added separation of ORB and LLM calls so we can 'tune' the ORB scene changes before we call the LLM for scene change detection;&#10;added filter option to Image dialog to allow filtering of the label data in that dialog" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java</url>
-          <line>852</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="added call to vector service for category request (so we can determine if the image already has a vector for this category);" />
+    <option name="LAST_COMMIT_MESSAGE" value="added call to vector service for category request (so we can determine if the image already has a vector for this category);" />
   </component>
 </project>

@@ -153,8 +153,8 @@ public class AiImage {
         return prompt;
     }
 
-    private static ImageLabelResponse requestImageLabels(Connection con, AiImage image, AiPrompt prompt, String modelName) throws SQLException, IOException {
-        AiImageLabelRequest request = AiImageLabelRequest.create(image.getId(), prompt, modelName);
+    private static ImageLabelResponse requestImageLabels(Connection con, AiImage image, AiPrompt prompt, AiModel model) throws SQLException, IOException {
+        AiImageLabelRequest request = AiImageLabelRequest.create(image.getId(), prompt, model);
 
         request = DbRequest.insertForLabel(con, request);
 
@@ -223,11 +223,11 @@ public class AiImage {
 //                labelServiceName = args[2];
 //            }
             //String modelName = LabelService.getModelName(labelServiceName, AiModel.DEFAULT_VISION_MODEL.getName());
-            String modelName = AiModel.DEFAULT_VISION_MODEL.getName();
-            if (args.length >= 3) {
-                modelName = args[2];
-            }
-
+//            String modelName = AiModel.DEFAULT_VISION_MODEL.getName();
+//            if (args.length >= 3) {
+//                modelName = args[2];
+//            }
+            AiModel model = AiModel.DEFAULT_VISION_MODEL;
             AiPrompt prompt = DbLanguage.findPrompt(con, promptId);
             if (prompt == null) {
                 throw new IllegalArgumentException("no prompt found for " + promptId);
@@ -235,7 +235,7 @@ public class AiImage {
 
             List<AiImage> newImages = DbImage.findImages(con, Status.NEW);
             for (AiImage image : newImages) {
-                ImageLabelResponse imageLabelResponse = requestImageLabels(con, image, prompt, modelName);
+                ImageLabelResponse imageLabelResponse = requestImageLabels(con, image, prompt, model);
                 DbImage.updateStatus(con, image, Status.ACTIVE);
             }
 

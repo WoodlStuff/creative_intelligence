@@ -3,7 +3,6 @@ package com.noi.embeddings;
 import com.noi.AiModel;
 import com.noi.image.AiImage;
 import com.noi.image.label.AiImageLabel;
-import com.noi.image.label.GoogleVisionLabelService;
 import com.noi.image.label.LabelMetaData;
 import com.noi.image.label.LabelService;
 import com.noi.language.AiPrompt;
@@ -24,6 +23,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -164,27 +164,22 @@ public class CategoryServlet extends BaseControllerServlet {
             }
         }
 
-        // the model dictates what service we'll call
-        String modelName = handleModelName(req, AiModel.DEFAULT_VISION_MODEL.getName());
-
-        AiPrompt[] prompts;
+        Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
         // one specific prompt requested?
         if (prompt != null) {
-            prompts = new AiPrompt[]{prompt};
+            List<AiPrompt> prompts = new ArrayList<>();
+            prompts.add(prompt);
+            modelPrompts.put(prompt.getModel(), prompts);
         } else {
             // otherwise: use all active label prompts
-            List<AiPrompt.Type> promptTypes = new ArrayList<>();
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_OBJECTS);
-            promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES);
-            List<AiPrompt> dbPrompts = DbLanguage.findPrompts(promptTypes);
-            prompts = new AiPrompt[dbPrompts.size()];
-            dbPrompts.toArray(prompts);
+            modelPrompts.putAll(readPrompts());
         }
 
         List<NoiResponse> responses = new ArrayList<>();
-        responses.addAll(requestImageLabels(imgId, modelName, prompts));
-        responses.addAll(requestImageLabels(imgId, GoogleVisionLabelService.MODEL_NAME, null));
+        for (Map.Entry<AiModel, List<AiPrompt>> entry : modelPrompts.entrySet()) {
+            responses.addAll(requestImageLabels(imgId, entry.getKey(), entry.getValue()));
+        }
+        responses.addAll(requestImageLabels(imgId, AiModel.GOOGLE_VISION, null));
 
         writeLabelResponse(imgId, null, resp);
     }

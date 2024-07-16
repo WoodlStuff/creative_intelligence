@@ -1,5 +1,6 @@
 package com.noi;
 
+import com.noi.image.label.GoogleVisionLabelService;
 import com.noi.requests.NoiRequest;
 
 import java.sql.ResultSet;
@@ -8,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class AiModel {
+public class AiModel implements Comparable<AiModel> {
     private final String name;
     private final Long id;
 
@@ -22,8 +23,11 @@ public class AiModel {
 
     // The latest GPT-4 Turbo model with vision capabilities.
     public static final AiModel GPT_4_TURBO = new AiModel("gpt-4-turbo");
+    public static final AiModel WHISPER_1 = new AiModel("whisper-1");
+    public static final AiModel TEXT_EMBEDDING_3_SMALL = new AiModel("text-embedding-3-small");
 
     public static final AiModel MID_JOURNEY = new AiModel("midjourney");
+    public static final AiModel GOOGLE_VISION = new AiModel(GoogleVisionLabelService.MODEL_NAME);
 
     public static final AiModel PY_INTERNAL_SCORING = new AiModel("ORB");
     public static final AiModel DEFAULT_VISION_MODEL = GPT_4o;
@@ -76,5 +80,10 @@ public class AiModel {
 
     public static AiModel getModel(String name) {
         return models.get(name.toLowerCase());
+    }
+
+    @Override
+    public int compareTo(AiModel o) {
+        return this.name.compareTo(o.name);
     }
 }

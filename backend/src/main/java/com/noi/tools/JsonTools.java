@@ -73,10 +73,14 @@ public class JsonTools {
         return n.getAsJsonObject();
     }
 
-    public static long getAsLong(JsonObject object, String node) {
+    public static long getAsLong(JsonObject object, String node, Long defaultValue) {
         JsonElement n = getNodeElement(object, node);
-        if (n == null) return 0L;
+        if (n == null) return defaultValue;
         return n.getAsLong();
+    }
+
+    public static long getAsLong(JsonObject object, String node) {
+        return getAsLong(object, node, 0L);
     }
 
     public static int getAsInt(JsonObject object, String node) {
