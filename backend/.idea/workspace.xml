@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added model as a relationship of the prompt; &#10;added a name to prompts so they can more easily be managed; &#10;improved data for Prompt dialog (added lookup tables for models, statuses, and types);">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);">
       <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -221,7 +216,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721169548700</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);">
+      <created>1721173514177</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1721173514177</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -237,6 +239,7 @@
     <MESSAGE value="added video score params to similarity requests and UI to allow to change them in the UI; &#10;added separation of ORB and LLM calls so we can 'tune' the ORB scene changes before we call the LLM for scene change detection;&#10;added filter option to Image dialog to allow filtering of the label data in that dialog" />
     <MESSAGE value="added call to vector service for category request (so we can determine if the image already has a vector for this category);" />
     <MESSAGE value="added model as a relationship of the prompt; &#10;added a name to prompts so they can more easily be managed; &#10;improved data for Prompt dialog (added lookup tables for models, statuses, and types);" />
-    <option name="LAST_COMMIT_MESSAGE" value="added model as a relationship of the prompt; &#10;added a name to prompts so they can more easily be managed; &#10;improved data for Prompt dialog (added lookup tables for models, statuses, and types);" />
+    <MESSAGE value="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);" />
+    <option name="LAST_COMMIT_MESSAGE" value="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);" />
   </component>
 </project>

@@ -20,7 +20,9 @@ function Image() {
 
   const [selectedCategoryName, setSelectedCategoryName] = useState("- all -");
   const [catSelectorData, setCatSelectorData] = useState(["- all -"]);
-
+  const [promptSelectorData, setPromptSelectorData] = useState([{"prompt_name": "- all -", "prompt_id": -1}]);
+  const [selectedPromptId, setSelectedPromptId] = useState(-1);
+ 
   function showProgressbar(){
     // find progress bar with id='progressbar' and show it
     progress.hidden=false;
@@ -46,6 +48,10 @@ function Image() {
   function changeCategory(newValue) {
     setSelectedCategoryName(newValue);
     fetchSimilarityData(params.id, newValue);
+  }
+
+  function changePrompt(newValue) {
+    setSelectedPromptId(newValue);
   }
 
   const LabelRows = (props) => {
@@ -106,6 +112,38 @@ function Image() {
     return(<label>no categories loaded!</label>)
   }
   
+  const PromptOptions = (props) => {
+    if(Object.entries(props).length > 0 && Object.entries(props.prompts).length > 0){
+      return(
+        props.prompts.map( (p) => (
+          <option key={p.prompt_id} value={p.prompt_id}>{p.prompt_name}</option>
+        ))
+      )
+    }
+
+    return(<></>)
+  }
+
+  // render a drop down for category selection
+  const  PromptSelector = (props) => {
+    if(props.hasPrompts === true){
+      return(
+          <label style={{padding: 10}}>
+            Select Prompt:
+            <select
+              name="selectedPrompt"
+              value={selectedPromptId}
+              multiple={false}
+              onChange={e => changePrompt(e.target.value) }
+            >
+                <PromptOptions prompts={props.prompts}/>
+            </select>
+          </label>
+      )
+    }
+    return(<label>no categories loaded!</label>)
+  }
+  
   async function handleLabelClick() {
     if (Object.entries(params.id).length <= 0){
       console.log("no image Id!");
@@ -115,7 +153,7 @@ function Image() {
     // set the progress bar to visible
     showProgressbar();
     console.log("label image for id: " + params.id);
-    axios.post('http://localhost:8080/noi-server/categories/' + params.id).then((response) => {
+    axios.post('http://localhost:8080/noi-server/categories/' + params.id + "/" + selectedPromptId).then((response) => {
       // todo: take the response.data json, and post it to be inserted into the db (post to Java code on :8080)
       console.log(response.data);
       let data = response.data; 
@@ -190,6 +228,12 @@ function Image() {
             var filterData = data.category_names;
             filterData.push("- all -");
             setCatSelectorData(filterData);
+            
+            var promptData = data.prompts;
+            promptData.push({"prompt_name": "- all -", "prompt_id": -1});
+            setPromptSelectorData(promptData);
+            setSelectedPromptId(-1);
+
             setImageAnnotationData(data.annotations);
             if(data.video_id != null){
               setVideoId(data.video_id);
@@ -228,10 +272,11 @@ function Image() {
         </div>
         <div className="card-button">
           <button onClick={async () => { await handleLabelClick();}}>Label Image</button>
+          <PromptSelector hasPrompts={Object.entries(promptSelectorData).length > 0} prompts={promptSelectorData} />
         </div>
         <div className="card-button">
           <button onClick={async () => { await handleEmbeddingClick();}}>Create Embeddings</button>
-          <span><label>Has Embeddings</label><input type="checkbox" checked={embedding}/></span>
+          <span><label style={{padding: 10}}>Has Embeddings</label><input type="checkbox" checked={embedding}/></span>
         </div>
       </div>
 
