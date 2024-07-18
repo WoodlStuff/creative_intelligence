@@ -1,5 +1,7 @@
 package com.noi;
 
+import com.google.gson.JsonObject;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -11,10 +13,18 @@ public class AiBrand {
     private final Status status;
 
     private AiBrand(Long id, String name, int status, Type brandType) {
+        this(id, name, Status.parse(status), brandType);
+    }
+
+    private AiBrand(Long id, String name, Status status, Type brandType) {
         this.id = id;
         this.name = name;
-        this.status = Status.parse(status);
+        this.status = status;
         this.brandType = brandType;
+    }
+
+    public static AiBrand create(Long id, String brandName, Status status) {
+        return new AiBrand(id, brandName, status, null);
     }
 
     public Long getId() {
@@ -35,12 +45,7 @@ public class AiBrand {
 
     @Override
     public String toString() {
-        return "AiBrand{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", status=" + status +
-                ", brandType=" + brandType +
-                '}';
+        return "AiBrand{" + "id=" + id + ", name='" + name + '\'' + ", status=" + status + ", brandType=" + brandType + '}';
     }
 
     @Override
@@ -64,6 +69,21 @@ public class AiBrand {
 
     public static AiBrand create(ResultSet rs, Type brandType) throws SQLException {
         return new AiBrand(rs.getLong("id"), rs.getString("name"), rs.getInt("status"), brandType);
+    }
+
+    public JsonObject toJson() {
+        JsonObject o = new JsonObject();
+        o.addProperty("id", id);
+        o.addProperty("name", name);
+        o.addProperty("status_code", status.getStatus());
+        o.addProperty("status_name", status.getName());
+
+        if (brandType != null) {
+            o.addProperty("type_id", brandType.getId());
+            o.addProperty("type_name", brandType.getName());
+        }
+
+        return o;
     }
 
     public static class Type {
@@ -91,11 +111,7 @@ public class AiBrand {
 
         @Override
         public String toString() {
-            return "Type{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", status=" + status +
-                    '}';
+            return "Type{" + "id=" + id + ", name='" + name + '\'' + ", status=" + status + '}';
         }
 
         @Override

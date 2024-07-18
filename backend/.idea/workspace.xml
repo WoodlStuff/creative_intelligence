@@ -5,7 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);">
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiBrand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiBrand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbBrand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbBrand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Videos.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Videos.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

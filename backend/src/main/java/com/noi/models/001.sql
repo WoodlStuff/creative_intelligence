@@ -130,13 +130,17 @@ CREATE TABLE `ai_image_requests` (
 DROP TABLE if exists ai_videos;
 CREATE TABLE `ai_videos` (
   `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NULL,
   `video_url` text NOT NULL,
   `frame_rate` decimal(8,6) NULL,
+  `ai_brand_id` bigint NULL,
   `frame_count` int NULL,
   `status` tinyint default 1,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY(name),
+  FOREIGN KEY (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
 DROP TABLE if exists `ai_images`;
@@ -148,6 +152,7 @@ CREATE TABLE `ai_images` (
   `video_frame_number` int NULL,
   `is_new_video_scene` tinyint NOT NULL DEFAULT 0,
   `is_video_scene_snap` tinyint NOT NULL DEFAULT 0,
+  `ai_brand_id` bigint NULL,
   `image_url` text NOT NULL,
   `status` tinyint default 1,
   `created_at` datetime NOT NULL,
@@ -156,7 +161,8 @@ CREATE TABLE `ai_images` (
   UNIQUE KEY(ai_video_id, video_frame_number),
   FOREIGN KEY(ai_image_request_id) references ai_image_requests(id) ON DELETE RESTRICT,
   FOREIGN KEY(ai_video_id) references ai_videos(id) ON DELETE RESTRICT,
-  FOREIGN KEY(ai_prompt_id) references ai_prompts(id) ON DELETE RESTRICT
+  FOREIGN KEY(ai_prompt_id) references ai_prompts(id) ON DELETE RESTRICT,
+  FOREIGN KEY(ai_brand_id) references ai_brands(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
 -- 2024-06-03
@@ -194,10 +200,13 @@ DROP TABLE if exists `ai_similarity_requests`;
 CREATE TABLE `ai_similarity_requests` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `uuid` varchar(65) NULL,
+  `ai_video_id` bigint NULL,
   `ai_image_id` bigint NOT NULL,
   `ai_image_before_id` bigint NOT NULL,
   `ai_model_id` bigint NOT NULL,
   `ai_prompt_id` bigint NULL,
+  `max_distance` int NULL,
+  `score_threshold` decimal(4,2) NULL,
   `score` DECIMAL(20,18) NOT NULL DEFAULT 0,
   `explanation` VARCHAR(255) NULL,
   `is_scene_change` TINYINT NOT NULL DEFAULT 0,
@@ -209,7 +218,8 @@ CREATE TABLE `ai_similarity_requests` (
   FOREIGN KEY(ai_image_id) references ai_images(id) ON DELETE RESTRICT,
   FOREIGN KEY(ai_image_before_id) references ai_images(id) ON DELETE RESTRICT,
   FOREIGN KEY(ai_model_id) references ai_models(id) ON DELETE RESTRICT,
-  FOREIGN KEY(ai_prompt_id) references ai_prompts(id) ON DELETE RESTRICT
+  FOREIGN KEY(ai_prompt_id) references ai_prompts(id) ON DELETE RESTRICT,
+  foreign key (ai_video_id) references ai_videos(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
 DROP TABLE if exists `ai_transcribe_requests`;
@@ -479,7 +489,7 @@ CREATE TABLE `ai_image_label_meta_color_gradients` (
   FOREIGN KEY(ai_image_label_id) references ai_image_labels(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
--- 20240703: embedding requests
+-- 2024-07-03: embedding requests
 DROP TABLE if exists `ai_embedding_requests`;
 CREATE TABLE `ai_embedding_requests` (
   `id` bigint NOT NULL AUTO_INCREMENT,
@@ -517,7 +527,7 @@ CREATE TABLE `ai_upsert_requests` (
   KEY(model_name, uuid, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
 
--- 20240710: add the concept of brands
+-- 2024-07-10: add the concept of brands
 CREATE TABLE `ai_brand_types` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -562,13 +572,13 @@ alter table ai_videos add column ai_brand_id bigint NULL after frame_count;
 alter table ai_videos add foreign key (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT;
 alter table ai_images add column ai_brand_id bigint NULL after is_video_scene_snap;
 alter table ai_images add foreign key (ai_brand_id) references ai_brands(id) ON DELETE RESTRICT;
--- end: 20240710
+-- end: 2024-07-10
 
--- 20240712
+-- 2024-07-12
 alter table ai_similarity_requests add column ai_video_id bigint NULL after uuid;
 alter table ai_similarity_requests add foreign key (ai_video_id) references ai_videos(id) ON DELETE RESTRICT;
 
--- 20240715
+-- 2024-07-15
 alter table ai_similarity_requests add column max_distance int NULL after ai_prompt_id;
 alter table ai_similarity_requests add column score_threshold decimal(4,2) NULL after max_distance;
 
@@ -577,6 +587,11 @@ alter table ai_prompts add column ai_model_id bigint NULL after id;
 alter table ai_prompts add column name varchar(100) NULL after ai_model_id;
 alter table ai_prompts add foreign key (ai_model_id) references ai_models(id) ON DELETE RESTRICT;
 alter table ai_prompts add unique key(name);
+
+-- 2024-07-17
+alter table ai_videos add column name varchar(100) NULL after id;
+alter table ai_videos add UNIQUE KEY(name);
+update ai_videos set name = substring_index(video_url, '/', -1) where name is null;
 
 
 -- =======================================

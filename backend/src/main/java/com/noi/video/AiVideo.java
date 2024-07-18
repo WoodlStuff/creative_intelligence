@@ -10,14 +10,15 @@ import java.util.Objects;
 
 public class AiVideo {
     private final Long id;
-    private final String url;
+    private final String name, url;
     private final double frameRate;
     private final int frameCount;
     private final Status status;
     private final AiBrand brand;
 
-    private AiVideo(Long id, String url, double frameRate, int frameCount, Status status, AiBrand brand) {
+    private AiVideo(Long id, String name, String url, double frameRate, int frameCount, Status status, AiBrand brand) {
         this.id = id;
+        this.name = name;
         this.url = url;
         this.frameRate = frameRate;
         this.frameCount = frameCount;
@@ -25,15 +26,20 @@ public class AiVideo {
         this.brand = brand;
     }
 
+    public static AiVideo create(String name, String url, Status status, AiBrand brand) throws SQLException {
+        return new AiVideo(null, name, url, 0.0, 0, status, brand);
+    }
+
     public static AiVideo create(ResultSet rs, AiBrand brand) throws SQLException {
         // id, video_url, frame_rate, frame_count, status
         Long id = rs.getLong("id");
+        String name = rs.getString("name");
         String url = rs.getString("video_url");
         double frameRate = rs.getDouble("frame_rate");
         int frameCount = rs.getInt("frame_count");
         Status status = Status.parse(rs.getInt("status"));
 
-        return new AiVideo(id, url, frameRate, frameCount, status, brand);
+        return new AiVideo(id, name, url, frameRate, frameCount, status, brand);
     }
 
     public Long getId() {
@@ -58,6 +64,10 @@ public class AiVideo {
 
     public AiBrand getBrand() {
         return brand;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

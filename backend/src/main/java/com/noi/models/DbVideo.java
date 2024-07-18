@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DbVideo extends Model {
-    private static String COLUMNS = "id, video_url, frame_rate, frame_count, status, ai_brand_id";
+    private static String COLUMNS = "id, name, video_url, frame_rate, frame_count, status, ai_brand_id";
 
     public static List<AiVideo> findMostRecent(Connection con, int limit) throws SQLException {
         List<AiVideo> videos = new ArrayList<>();
@@ -88,6 +88,22 @@ public class DbVideo extends Model {
         }
     }
 
+    public static void update(Connection con, AiVideo aiVideo, Status status) throws SQLException {
+        if (aiVideo == null || aiVideo.getId() == null) {
+            throw new IllegalArgumentException();
+        }
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_videos set status=?, updated_at=now() where id=?");
+            stmt.setInt(1, status.getStatus());
+            stmt.setLong(2, aiVideo.getId());
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+        }
+    }
+
     public static List<VideoFrameMoment> findSummaryFrames(Connection con, Long videoId) throws SQLException {
         List<VideoFrameMoment> moments = new LinkedList<>();
         PreparedStatement stmt = null;
@@ -105,5 +121,28 @@ public class DbVideo extends Model {
             Model.close(stmt);
         }
         return moments;
+    }
+
+    public static Long insert(Connection con, AiVideo aiVideo) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("insert into ai_videos(name, video_url, frame_rate, frame_count, ai_brand_id, status, created_at, updated_at) values(?,?,?,?,?,?, now(), now())");
+            stmt.setString(1, aiVideo.getName());
+            stmt.setString(2, aiVideo.getUrl());
+            stmt.setDouble(3, aiVideo.getFrameRate());
+            stmt.setInt(4, aiVideo.getFrameCount());
+
+            if (aiVideo.getBrand() != null) {
+                stmt.setLong(5, aiVideo.getBrand().getId());
+            } else {
+                stmt.setString(5, null);
+            }
+            stmt.setInt(6, aiVideo.getStatus().getStatus());
+
+            return executeWithLastId(stmt);
+
+        } finally {
+            close(stmt);
+        }
     }
 }
