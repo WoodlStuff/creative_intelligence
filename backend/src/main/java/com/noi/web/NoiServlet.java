@@ -682,6 +682,7 @@ public class NoiServlet extends BaseControllerServlet {
                 e.printStackTrace();
             }
         }
+        System.out.println("NoiServlet: DONE with labels for video " + videoId + ": processing " + images.size() + " images with " + modelPrompts.size() + " models ...");
 
         writeResponses(resp, responses);
     }

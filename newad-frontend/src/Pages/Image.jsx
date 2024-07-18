@@ -215,6 +215,14 @@ function Image() {
     }
   };
 
+  function assembleImageHref(imageId){
+    var imageUrl = '/image/' + imageId;
+    if('- all -' !== selectedCategoryName){
+      imageUrl = imageUrl + "/" + selectedCategoryName;
+    }
+    return imageUrl;
+  }
+
   useEffect(() => {
     const fetchData = async (imageId) => {
       try {
@@ -243,6 +251,11 @@ function Image() {
               setBrand(data.brand);
             }
             setEmbedding(data.has_embedding)
+
+            if(params.category !== undefined){
+              console.log(params.category);
+              changeCategory(params.category);
+            }
           }
         });
       } catch (error) {
@@ -294,7 +307,7 @@ function Image() {
                 {
                   similarityData.map((image) => (
                     <td key={image.image_id} className="image_thumb">
-                      <a id={image.image_id} name={image.frame_number} href={'/image/' + image.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } alt={image.image_id} /></a>
+                      <a id={image.image_id} name={image.frame_number} href={ assembleImageHref(image.image_id)}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } alt={image.image_id} /></a>
                       <div><span><label>Score:</label>{image.score}</span></div>
                     </td>
                   ))

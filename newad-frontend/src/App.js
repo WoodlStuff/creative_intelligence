@@ -32,7 +32,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/images" element={<Images />} />
-            <Route path="/image/:id" element={<Image />}
+            <Route path="/image/:id/:category?" element={<Image />}
               action={({ params }) => { }} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/video/:id" element={<Video />}

@@ -4,23 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiBrand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiBrand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbBrand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbBrand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Prompt.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Videos.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Videos.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -238,7 +225,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721173514177</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload">
+      <created>1721335693259</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1721335693259</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -255,6 +249,7 @@
     <MESSAGE value="added call to vector service for category request (so we can determine if the image already has a vector for this category);" />
     <MESSAGE value="added model as a relationship of the prompt; &#10;added a name to prompts so they can more easily be managed; &#10;improved data for Prompt dialog (added lookup tables for models, statuses, and types);" />
     <MESSAGE value="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);" />
-    <option name="LAST_COMMIT_MESSAGE" value="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);" />
+    <MESSAGE value="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload" />
+    <option name="LAST_COMMIT_MESSAGE" value="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload" />
   </component>
 </project>

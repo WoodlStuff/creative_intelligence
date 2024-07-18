@@ -137,6 +137,7 @@ public class EmbeddingServlet extends HttpServlet {
                     upsertCounts.put(image.getId(), imageCategoryCounts);
                 }
             }
+            System.out.println("EmbeddingServlet: DONE processing " + images.size() + " images ...");
 
             writeResponse(upsertCounts, resp);
 
