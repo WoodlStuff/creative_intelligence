@@ -216,6 +216,7 @@ function Prompt() {
       <form onSubmit={handleSubmit}>
         <div className="card">
           <div className="card-body">
+            
             <table width="100%">
               <thead>
                 <tr>
@@ -268,9 +269,6 @@ function Prompt() {
               </tbody>
             </table>
           </div>
-          {/* <div className="card-button">
-          <button>Update</button>
-          </div> */}
         </div>
       </form>
     </div>

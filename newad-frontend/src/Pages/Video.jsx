@@ -148,6 +148,28 @@ function Video () {
         });
     }
 
+    async function handleDelete() {
+      if (Object.entries(videoData).length <= 0){
+        console.log("no videoData to delete!");
+        return;
+      }
+
+      // delete the video and return to the list
+      // var postData = {"video_id": params.id, "video_name": videoData[0].name}
+      axios.delete('http://localhost:8080/noi-server/video/' + params.id).then((response) => {
+        var data = response.data;
+        if(data.hasOwnProperty('error')){
+          alert(data.error);
+        }else{
+          // redirect to /videos 
+          window.location.href='/videos';
+        }
+      }).catch(error => {
+        console.log("error -> ", error);
+        alert(error);;
+      });
+    }
+
     async function handleClick() {
       if (Object.entries(videoData).length <= 0){
         console.log("no videoData!");
@@ -165,7 +187,7 @@ function Video () {
         console.log(response.data);
         let videoJson = response.data;
         if (Object.entries(videoJson).length > 0){
-          axios.post('http://localhost:8080/noi-server/api/video/' + params.id, videoJson).then((sqlResponse) => {
+          axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
             // we posted the json to be parsed and written into the db, now what? 
             let data = sqlResponse.data;
             setVideoData(data.videos);
@@ -178,7 +200,7 @@ function Video () {
                 console.log(response.data);
                 let videoJson = response.data;
                 if (Object.entries(videoJson).length > 0){
-                  axios.post('http://localhost:8080/noi-server/api/video/' + params.id, videoJson).then((sqlResponse) => {
+                  axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
                     // we posted the json to be parsed and written into the db, now what? 
                     let data = sqlResponse.data;
                     setVideoData(data.videos);
@@ -202,7 +224,7 @@ function Video () {
         try {
           console.log("calling for video meta...")
           showProgressbar();
-          axios.get("http://localhost:8080/noi-server/api/videos/" + videoId).then((response) => {
+          axios.get("http://localhost:8080/noi-server/videos/" + videoId).then((response) => {
             let data = response.data;
             if (!isCalled) {
               if (Object.entries(data).length >= 0) {
@@ -226,12 +248,13 @@ function Video () {
           <div className="card">
             <div className="card-body">
               <video width="400" controls>
-                <source src={"http://localhost:8080/noi-server/api/video/" + params.id} type="video/mp4" />
+                <source src={"http://localhost:8080/noi-server/video/" + params.id} type="video/mp4" />
                 Your browser does not support HTML video.
               </video>
             </div>
             <div className="card-button">
               <button onClick={async () => { await handleClick();}}>Process Video</button>
+              <button onClick={async () => { await handleDelete();}}>Delete!</button>
               <div className="left-padding">
                 <label className="label-padding">Call LLMs</label><input name='llms' type="checkbox" checked={callLLMs.selected} onChange={(event) => {setCallLLMs({selected: !callLLMs.selected});}}></input>
               </div>

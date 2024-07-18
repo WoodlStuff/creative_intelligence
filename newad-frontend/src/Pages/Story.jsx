@@ -140,7 +140,7 @@ function Story() {
       try {
           console.log("calling for video story data...")
           console.log(videoId);
-          axios.get("http://localhost:8080/noi-server/api/video-story/" + videoId).then((response) => {
+          axios.get("http://localhost:8080/noi-server/video-story/" + videoId).then((response) => {
             let data = response.data;
             if (Object.entries(data).length >= 0) {
               setStoryData(data.story);

@@ -13,7 +13,7 @@ function Videos() {
     let isCalled = false;
     const fetchData = async () => {
       try {
-        axios.get("http://localhost:8080/noi-server/api/videos").then((response) => {
+        axios.get("http://localhost:8080/noi-server/videos").then((response) => {
           let data = response.data;
           if (!isCalled) {
             if (Object.entries(data).length >= 0) {
@@ -36,6 +36,7 @@ function Videos() {
       <div className="card">
         <div className="card-header">
           <h3>Recent Videos</h3>
+          <div className="new_button"><a href="/upload-video">Upload New Video ...</a></div>
           <button>
             See all
             <span className="las la-arrow-right">
@@ -49,7 +50,7 @@ function Videos() {
             <table width="100%">
               <thead>
                 <tr>
-                  <td>Video URL</td>
+                  <td>Name</td>
                   <td>Frame Rate</td>
                   <td>#Frames</td>
                   <td>Seconds</td>
@@ -66,7 +67,7 @@ function Videos() {
                         className="video-link"
                       >
                         {/* <div className="icon">{image.icon}</div> */}
-                        <div className="video_link_text">{video.url}</div>
+                        <div className="video_link_text">{video.name}</div>
                       </NavLink>
                     </td>
                     <td>
