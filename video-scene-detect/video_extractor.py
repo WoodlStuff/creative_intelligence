@@ -200,7 +200,8 @@ def findSceneChanges(path, videoName, frames_to_skip=0, max_distance_for_similar
         os.remove(seekImageURL)
     print(f"Extracted {len(sceneChangeImages)} scene changes")
 
-    response['video_length_seconds'] = int(totalFrames / fps)
+    videoSeconds = int(totalFrames / fps)
+    response['video_length_seconds'] = videoSeconds
     response['total_frames'] = totalFrames
     response['frames_per_second'] = fps
     response['score_threshold'] = scene_change_threshold
@@ -213,7 +214,7 @@ def findSceneChanges(path, videoName, frames_to_skip=0, max_distance_for_similar
         json.dump(response, f)
         f.close()
 
-    return sceneChangeImages
+    return [sceneChangeImages, videoSeconds]
 
 def saveFrameToFile(path, videoName, video, frameNumber):
     imgURL = constructImageURL(path, videoName, frameNumber)
@@ -288,16 +289,21 @@ def labelForSameVideoScene(openAI_caller, sceneChanges, position):
 # summarize the video based on a set of scenes we send.
 # llmSceneChanges trump the raw sceneChanges (i.e. if there are enough of them, we use those over the raw)
 # if there are too many scenes (count > max_scenes_for_summary), we filter them by score, lowering the threshold until we get to the max count
-def summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary):
+def summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, videoSeconds):
     scoreFilterThreshold = 0.25
+    # default to use the llm approved scenes for the summary
     scenes = llmSceneChanges
-    if len(llmSceneChanges) <= 2 and len(sceneChanges) > len(llmSceneChanges):
+    # calculate the min and max scenes we can use
+    maxSceneChanges = len(sceneChanges) if int(videoSeconds / 2) > len(sceneChanges) else int(videoSeconds / 2) # max: one scene change every 2 seconds
+    minSceneChanges = 15 if maxSceneChanges > 15 else maxSceneChanges
+    # if the llm approves scenes are not enough, use the ORB scenes (... and filter them down if we have too many, based on their score [remove those with the higher score (those that are too similar)])
+    if len(llmSceneChanges) < minSceneChanges and len(sceneChanges) > len(llmSceneChanges):
         print(f"WARNING: not enough labeled scene changes {len(llmSceneChanges)}: attempting a fallback ...")
         scenes = sceneChanges
     # if we have too many scenes: keep lowering the filter score threshold until we have no more than the max scenes
-    while len(scenes) > max_scenes_for_summary:
+    while len(scenes) > maxSceneChanges:
         # try to filter by score (low similarity score), in case we have too many scenes (will run into token limits with model!)
-        print(f"fallback: filter {len(scenes)} scene changes to max={max_scenes_for_summary}...")
+        print(f"fallback: filter {len(scenes)} scene changes to max={maxSceneChanges}...")
         # only keep the ones with a similarity score greater than the threshold!
         scenes = [scene for scene in scenes if (scene['similarity_score'] >= scoreFilterThreshold)]
         scoreFilterThreshold += 0.01
@@ -311,7 +317,7 @@ def downloadYouTubeVideo(videoURL, outputPath, fileName):
 
 
 def scoreFramesAndLabelSceneChanges(path, videoName, maxDistanceForSimilarity=60, scoreThreshold=.80, verbose=False):
-    sceneChanges = findSceneChanges(path, videoName,
+    [sceneChanges, videoSeconds] = findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
 
@@ -400,7 +406,7 @@ def main():
     print(
         f'scoring similarities with threshold: {scoreThreshold} and max distance for similarity: {maxDistanceForSimilarity}')
 
-    sceneChanges = findSceneChanges(path, videoName,
+    [sceneChanges, videoSeconds] = findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold)
 
@@ -414,8 +420,7 @@ def main():
 
     # summarize the video based on a set of scene images
     # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
-    # max_scenes_for_summary = 16
-    # summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary)
+    # summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, videoSeconds)
 
 
 # usage:

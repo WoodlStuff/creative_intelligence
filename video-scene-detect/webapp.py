@@ -77,10 +77,11 @@ class WebRequestHandler(BaseHTTPRequestHandler):
                 with open(scoredMetaPath, 'r') as f:
                     orbScores = json.loads(f.read())
                     sceneChanges = orbScores['scored_scene_changes']
+                    videoSeconds = orbScores['video_length_seconds']
 
                 llmSceneChanges = video_extractor.labelSceneChanges(sceneChanges, path, videoName)
             else:
-                sceneChanges = video_extractor.findSceneChanges(path, videoName,
+                [sceneChanges, videoSeconds] = video_extractor.findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
 
@@ -111,8 +112,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
             # summarize the video based on a set of scene images
             # if there aren't any scene changes detected from labels, try to use the raw changes (before labeling)
             # if we have more than max_scenes_for_summary scenes, then filter the list by score until we get to no more than max_scenes_for_summary
-            max_scenes_for_summary = 16
-            video_extractor.summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, max_scenes_for_summary)
+            video_extractor.summarizeVideo(path, videoName, sceneChanges, llmSceneChanges, videoSeconds)
         
             summaryPath = os.path.join(path, videoName, videoName + '_scene_summary.json')
             jsonResponse.update({"video_summary": summaryPath})
