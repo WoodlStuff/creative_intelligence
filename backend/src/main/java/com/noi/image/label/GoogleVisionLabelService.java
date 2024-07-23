@@ -10,13 +10,12 @@ import com.noi.image.AiImageRequest;
 import com.noi.image.AiImageService;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiPrompt;
-import com.noi.requests.ImageLabelResponse;
 import com.noi.models.DbImage;
 import com.noi.models.DbImageLabel;
+import com.noi.requests.ImageLabelResponse;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
 import com.noi.tools.SystemEnv;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -93,15 +92,26 @@ public class GoogleVisionLabelService extends LabelService {
         JsonObject request = new JsonObject();
         JsonObject image = new JsonObject();
         JsonArray features = new JsonArray();
-        JsonObject feature = new JsonObject();
 
         root.add("requests", requests);
         requests.add(request);
         request.add("image", image);
         request.add("features", features);
-        features.add(feature);
-        feature.addProperty("maxResults", 10);
-        feature.addProperty("type", "LABEL_DETECTION");
+
+        // Google mapping for prompt types
+        if (aiRequest.getPrompt() != null) {
+            int promptType = aiRequest.getPrompt().getPromptType();
+            if (AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType() == promptType) {
+                addFeatures(features, new String[]{"LABEL_DETECTION", "TEXT_DETECTION", "DOCUMENT_TEXT_DETECTION", "FACE_DETECTION", "LANDMARK_DETECTION", "LOGO_DETECTION", "SAFE_SEARCH_DETECTION", "WEB_DETECTION"});
+            } else if (AiPrompt.TYPE_IMAGE_LABEL_OBJECTS.getType() == promptType) {
+                addFeatures(features, new String[]{"OBJECT_LOCALIZATION"});
+//            } else if (AiPrompt.TYPE_IMAGE_LABEL_PROPERTIES.getType() == promptType) {
+//                addFeatures(features, new String[]{"IMAGE_PROPERTIES"});
+            }
+        } else {
+            // default (if no prompt is provided)
+            addFeatures(features, new String[]{"LABEL_DETECTION", "TEXT_DETECTION", "LANDMARK_DETECTION", "LOGO_DETECTION", "OBJECT_LOCALIZATION", "WEB_DETECTION"});
+        }
         image.addProperty("content", encodedString);
 
         /*
@@ -130,6 +140,15 @@ public class GoogleVisionLabelService extends LabelService {
         return root;
     }
 
+    private static void addFeatures(JsonArray features, String[] fefe) {
+        for (String f : fefe) {
+            JsonObject feature = new JsonObject();
+            //feature.addProperty("maxResults", 10);
+            feature.addProperty("type", f);
+            features.add(feature);
+        }
+    }
+
     private static List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
@@ -140,7 +159,7 @@ public class GoogleVisionLabelService extends LabelService {
             HttpPost httpPost = createHttpPost(apiKey, request, image);
             response = client.execute(httpPost);
 
-            return parseResponse(image, response);
+            return parseResponse(image, request, response);
         } finally {
             if (response != null) {
                 response.close();
@@ -164,14 +183,14 @@ public class GoogleVisionLabelService extends LabelService {
         return httpPost;
     }
 
-    private static List<AiImageLabel> parseResponse(AiImage image, CloseableHttpResponse httpResponse) throws IOException {
+    private static List<AiImageLabel> parseResponse(AiImage image, AiImageLabelRequest request, CloseableHttpResponse httpResponse) throws IOException {
         String jsonResponse = FileTools.readToString(httpResponse.getEntity().getContent());
         System.out.println("response:" + jsonResponse);
         System.out.println("response-code:" + httpResponse.getStatusLine().getStatusCode());
-        return parseResponse(image, jsonResponse);
+        return parseResponse(image, request, jsonResponse);
     }
 
-    private static List<AiImageLabel> parseResponse(AiImage image, String jsonResponse) {
+    private static List<AiImageLabel> parseResponse(AiImage image, AiImageLabelRequest request, String jsonResponse) {
         List<AiImageLabel> labels = new ArrayList<>();
         JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
         if (root != null) {
@@ -179,24 +198,137 @@ public class GoogleVisionLabelService extends LabelService {
             if (responses != null && !responses.isJsonNull()) {
                 for (int i = 0; i < responses.size(); i++) {
                     JsonObject response = responses.get(i).getAsJsonObject();
-                    JsonArray annotations = response.getAsJsonArray("labelAnnotations");
-                    if (annotations != null && !annotations.isJsonNull()) {
-                        for (int a = 0; a < annotations.size(); a++) {
-                            JsonObject annotation = annotations.get(a).getAsJsonObject();
-                            String mid = JsonTools.getAsString(annotation, "mid");
-                            String description = JsonTools.getAsString(annotation, "description");
-                            double score = JsonTools.getAsDouble(annotation, "score");
-                            double topicality = JsonTools.getAsDouble(annotation, "topicality");
 
-                            labels.add(AiImageLabel.create(image, null, MODEL_NAME, description, mid, score, topicality));
+                    // we request different things based on the prompt type, or a set of defaults if no prompt was provided
+                    if (request.getPrompt() != null) {
+                        if (AiPrompt.TYPE_IMAGE_LABEL_OBJECTS.getType() == request.getPrompt().getPromptType()) {
+                            parseResponseAnnotationForCategory(image, labels, response, "localizedObjectAnnotations");
                         }
+                        continue;
                     }
 
+                    parseResponseAnnotationForCategory(image, labels, response, "labelAnnotations");
+                    parseResponseAnnotationForCategory(image, labels, response, "textAnnotations");
+                    parseResponseAnnotationForCategory(image, labels, response, "landmarkAnnotations");
+                    parseResponseAnnotationForCategory(image, labels, response, "logoAnnotations");
+
+                    parseResponseForSafeSearch(image, labels, response);
+                    parseResponseForWebDetect(image, labels, response);
+
+                    // todo: too complicated / specific?
+                    // * faceAnnotations (location of face details in the image)
+                    // * imagePropertiesAnnotation (RBG color values used with their fraction of pixels in the image
                 }
             }
         }
 
         return labels;
+    }
+
+    private static void parseResponseForWebDetect(AiImage image, List<AiImageLabel> labels, JsonObject response) {
+        if (!response.has("webDetection")) {
+            return;
+        }
+
+        JsonObject web = response.get("webDetection").getAsJsonObject();
+        parseResponseAnnotationForCategory(image, labels, web, "webEntities");
+
+        /* todo: https://cloud.google.com/vision/docs/detecting-web
+        // todo: add parsing of the image urls and best guess label(s)
+            "webDetection": {
+            "webEntities": [
+              {
+                "entityId": "/m/02p7_j8",
+                "score": 1.44225,
+                "description": "Carnival in Rio de Janeiro"
+              },
+              {
+                "entityId": "/m/06gmr",
+                "score": 1.2913725,
+                "description": "Rio de Janeiro"
+              },
+              ...
+            ],
+            "fullMatchingImages": [
+                  {
+                    "url": "https://1000lugaresparair.files.wordpress.com/2017/11/quinten-de-graaf-278848.jpg"
+                  },
+                  ...
+                ],
+            "partialMatchingImages": [
+                  {
+                    "url": "https://www.linnanneito.fi/wp-content/uploads/sambakarnevaali-riossa.jpg"
+                  },
+                  ...
+                ],
+            "pagesWithMatchingImages": [
+                  {
+                    "url": "https://www.intrepidtravel.com/us/brazil/rio-carnival-122873",
+                    "pageTitle": "\u003cb\u003eRio Carnival\u003c/b\u003e | Intrepid Travel US",
+                    "partialMatchingImages": [
+                      {
+                        "url": "https://www.intrepidtravel.com/sites/intrepid/files/styles/large/public/elements/product/hero/GGSR-Brazil-rio-carnival-ladies.jpg"
+                      },
+                      ...
+                ],
+            "visuallySimilarImages": [
+                  {
+                    "url": "https://pbs.twimg.com/media/DVoQOx6WkAIpHKF.jpg"
+                  },
+                  ...
+                ],
+            "bestGuessLabels": [
+                  {
+                    "label": "rio carnival",
+                    "languageCode": "en"
+                  }
+                ]
+         */
+    }
+
+    private static void parseResponseForSafeSearch(AiImage image, List<AiImageLabel> labels, JsonObject response) {
+        if (!response.has("safeSearchAnnotation")) {
+            return;
+        }
+
+        /*
+        todo: https://cloud.google.com/vision/docs/detecting-safe-search
+        "safeSearchAnnotation": {
+            "adult": "UNLIKELY",
+            "spoof": "VERY_UNLIKELY",
+            "medical": "VERY_UNLIKELY",
+            "violence": "LIKELY",
+            "racy": "POSSIBLE"
+        }
+        */
+    }
+
+    private static void parseResponseAnnotationForCategory(AiImage image, List<AiImageLabel> labels, JsonObject response, String category) {
+        if (!response.has(category) || !response.get(category).isJsonArray()) {
+            System.out.println("GoogleVisionLabelParser: " + category + " is not present as an array!");
+            return;
+        }
+
+        JsonArray annotations = response.getAsJsonArray(category);
+        if (annotations != null && !annotations.isJsonNull()) {
+            for (int a = 0; a < annotations.size(); a++) {
+                JsonObject annotation = annotations.get(a).getAsJsonObject();
+                String mid = JsonTools.getAsString(annotation, "mid");
+                String entityId = JsonTools.getAsString(annotation, "entityId"); // todo: same as mid?
+                if (mid == null && entityId != null) {
+                    mid = entityId;
+                }
+                String description = JsonTools.getAsString(annotation, "description");
+                String name = JsonTools.getAsString(annotation, "name"); //todo: same as description?
+                if (description == null && name != null) {
+                    description = name;
+                }
+                double score = JsonTools.getAsDouble(annotation, "score");
+                double topicality = JsonTools.getAsDouble(annotation, "topicality");
+
+                labels.add(AiImageLabel.create(image, null, MODEL_NAME, description, mid, score, topicality));
+            }
+        }
     }
 
     public static void main(String[] args) throws IOException {

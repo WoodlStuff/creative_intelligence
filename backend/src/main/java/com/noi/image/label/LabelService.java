@@ -122,6 +122,7 @@ public abstract class LabelService {
             JsonObject l = new JsonObject();
             l.addProperty("request_uuid", label.getRequestUUID());
             l.addProperty("model_name", label.getModelName());
+            l.addProperty("description", label.getContent());
             l.addProperty("mid", label.getMid());
             l.addProperty("score", label.getScore());
             l.addProperty("topicality", label.getTopicality());

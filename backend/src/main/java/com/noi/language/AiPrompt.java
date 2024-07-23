@@ -25,6 +25,7 @@ public class AiPrompt {
     private final Status status;
 
     public static final Type TYPE_IMAGE_CREATION = new Type(0, "image_creation");
+
     public static final Type TYPE_IMAGE_LABEL_CATEGORIES = new Type(10, "label_categories");
     public static final Type TYPE_IMAGE_LABEL_OBJECTS = new Type(11, "image_label_objects");
     public static final Type TYPE_IMAGE_LABEL_PROPERTIES = new Type(12, "image_label_properties");

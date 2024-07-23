@@ -4,13 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -236,7 +234,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721335693259</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;">
+      <created>1721751541460</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1721751541460</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -254,6 +259,7 @@
     <MESSAGE value="added model as a relationship of the prompt; &#10;added a name to prompts so they can more easily be managed; &#10;improved data for Prompt dialog (added lookup tables for models, statuses, and types);" />
     <MESSAGE value="added a prompt select for Image Label process (select all or one specific prompt to create labels for the image with);" />
     <MESSAGE value="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload" />
-    <option name="LAST_COMMIT_MESSAGE" value="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload" />
+    <MESSAGE value="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;" />
+    <option name="LAST_COMMIT_MESSAGE" value="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;" />
   </component>
 </project>
