@@ -389,6 +389,7 @@ function Image() {
             <table width="100%">
               <thead>
                 <tr>
+                  <td>Description</td>
                   <td>Mid</td>
                   <td>Score</td>
                   <td>Topicality</td>
@@ -399,6 +400,9 @@ function Image() {
                 {
                   imageAnnotationData.map((anno) => (
                     <tr key={anno.mid}>
+                      <td>
+                        {anno.description}
+                      </td>
                       <td>
                         {anno.mid}
                       </td>
