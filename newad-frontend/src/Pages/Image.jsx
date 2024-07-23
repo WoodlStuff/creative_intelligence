@@ -52,7 +52,39 @@ function Image() {
 
   function changePrompt(newValue) {
     setSelectedPromptId(newValue);
+    fetchLabelData(params.id, newValue);
   }
+
+  const fetchLabelData = async (imageId, promptId) => {
+    try {
+      console.log("reading labels for image ...")
+      console.log(imageId);
+      axios.get("http://localhost:8080/noi-server/categories/" + imageId + '?p=' + promptId).then((response) => {
+        let data = response.data;
+        if (Object.entries(data).length >= 0) {
+          setImageLabelData(data.categories);
+          // var filterData = data.category_names;
+          // filterData.push("- all -");
+          // setCatSelectorData(filterData);
+          
+          // var promptData = data.prompts;
+          // promptData.push({"prompt_name": "- all -", "prompt_id": -1});
+          // setPromptSelectorData(promptData);
+          // setSelectedPromptId(-1);
+
+          setImageAnnotationData(data.annotations);
+          setEmbedding(data.has_embedding)
+
+          if(params.category !== undefined){
+            console.log(params.category);
+            changeCategory(params.category);
+          }
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const LabelRows = (props) => {
     if(props.hasLabels === true){
@@ -153,7 +185,7 @@ function Image() {
     // set the progress bar to visible
     showProgressbar();
     console.log("label image for id: " + params.id);
-    axios.post('http://localhost:8080/noi-server/categories/' + params.id + "/" + selectedPromptId).then((response) => {
+    axios.post('http://localhost:8080/noi-server/categories/' + params.id + "?p=" + selectedPromptId).then((response) => {
       // todo: take the response.data json, and post it to be inserted into the db (post to Java code on :8080)
       console.log(response.data);
       let data = response.data; 
@@ -228,7 +260,7 @@ function Image() {
       try {
         console.log("calling for image meta...")
         console.log(imageId);
-        axios.get("http://localhost:8080/noi-server/categories/" + imageId).then((response) => {
+        axios.get("http://localhost:8080/noi-server/categories/" + imageId + '?p=' + selectedPromptId).then((response) => {
           let data = response.data;
           if (Object.entries(data).length >= 0) {
             setImageURL(data.path)
