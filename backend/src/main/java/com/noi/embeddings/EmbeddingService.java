@@ -25,11 +25,23 @@ public abstract class EmbeddingService {
         return getEmbeddings(con, imageId, categoryName, false);
     }
 
+    public static ImageEmbeddings getEmbeddings(Connection con, AiImage image, String categoryName) throws SQLException, EmbeddingException, IOException {
+        return getEmbeddings(con, image, categoryName, false);
+    }
+
     public static ImageEmbeddings getEmbeddings(Connection con, Long imageId, String categoryName, boolean includeModelName) throws SQLException, EmbeddingException, IOException {
         // look up the image and the label metadata for it
         AiImage image = DbImage.find(con, imageId);
-        AiVideo video = null;
+        return getEmbeddings(con, image, categoryName, includeModelName);
+    }
 
+    public static ImageEmbeddings getEmbeddings(Connection con, AiImage image, String categoryName, boolean includeModelName) throws SQLException, EmbeddingException, IOException {
+        if (image == null) {
+            throw new IllegalArgumentException();
+        }
+
+        // look up the image and the label metadata for it
+        AiVideo video = null;
         if (image.getVideoId() != null) {
             video = DbVideo.find(con, image.getVideoId());
         }
