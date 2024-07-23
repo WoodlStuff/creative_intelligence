@@ -83,10 +83,10 @@ public class NoiServlet extends BaseControllerServlet {
                         Map<String, List<LabelMetaData>> metaValues = DbImageLabel.findLabelMetaCategories(con, image);
 
                         // add the image meta to the json doc (for the response)
-                        imagesArray.add(LabelService.addImageLabels(image, annotations, metaValues, null));
+                        imagesArray.add(LabelService.addImageLabels(image, annotations, metaValues, null, null));
 
                         // create a json file for each image in the same local image folder
-                        JsonObject imgRoot = LabelService.addImageLabels(image, annotations, metaValues, null);
+                        JsonObject imgRoot = LabelService.addImageLabels(image, annotations, metaValues, null, null);
                         File parentFolder = f.getParentFile();
                         String jsonFileName = f.getName().replace(".jpg", ".json");
                         File imgJsonFile = new File(parentFolder, jsonFileName);

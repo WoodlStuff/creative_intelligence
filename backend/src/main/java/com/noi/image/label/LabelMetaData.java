@@ -1,21 +1,30 @@
 package com.noi.image.label;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Objects;
 
 public class LabelMetaData {
     private final String key, value;
     private final String requestUUID;
+    private final Long promptId;
+
     private final String modelName;
     private LabelMetaObject labelMetaObject;
     private LabelMetaColorGradient labelMetaColorGradient;
     private LabelMetaShadow labelMetaShadow;
 
     private LabelMetaData(String key, String value) {
-        this(null, null, key, value);
+        this(null, null, null, key, value);
     }
 
-    private LabelMetaData(String requestUUID, String modelName, String key, String value) {
+    private LabelMetaData(String requestUUID, Long promptId, String modelName, String key, String value) {
         this.requestUUID = requestUUID;
+        if (promptId != null && promptId > 0L) {
+            this.promptId = promptId;
+        } else {
+            this.promptId = null;
+        }
         this.modelName = modelName;
         this.key = key;
         this.value = value;
@@ -28,11 +37,15 @@ public class LabelMetaData {
         return new LabelMetaData(key, value);
     }
 
-    public static LabelMetaData create(String requestUUID, String modelName, String key, String value) {
+    public static LabelMetaData create(ResultSet rs) throws SQLException {
+        return create(rs.getString("label_request_uuid"), rs.getLong("ai_prompt_id"), rs.getString("model_name"), rs.getString("meta_key"), rs.getString("meta_values"));
+    }
+
+    public static LabelMetaData create(String requestUUID, Long promptId, String modelName, String key, String value) {
         if (key == null || value == null) {
             throw new IllegalArgumentException();
         }
-        return new LabelMetaData(requestUUID, modelName, key, value);
+        return new LabelMetaData(requestUUID, promptId, modelName, key, value);
     }
 
     public static LabelMetaData create(String key, String value, LabelMetaObject labelMetaObject) {
@@ -112,5 +125,9 @@ public class LabelMetaData {
 
     public void add(LabelMetaShadow shadow) {
         this.labelMetaShadow = shadow;
+    }
+
+    public Long getPromptId() {
+        return promptId;
     }
 }

@@ -6,8 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

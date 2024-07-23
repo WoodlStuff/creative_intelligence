@@ -68,9 +68,9 @@ public abstract class LabelService {
         return modelName;
     }
 
-    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, boolean hasEmbedding, HttpServletResponse response) throws IOException, SQLException, NamingException {
+    public static void writeLabelReport(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, Long promptId, boolean hasEmbedding, HttpServletResponse response) throws IOException, SQLException, NamingException {
         // create the json doc
-        JsonObject root = addImageLabels(image, annotations, metaValues, categoryName);
+        JsonObject root = addImageLabels(image, annotations, metaValues, categoryName, promptId);
         root.addProperty("has_embedding", hasEmbedding);
         addPromptsForLookup(root);
 
@@ -107,7 +107,7 @@ public abstract class LabelService {
         }
     }
 
-    public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName) {
+    public static JsonObject addImageLabels(AiImage image, List<AiImageLabel> annotations, Map<String, List<LabelMetaData>> metaValues, String categoryName, Long promptId) {
         JsonObject i = new JsonObject();
         i.addProperty("path", image.getFilePath());
         i.addProperty("video_frame_number", image.getVideoFrameNumber());
@@ -142,13 +142,15 @@ public abstract class LabelService {
                     catNames.add(catName);
                 }
                 for (LabelMetaData meta : cat.getValue()) {
-                    JsonObject label = new JsonObject();
-                    categories.add(label);
-                    label.addProperty("category_name", catName);
-                    label.addProperty("request_uuid", meta.getRequestUUID());
-                    label.addProperty("model_name", meta.getModelName());
-                    label.addProperty("key", meta.getKey());
-                    label.addProperty("value", meta.getValue());
+                    if(promptId == null || promptId.equals(meta.getPromptId())) {
+                        JsonObject label = new JsonObject();
+                        categories.add(label);
+                        label.addProperty("category_name", catName);
+                        label.addProperty("request_uuid", meta.getRequestUUID());
+                        label.addProperty("model_name", meta.getModelName());
+                        label.addProperty("key", meta.getKey());
+                        label.addProperty("value", meta.getValue());
+                    }
                 }
             }
         }

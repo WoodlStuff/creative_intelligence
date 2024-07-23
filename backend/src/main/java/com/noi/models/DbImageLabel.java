@@ -89,9 +89,11 @@ public class DbImageLabel extends Model {
         Map<String, List<LabelMetaData>> labelCategories = new HashMap<>();
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select r.uuid label_request_uuid, p.prompt_type, r.model_name, c.name category_name, mc.meta_key, group_concat(mc.meta_value) meta_values from ai_label_requests r join ai_prompts p on p.id=r.ai_prompt_id join ai_image_labels l on l.ai_label_request_id = r.id join ai_image_label_meta_categories mc on mc.ai_image_label_id = l.id join meta_categories c on c.id = mc.meta_category_id  where r.ai_image_id=? and r.status=? group by uuid, p.prompt_type, r.model_name, c.name, mc.meta_key order by c.name, mc.meta_key");
+            // only the most recent request per prompt!
+            stmt = con.prepareStatement("select r.uuid label_request_uuid, r.ai_prompt_id, p.prompt_type, r.model_name, c.name category_name, mc.meta_key, group_concat(mc.meta_value) meta_values from ai_label_requests r join ai_prompts p on p.id=r.ai_prompt_id join ai_image_labels l on l.ai_label_request_id = r.id join ai_image_label_meta_categories mc on mc.ai_image_label_id = l.id join meta_categories c on c.id = mc.meta_category_id join (select ai_prompt_id, max(id) _max_request_id from ai_label_requests where ai_image_id=? and ai_prompt_id is not null group by ai_prompt_id)mrq on mrq.ai_prompt_id = r.ai_prompt_id and mrq._max_request_id = r.id where r.ai_image_id=? and r.status=? group by uuid, ai_prompt_id, p.prompt_type, r.model_name, c.name, mc.meta_key order by c.name, mc.meta_key");
             stmt.setLong(1, image.getId());
-            stmt.setInt(2, Status.COMPLETE.getStatus());
+            stmt.setLong(2, image.getId());
+            stmt.setInt(3, Status.COMPLETE.getStatus());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 String categoryName = rs.getString("category_name");
@@ -100,7 +102,7 @@ public class DbImageLabel extends Model {
                     metas = new ArrayList<>();
                     labelCategories.put(categoryName, metas);
                 }
-                metas.add(LabelMetaData.create(rs.getString("label_request_uuid"), rs.getString("model_name"), rs.getString("meta_key"), rs.getString("meta_values")));
+                metas.add(LabelMetaData.create(rs));
             }
         } finally {
             close(stmt);

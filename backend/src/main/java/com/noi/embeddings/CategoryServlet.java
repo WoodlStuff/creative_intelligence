@@ -32,7 +32,7 @@ public class CategoryServlet extends BaseControllerServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // label data for one image
-        // curl http://localhost:8080/noi-server/categories/<image-id>
+        // curl http://localhost:8080/noi-server/categories/<image-id>[/<prompt-id>]
 
         // generate json doc for requested image (... and category name)
         Path path = Path.parse(req);
@@ -73,11 +73,19 @@ public class CategoryServlet extends BaseControllerServlet {
             categoryName = pathTokens[1].trim();
         }
 
+        Long promptId = null;
+        if (req.getParameter("p") != null) {
+            promptId = Long.valueOf(req.getParameter("p").trim());
+            if (promptId <= 0L) {
+                promptId = null;
+            }
+        }
+
         // read the image and the labels, and format a response (json)
-        writeLabelResponse(imgId, categoryName, resp);
+        writeLabelResponse(imgId, categoryName, promptId, resp);
     }
 
-    private void writeLabelResponse(Long imgId, String categoryName, HttpServletResponse resp) throws SQLException, NamingException, IOException {
+    private void writeLabelResponse(Long imgId, String categoryName, Long promptId, HttpServletResponse resp) throws SQLException, NamingException, IOException {
         // read the image and the labels, and format a response (json)
         Connection con = null;
         try {
@@ -90,7 +98,7 @@ public class CategoryServlet extends BaseControllerServlet {
             String cat = categoryName != null ? categoryName : "situation"; // todo: do we define a 'DEFAULT_CATEGORY' ?
             boolean hasEmbedding = vectorService.hasVector(image.getId(), cat);
 
-            LabelService.writeLabelReport(image, annotations, metaValues, categoryName, hasEmbedding, resp);
+            LabelService.writeLabelReport(image, annotations, metaValues, categoryName, promptId, hasEmbedding, resp);
         } catch (EmbeddingException e) {
             throw new IOException(e);
         } finally {
@@ -108,7 +116,7 @@ public class CategoryServlet extends BaseControllerServlet {
         // [or:
         // curl -X POST http://localhost:8080/noi-server/categories/12345 -d "{'prompt_type': 10, 'prompt': 'some text goes here'}"  -d "modelName=gpt-4o (the default) | GoogleVision"]
         // with url encoding for url parameters in passed image url
-        // curl -X POST -G http://localhost:8080/noi-server/category -d "modelName=gpt-4o" -d "prompt_id=1" --data-urlencode "image_url=https://scontent.fbgi3-1.fna.fbcdn.net/v/t45.1600-4/407953252_120203198010660611_4827034948669956474_n.png?stp=cp0_dst-jpg_fr_q90_spS444&_nc_cat=100&ccb=1-7&_nc_sid=5f2048&_nc_ohc=bzeFfJzfm_0Q7kNvgFcIMKg&_nc_ht=scontent.fbgi3-1.fna&oh=00_AYDLxbzIFiQqvqhkMu2u3cMA7bIGqm2U5QlU66a9sl1FAg&oe=6644314E"
+        // curl -X POST -G http://localhost:8080/noi-server/category -d "modelName=gpt-4o" -d "p=1" --data-urlencode "image_url=https://scontent.fbgi3-1.fna.fbcdn.net/v/t45.1600-4/407953252_120203198010660611_4827034948669956474_n.png?stp=cp0_dst-jpg_fr_q90_spS444&_nc_cat=100&ccb=1-7&_nc_sid=5f2048&_nc_ohc=bzeFfJzfm_0Q7kNvgFcIMKg&_nc_ht=scontent.fbgi3-1.fna&oh=00_AYDLxbzIFiQqvqhkMu2u3cMA7bIGqm2U5QlU66a9sl1FAg&oe=6644314E"
 
         Path path = Path.parse(req);
         if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
@@ -153,10 +161,16 @@ public class CategoryServlet extends BaseControllerServlet {
                     throw new IllegalArgumentException("prompt id is invalid in the path: /label/<image-id>/<prompt-id>: " + path);
                 }
 
-                Long aiPromptId = Long.valueOf(promptId);
-                prompt = DbLanguage.findPrompt(aiPromptId);
+                Long id = Long.valueOf(promptId);
+                prompt = DbLanguage.findPrompt(id);
                 // todo: revisit! (case: no id in url, but type and prompt as posted json)
                 // prompt = handlePrompt(req, path, 1);
+            } else {
+                String promptId = req.getParameter("p");
+                if (promptId != null) {
+                    Long id = Long.valueOf(promptId);
+                    prompt = DbLanguage.findPrompt(id);
+                }
             }
         } else {
             String imageUrl = req.getParameter("image_url");
@@ -165,7 +179,7 @@ public class CategoryServlet extends BaseControllerServlet {
                 imgId = image.getId();
             }
 
-            String promptId = req.getParameter("prompt_id");
+            String promptId = req.getParameter("p");
             if (promptId != null) {
                 Long id = Long.valueOf(promptId.trim());
                 prompt = DbLanguage.findPrompt(id);
@@ -174,7 +188,9 @@ public class CategoryServlet extends BaseControllerServlet {
 
         Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
         // one specific prompt requested?
+        Long aiPromptId = null;
         if (prompt != null) {
+            aiPromptId = prompt.getId();
             List<AiPrompt> prompts = new ArrayList<>();
             prompts.add(prompt);
             modelPrompts.put(prompt.getModel(), prompts);
@@ -189,6 +205,6 @@ public class CategoryServlet extends BaseControllerServlet {
         }
         responses.addAll(requestImageLabels(imgId, AiModel.GOOGLE_VISION, null));
 
-        writeLabelResponse(imgId, null, resp);
+        writeLabelResponse(imgId, null, aiPromptId, resp);
     }
 }
