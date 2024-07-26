@@ -21,18 +21,22 @@ import java.util.Map;
 public class DbImage extends Model {
     private static final String COLUMNS = "i.id, p.id prompt_id, i.image_url, i.ai_brand_id, rp.prompt revised_prompt, i.status, i.ai_video_id, i.video_frame_number, i.is_new_video_scene, i.is_video_scene_snap";
 
-    public static void insert(Connection con, AiImageRequest request, AiImage image) throws SQLException {
+    public static Long insert(Connection con, AiImageRequest request, AiImage image) throws SQLException {
         // insert image details , and link it to the prompt the image came from
         Long promptId = null;
-        if (request.getPrompt() != null && request.getPrompt().getId() != null) {
-            promptId = request.getPrompt().getId();
+        Long requestId = null;
+        if (request != null) {
+            requestId = request.getId();
+
+            if (request.getPrompt() != null && request.getPrompt().getId() != null) {
+                promptId = request.getPrompt().getId();
+            }
         }
 
-        Long requestId = request.getId();
 
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("insert into ai_images(ai_image_request_id, ai_prompt_id, image_url, status, created_at, updated_at) values(?,?,?,?, now(), now())");
+            stmt = con.prepareStatement("insert into ai_images(ai_image_request_id, ai_prompt_id, image_url, name, status, created_at, updated_at) values(?,?,?,?,?, now(), now())");
 
             if (requestId != null && requestId > 0L) {
                 stmt.setLong(1, requestId);
@@ -47,7 +51,8 @@ public class DbImage extends Model {
             }
 
             stmt.setString(3, image.getUrl());
-            stmt.setInt(4, Status.NEW.getStatus());
+            stmt.setString(4, image.getName());
+            stmt.setInt(5, Status.NEW.getStatus());
             Long id = executeWithLastId(stmt);
             if (id > 0L) {
                 image.setId(id);
@@ -57,6 +62,8 @@ public class DbImage extends Model {
             if (image.getRevisedPrompt() != null) {
                 linkRevisedPrompt(con, requestId, promptId, image.getRevisedPrompt());
             }
+            return id;
+
         } finally {
             close(stmt);
         }
@@ -91,10 +98,9 @@ public class DbImage extends Model {
             stmt = con.prepareStatement("insert ignore into ai_images(ai_video_id, video_frame_number, image_url, ai_brand_id, status, created_at, updated_at) values(?,?,?,?,?, now(), now())");
             if (video != null) {
                 stmt.setLong(1, video.getId());
-                if(video.getBrand() != null) {
+                if (video.getBrand() != null) {
                     stmt.setLong(4, video.getBrand().getId());
-                }
-                else {
+                } else {
                     stmt.setString(4, null);
                 }
             } else {

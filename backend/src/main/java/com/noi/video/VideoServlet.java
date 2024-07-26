@@ -212,11 +212,11 @@ public class VideoServlet extends BaseControllerServlet {
 
             // todo: how to read the configured url from the MultipartConfig(location ... tag?
             // export NOI_PATH=/Users/martin/work/tmp/ai-data/videos
-            String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data/videos");
+            String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
             if (!noiPath.endsWith("/")) {
                 noiPath = noiPath + "/";
             }
-            String url = noiPath + fileName;
+            String url = noiPath + "videos/" + fileName;
             AiVideo aiVideo = AiVideo.create(fileName, url, Status.NEW, aiBrand);
             Long id = DbVideo.insert(con, aiVideo);
             System.out.println(fileName + ": created new video with id=" + id);

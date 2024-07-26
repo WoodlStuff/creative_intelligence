@@ -4,6 +4,7 @@ import com.noi.AiModel;
 import com.noi.language.AiPrompt;
 import com.noi.requests.NoiRequest;
 import com.noi.tools.FileTools;
+import com.noi.tools.SystemEnv;
 import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
@@ -14,7 +15,6 @@ import java.io.*;
 import java.net.URL;
 
 public abstract class AiImageService {
-    public static final String FILE_ROOT_FOLDER = "/Users/martin/work/tmp/ai-data/images/";
     protected final String modelName;
 
     protected AiImageService(String modelName) {
@@ -43,7 +43,8 @@ public abstract class AiImageService {
 
         // for remote images:
         String fileName = getFileName(aiImage.getId(), aiImage.getUrl());
-        String imgUrl = String.format("%s/%s", FILE_ROOT_FOLDER, fileName);
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String imgUrl = String.format("%s/images/%s", noiPath, fileName);
 
         File file = new File(imgUrl);
         if (file.exists()) {
@@ -56,7 +57,8 @@ public abstract class AiImageService {
     // write a local copy of the image to a root folder and a created folder for the request-UUID
     // file name is the image id and the src file extension
     public static void downloadImage(AiImage image) throws IOException {
-        String path = FILE_ROOT_FOLDER;
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String path = String.format("%s/images/", noiPath);
         downloadImage(path, image.getId(), image.getUrl());
     }
 
@@ -117,7 +119,6 @@ public abstract class AiImageService {
 
     public static void main(String[] args) throws IOException {
 
-//        String targetFolder = FILE_ROOT_FOLDER + UUID.randomUUID().toString();
 //        Long imageId = 1L;
 //        String srcUrl = "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*1uzNKl9Hj2UQQ9lZhFNNkQ.jpeg";
 //        downloadImage(targetFolder, imageId, srcUrl);

@@ -120,6 +120,7 @@ public abstract class LabelService {
         i.add("annotations", a);
         for (AiImageLabel label : annotations) {
             JsonObject l = new JsonObject();
+            l.addProperty("label_id", label.getId());
             l.addProperty("request_uuid", label.getRequestUUID());
             l.addProperty("model_name", label.getModelName());
             l.addProperty("description", label.getContent());

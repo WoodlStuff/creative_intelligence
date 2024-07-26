@@ -5,6 +5,7 @@ import com.noi.image.*;
 import com.noi.language.AiPrompt;
 import com.noi.requests.NoiRequest;
 import com.noi.tools.FileTools;
+import com.noi.tools.SystemEnv;
 import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
@@ -15,7 +16,6 @@ import java.io.*;
 import java.net.URL;
 
 public class AiVideoService {
-    public static final String FILE_ROOT_FOLDER = "/Users/martin/work/tmp/ai-data/videos/";
     protected final String modelName;
 
     protected AiVideoService(String modelName) {
@@ -29,7 +29,8 @@ public class AiVideoService {
 
         // for remote videos:
         String fileName = getFileName(aiVideo.getId(), aiVideo.getUrl());
-        String imgUrl = String.format("%s/%s", FILE_ROOT_FOLDER, fileName);
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String imgUrl = String.format("%s/videos/%s", noiPath, fileName);
 
         File file = new File(imgUrl);
         if (file.exists()) {
@@ -42,7 +43,8 @@ public class AiVideoService {
     // write a local copy of the image to a root folder and a created folder for the request-UUID
     // file name is the image id and the src file extension
     public static void downloadVideo(AiVideo video) throws IOException {
-        String path = FILE_ROOT_FOLDER;
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String path = String.format("%s/videos/", noiPath);
         downloadVideo(path, video.getId(), video.getUrl());
     }
 

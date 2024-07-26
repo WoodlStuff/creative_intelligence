@@ -4,10 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added more label types to GoogleVision requests">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="small fix: re-use the image we already read.">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/ImageServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/EmbeddingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/VectorServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/requests/AiRequestLogger.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/requests/AiRequestLogger.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideoService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -246,7 +256,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721765316573</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="small fix: re-use the image we already read.">
+      <created>1721772695973</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1721772695973</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -266,6 +283,7 @@
     <MESSAGE value="added a name property to videos; &#10;added functionality to add a new brand; &#10;moved video backend to separated endpoint (from shared /api endpoint);&#10;some code cleanup; &#10;added delete for videos; &#10;added video upload" />
     <MESSAGE value="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;" />
     <MESSAGE value="added more label types to GoogleVision requests" />
-    <option name="LAST_COMMIT_MESSAGE" value="added more label types to GoogleVision requests" />
+    <MESSAGE value="small fix: re-use the image we already read." />
+    <option name="LAST_COMMIT_MESSAGE" value="small fix: re-use the image we already read." />
   </component>
 </project>

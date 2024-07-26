@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.tools.FileTools;
+import com.noi.tools.SystemEnv;
 import com.noi.tools.TimeTools;
 
 import java.io.*;
@@ -14,14 +15,15 @@ import java.time.Instant;
 
 public class AiRequestLogger {
     public static final String LABEL = "imageLabels";
-    public static final String FILE_ROOT_FOLDER = "/Users/martin/work/tmp/ai-data/";
 
     public static void logLabelRequest(String category, NoiRequest request, JsonObject payload) throws IOException {
         ////        System.out.println("OpenAI Label Service: payload:\r\n" + gson.toJson(payloadJson));
         String today = TimeTools.convertToDateStringUTC(Instant.now());
 
         // <root>/yyyyMMdd/<category>/<model>/<request-uuid>-req.json
-        String targetFolder = String.format("%s/%s/%s/%s/", FILE_ROOT_FOLDER, today, category, request.getModel().getName());
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+
+        String targetFolder = String.format("%s/%s/%s/%s/", noiPath, today, category, request.getModel().getName());
 
         File imageDir = new File(targetFolder);
         imageDir.mkdirs();
@@ -39,7 +41,8 @@ public class AiRequestLogger {
         // write to logs:
         // <root>/yyyyMMdd/<category>/<model>/<request-uuid>-res.json
         String today = TimeTools.convertToDateStringUTC(Instant.now());
-        String targetFolder = String.format("%s/%s/%s/%s/", FILE_ROOT_FOLDER, today, category, request.getModel().getName());
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String targetFolder = String.format("%s/%s/%s/%s/", noiPath, today, category, request.getModel().getName());
 
         File imageDir = new File(targetFolder);
         imageDir.mkdirs();
@@ -62,7 +65,8 @@ public class AiRequestLogger {
         }
 
         String today = TimeTools.convertToDateStringUTC(Instant.now());
-        String targetFolder = String.format("%s/%s/%s/%s/", FILE_ROOT_FOLDER, today, category, request.getModel().getName());
+        String noiPath = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String targetFolder = String.format("%s/%s/%s/%s/", noiPath, today, category, request.getModel().getName());
 
         File imageDir = new File(targetFolder);
         imageDir.mkdirs();

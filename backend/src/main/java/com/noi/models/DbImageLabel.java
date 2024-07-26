@@ -372,7 +372,12 @@ public class DbImageLabel extends Model {
             for (AiImageLabel label : imageLabels) {
                 stmt.setLong(2, label.getImage().getId());
                 stmt.setString(3, label.getModelName());
-                stmt.setString(4, label.getContent());
+                String lb = label.getContent();
+                // ensure the text fits into the column
+                if (lb != null && lb.length() > 100) {
+                    lb = lb.substring(0, 100);
+                }
+                stmt.setString(4, lb);
                 stmt.setString(5, label.getMid());
                 stmt.setDouble(6, label.getScore());
                 stmt.setDouble(7, label.getTopicality());
@@ -422,6 +427,7 @@ public class DbImageLabel extends Model {
 
     /**
      * return a map of category name to its id.
+     *
      * @param con
      * @return
      * @throws SQLException

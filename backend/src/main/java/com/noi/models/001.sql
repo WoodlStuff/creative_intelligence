@@ -148,6 +148,7 @@ CREATE TABLE `ai_images` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `ai_prompt_id` bigint NULL,
   `ai_image_request_id` bigint NULL,
+  `name` varchar(100) NULL,
   `ai_video_id` bigint NULL,
   `video_frame_number` int NULL,
   `is_new_video_scene` tinyint NOT NULL DEFAULT 0,
@@ -593,6 +594,8 @@ alter table ai_videos add column name varchar(100) NULL after id;
 alter table ai_videos add UNIQUE KEY(name);
 update ai_videos set name = substring_index(video_url, '/', -1) where name is null;
 
+-- 2024-07-25
+alter table ai_images add column name varchar(100) NULL after ai_image_request_id;
 
 -- =======================================
 -- reset schema
