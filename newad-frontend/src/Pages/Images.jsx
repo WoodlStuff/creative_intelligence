@@ -72,6 +72,7 @@ function Images() {
       <div className="card">
         <div className="card-header">
           <h3>Recent Images</h3>
+          <div className="new_button"><a href="/upload-image">Upload New Image ...</a></div>
           <button>
             See all
             <span className="las la-arrow-right">

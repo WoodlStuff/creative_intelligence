@@ -197,11 +197,10 @@ function Image() {
 
       setImageAnnotationData(data.annotations);
       
-      // todo call endpoint to create embeddings and send them to the vector db
-
       hideProgressbar();
 
       fetchSimilarityData(params.id, selectedCategoryName);
+      handleEmbeddingClick();
     });
   }
 
@@ -399,7 +398,7 @@ function Image() {
               <tbody>
                 {
                   imageAnnotationData.map((anno) => (
-                    <tr key={anno.mid}>
+                    <tr key={anno.label_id}>
                       <td>
                         {anno.description}
                       </td>

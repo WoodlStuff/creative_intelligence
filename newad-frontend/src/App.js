@@ -13,6 +13,7 @@ import Prompts from "./Pages/Prompts.jsx";
 import Prompt from "./Pages/Prompt.jsx";
 import Story from "./Pages/Story.jsx";
 import VideoUpload from "./Pages/VideoUpload.jsx"
+import ImageUpload from "./Pages/ImageUpload.jsx"
 
 import Sidebar from "./Components/Sidebar.jsx";
 import Header from "./Components/Header.jsx";
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/story/:id" element={<Story />} 
               action={({ params }) => { }} />
             <Route path="/upload-video" element={<VideoUpload />} />
+            <Route path="/upload-image" element={<ImageUpload />} />
             </Routes>
         </Sidebar>
       </BrowserRouter>
