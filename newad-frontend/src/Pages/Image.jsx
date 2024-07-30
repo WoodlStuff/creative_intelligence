@@ -59,25 +59,19 @@ function Image() {
   }
 
   function lookupTheme(event){
-    // let category = event.target.getAttribute('category');
-    // let words = event.target.getAttribute('words');
     let s = event.target.closest('.compressButton');
     let sp = s.querySelector('span');
-    // alert(s.querySelector('span').textContent); 
-    // alert(s.querySelector('span').getAttribute('category')); 
-    
-    fetchWordTheme(sp.getAttribute('category'), sp.textContent);
+    if(sp !== 'undefined' && sp !== null){
+      fetchWordTheme(sp.getAttribute('category'), sp.textContent);
+    }
+    else{
+      setWordThemes([]);
+    }
   }
 
   const fetchWordTheme = async (category, words) => {
     try {
       console.log("looking for word theme ...")
-      
-      if(category === 'undefined' || category === null || words === 'undefined' || words === null){
-        setWordThemes([]);
-        return;
-      }
-
       let data = {"category_name": category, "words": words}
       axios.post("http://localhost:8080/noi-server/category-theme", data).then((response) => {
         let data = response.data;
