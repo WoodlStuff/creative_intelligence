@@ -9,6 +9,7 @@ import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
 import com.noi.image.AiImageService;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
 import com.noi.models.DbImage;
 import com.noi.models.DbImageLabel;
@@ -66,6 +67,12 @@ public class GoogleVisionLabelService extends LabelService {
         DbImageLabel.insertAnnotation(con, request, labels);
 
         return ImageLabelResponse.create(request, labels);
+    }
+
+    @Override
+    public String lookupThemeForWords(AiLabelConsolidateRequest request) throws IOException {
+        // todo:
+        throw new IllegalStateException("implement me!");
     }
 
     private static JsonObject createPayload(AiImageLabelRequest aiRequest, AiImage aiImage) throws IOException {

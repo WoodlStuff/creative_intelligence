@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.noi.AiModel;
 import com.noi.image.AiImage;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
 import com.noi.models.DbLanguage;
 import com.noi.models.Model;
@@ -34,10 +35,27 @@ public abstract class LabelService {
     Google Vision: https://cloud.google.com/vision
      */
     public static LabelService getService(AiImageLabelRequest request) {
-        String serviceName = getServiceName(request.getModelName());
+        String modelName = request.getModelName();
 
+        return getService(modelName);
+    }
+
+    public static LabelService getService(AiPrompt prompt) {
+        if (prompt == null) {
+            throw new IllegalArgumentException();
+        }
+        AiModel model = prompt.getModel();
+        if (model == null) {
+            throw new IllegalStateException();
+        }
+
+        return getService(model.getName());
+    }
+
+    private static LabelService getService(String modelName) {
+        String serviceName = getServiceName(modelName);
         if (serviceName == null || OPEN_AI.equalsIgnoreCase(serviceName)) {
-            return new OpenAILabelService(request.getModelName());
+            return new OpenAILabelService(modelName);
 
         } else if (GOOGLE_VISION.equalsIgnoreCase(serviceName)) {
             return new GoogleVisionLabelService();
@@ -86,7 +104,7 @@ public abstract class LabelService {
     }
 
     private static void addPromptsForLookup(JsonObject root) throws SQLException, NamingException {
-        Map<AiModel, List<AiPrompt>> labelPrompts = LabelService.readPrompts();
+        Map<AiModel, List<AiPrompt>> labelPrompts = LabelService.readLabelPrompts();
         JsonArray prompts = new JsonArray();
         root.add("prompts", prompts);
         for (Map.Entry<AiModel, List<AiPrompt>> entry : labelPrompts.entrySet()) {
@@ -144,7 +162,7 @@ public abstract class LabelService {
                     catNames.add(catName);
                 }
                 for (LabelMetaData meta : cat.getValue()) {
-                    if(promptId == null || promptId.equals(meta.getPromptId())) {
+                    if (promptId == null || promptId.equals(meta.getPromptId())) {
                         JsonObject label = new JsonObject();
                         categories.add(label);
                         label.addProperty("category_name", catName);
@@ -152,6 +170,7 @@ public abstract class LabelService {
                         label.addProperty("model_name", meta.getModelName());
                         label.addProperty("key", meta.getKey());
                         label.addProperty("value", meta.getValue());
+                        label.addProperty("value_count", meta.getDistinctValueCount());
                     }
                 }
             }
@@ -169,17 +188,17 @@ public abstract class LabelService {
         return i;
     }
 
-    public static Map<AiModel, List<AiPrompt>> readPrompts() throws SQLException, NamingException {
+    public static Map<AiModel, List<AiPrompt>> readLabelPrompts() throws SQLException, NamingException {
         Connection con = null;
         try {
             con = Model.connectX();
-            return readPrompts(con);
+            return readLabelPrompts(con);
         } finally {
             Model.close(con);
         }
     }
 
-    public static Map<AiModel, List<AiPrompt>> readPrompts(Connection con) throws SQLException {
+    public static Map<AiModel, List<AiPrompt>> readLabelPrompts(Connection con) throws SQLException {
         Map<AiModel, List<AiPrompt>> modelPrompts = new HashMap<>();
         List<AiPrompt.Type> promptTypes = new ArrayList<>();
         promptTypes.add(AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES);
@@ -206,4 +225,12 @@ public abstract class LabelService {
      * @return
      */
     public abstract ImageLabelResponse labelize(Connection con, AiImageLabelRequest request) throws SQLException, IOException;
+
+    /**
+     * Consolidate the list of words presented into a common word or theme.
+     *
+     * @return
+     * @throws IOException
+     */
+    public abstract String lookupThemeForWords(AiLabelConsolidateRequest request) throws IOException;
 }

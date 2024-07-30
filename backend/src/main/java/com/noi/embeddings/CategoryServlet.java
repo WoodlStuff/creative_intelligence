@@ -1,16 +1,19 @@
 package com.noi.embeddings;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.noi.AiModel;
 import com.noi.image.AiImage;
 import com.noi.image.label.AiImageLabel;
 import com.noi.image.label.LabelMetaData;
 import com.noi.image.label.LabelService;
+import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
-import com.noi.models.DbImage;
-import com.noi.models.DbImageLabel;
-import com.noi.models.DbLanguage;
-import com.noi.models.Model;
+import com.noi.models.*;
 import com.noi.requests.NoiResponse;
+import com.noi.tools.FileTools;
+import com.noi.tools.JsonTools;
 import com.noi.web.BaseControllerServlet;
 import com.noi.web.Path;
 
@@ -27,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "CategoryServlet", urlPatterns = {"/categories/*"}, loadOnStartup = 0)
+@WebServlet(name = "CategoryServlet", urlPatterns = {"/categories/*", "/category-theme"}, loadOnStartup = 0)
 public class CategoryServlet extends BaseControllerServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -49,7 +52,9 @@ public class CategoryServlet extends BaseControllerServlet {
         }
 
         try {
-            writeImageLabels(req, resp, pathTokens);
+            if ("categories".equalsIgnoreCase(path.getServletPath())) {
+                writeImageLabels(req, resp, pathTokens);
+            }
         } catch (SQLException | NamingException e) {
             throw new ServletException(e);
         }
@@ -118,27 +123,70 @@ public class CategoryServlet extends BaseControllerServlet {
         // with url encoding for url parameters in passed image url
         // curl -X POST -G http://localhost:8080/noi-server/category -d "modelName=gpt-4o" -d "p=1" --data-urlencode "image_url=https://scontent.fbgi3-1.fna.fbcdn.net/v/t45.1600-4/407953252_120203198010660611_4827034948669956474_n.png?stp=cp0_dst-jpg_fr_q90_spS444&_nc_cat=100&ccb=1-7&_nc_sid=5f2048&_nc_ohc=bzeFfJzfm_0Q7kNvgFcIMKg&_nc_ht=scontent.fbgi3-1.fna&oh=00_AYDLxbzIFiQqvqhkMu2u3cMA7bIGqm2U5QlU66a9sl1FAg&oe=6644314E"
 
+        // curl -X POST -G http://localhost:8080/noi-server/category-theme -H "Content-Type: application/json" -d '{"category_name":"colors", "words":"blue, light blue, baby blue"}'
+
         Path path = Path.parse(req);
-        if (path.getPathInfo() == null || path.getPathInfo().isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
 
         System.out.println("POST:CategoryServlet: " + path);
 
-        String[] pathTokens = path.getPathInfo().split("/");
-        if (pathTokens.length == 0 && req.getParameter("image_url") == null) {
-            return;
+        String[] pathTokens = new String[]{};
+        if (path.getPathInfo() != null) {
+            pathTokens = path.getPathInfo().split("/");
         }
-        System.out.println("CategoryServlet: pathToken length=" + pathTokens.length);
+        System.out.println("POST:CategoryServlet: pathToken length=" + pathTokens.length);
 
         try {
-            handleSingleImageLabelRequest(req, resp, path, pathTokens);
+            if ("categories".equalsIgnoreCase(path.getServletPath())) {
+                handleSingleImageLabelRequest(req, resp, path, pathTokens);
+            } else if ("category-theme".equalsIgnoreCase(path.getServletPath())) {
+                // prompt = be concise, and answer with up to two words. find the common word or theme amongst these  <category / key>: <values>
+                handleThemeLookupRequest(req, resp);
+            }
         } catch (SQLException | NamingException e) {
             throw new RuntimeException(e);
         }
-        return;
+    }
 
+    private void handleThemeLookupRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException, NamingException {
+        // we receive a json doc with the category_name, and the list of words to consolidate
+        // ... and respond with a string answer
+        String jsonInput = FileTools.readInputStream(req.getInputStream());
+        if (jsonInput == null) {
+            throw new IllegalArgumentException();
+        }
+        System.out.println("posted content [" + jsonInput + "]");
+        JsonObject root = new JsonParser().parse(jsonInput).getAsJsonObject();
+        if (root == null || root.isJsonNull()) {
+            throw new IllegalArgumentException();
+        }
+
+        String categoryName = JsonTools.getAsString(root, "category_name");
+        String words = JsonTools.getAsString(root, "words");
+
+        JsonObject responseRoot = new JsonObject();
+        JsonArray themes = new JsonArray();
+        responseRoot.add("themes", themes);
+
+        Connection con = null;
+        try {
+            con = Model.connectX();
+
+            List<AiPrompt.Type> types = new ArrayList<>();
+            types.add(AiPrompt.TYPE_IMAGE_LABEL_COLLAPSE);
+            List<AiPrompt> prompts = DbLanguage.findPrompts(con, types);
+            for (AiPrompt prompt : prompts) {
+                LabelService service = LabelService.getService(prompt);
+                if (service != null) {
+                    AiLabelConsolidateRequest request = AiLabelConsolidateRequest.create(prompt, categoryName, words);
+//                    request = DbRequest.insertForLabels(con, request);
+                    themes.add(service.lookupThemeForWords(request));
+                }
+            }
+
+            writeResponse(resp, responseRoot);
+        } finally {
+            Model.close(con);
+        }
     }
 
     private void handleSingleImageLabelRequest(HttpServletRequest req, HttpServletResponse resp, Path path, String[] pathTokens) throws IOException, SQLException, NamingException {
@@ -196,7 +244,7 @@ public class CategoryServlet extends BaseControllerServlet {
             modelPrompts.put(prompt.getModel(), prompts);
         } else {
             // otherwise: use all active label prompts
-            modelPrompts.putAll(LabelService.readPrompts());
+            modelPrompts.putAll(LabelService.readLabelPrompts());
         }
 
         List<NoiResponse> responses = new ArrayList<>();

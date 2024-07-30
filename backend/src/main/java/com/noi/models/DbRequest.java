@@ -397,6 +397,5 @@ public class DbRequest extends Model {
         } finally {
             close(stmt);
         }
-
     }
 }

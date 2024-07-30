@@ -63,7 +63,7 @@ public class NoiServlet extends BaseControllerServlet {
                 con = Model.connectX();
 
                 // read the prompts once
-                modelPrompts.putAll(LabelService.readPrompts(con));
+                modelPrompts.putAll(LabelService.readLabelPrompts(con));
 
                 System.out.println("processing folder " + folder + " for " + modelPrompts.size() + " models ...");
                 for (File f : dir.listFiles()) {
@@ -663,7 +663,7 @@ public class NoiServlet extends BaseControllerServlet {
             images.addAll(DbImage.findVideoSummaryScenes(con, videoId));
             // split all prompts by their models
             // get all active prompts
-            modelPrompts.putAll(LabelService.readPrompts(con));
+            modelPrompts.putAll(LabelService.readLabelPrompts(con));
         } finally {
             Model.close(con);
         }

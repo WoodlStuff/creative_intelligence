@@ -9,10 +9,12 @@ import com.noi.Status;
 import com.noi.image.AiImage;
 import com.noi.image.AiImageService;
 import com.noi.language.AiImageLabelRequest;
+import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
 import com.noi.models.*;
 import com.noi.requests.AiRequestLogger;
 import com.noi.requests.ImageLabelResponse;
+import com.noi.requests.NoiRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
 import com.noi.tools.SystemEnv;
@@ -91,6 +93,17 @@ public class OpenAILabelService extends LabelService {
         return ImageLabelResponse.create(request, labels);
     }
 
+    @Override
+    public String lookupThemeForWords(AiLabelConsolidateRequest request) throws IOException {
+        // replace tokens on the prompt text:
+        String promptText = request.getPrompt().getPrompt().replace("{category}", request.getCategoryName());
+        promptText = promptText.replace("{category_name}", request.getCategoryName());
+        promptText = promptText + ": " + request.getWords();
+
+        // call the LLM and extract the result
+        return post(API_KEY, request, promptText);
+    }
+
     private List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
@@ -102,6 +115,28 @@ public class OpenAILabelService extends LabelService {
             response = client.execute(httpPost);
 
             return parseResponse(request, image, response);
+
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+            if (client != null) {
+                client.close();
+            }
+        }
+    }
+
+    private String post(String apiKey, AiLabelConsolidateRequest request, String prompt) throws IOException {
+        CloseableHttpClient client = null;
+        CloseableHttpResponse response = null;
+
+        try {
+            client = HttpClients.createDefault();
+
+            HttpPost httpPost = createHttpPost(apiKey, null, prompt, request);
+            response = client.execute(httpPost);
+
+            return parseResponse(request, response);
 
         } finally {
             if (response != null) {
@@ -130,6 +165,22 @@ public class OpenAILabelService extends LabelService {
         return httpPost;
     }
 
+    private HttpPost createHttpPost(String apiKey, String systemRoleContent, String userRoleContent, NoiRequest request) throws IOException {
+        System.out.println("posting to " + LABEL_URL + ": " + userRoleContent);
+        JsonObject payloadJson = createPayload(null, modelName, systemRoleContent, userRoleContent, false);
+
+        Gson gson = new Gson();
+        AiRequestLogger.logLabelRequest(AiRequestLogger.LABEL, request, payloadJson);
+
+        StringEntity entity = new StringEntity(gson.toJson(payloadJson), ContentType.APPLICATION_JSON);
+
+        HttpPost httpPost = new HttpPost(LABEL_URL);
+        httpPost.setHeader("Authorization", "Bearer " + apiKey);
+        httpPost.setHeader("User-Agent", "Noi");
+        httpPost.setEntity(entity);
+        return httpPost;
+    }
+
     private List<AiImageLabel> parseResponse(AiImageLabelRequest request, AiImage image, CloseableHttpResponse response) throws IOException {
         String jsonResponse = FileTools.readToString(response.getEntity().getContent());
         System.out.println("response:" + jsonResponse);
@@ -138,13 +189,41 @@ public class OpenAILabelService extends LabelService {
 
         AiRequestLogger.logLabelResponse(AiRequestLogger.LABEL, request, jsonResponse);
 
-        if (statusLine.getStatusCode() == HttpServletResponse.SC_CREATED ||
-                statusLine.getStatusCode() == HttpServletResponse.SC_OK) {
+        if (statusLine.getStatusCode() == HttpServletResponse.SC_CREATED || statusLine.getStatusCode() == HttpServletResponse.SC_OK) {
             return parseLabels(request, image, jsonResponse);
         } else {
             ArrayList<AiImageLabel> labels = new ArrayList<>();
             labels.add(AiImageLabel.create(image, modelName, statusLine.getStatusCode(), statusLine.getReasonPhrase()));
             return labels;
+        }
+    }
+
+    private String parseResponse(AiLabelConsolidateRequest request, CloseableHttpResponse response) throws IOException {
+        String fileResponse = FileTools.readToString(response.getEntity().getContent());
+        StatusLine statusLine = response.getStatusLine();
+
+        // write to file log
+        AiRequestLogger.logLabelResponse(AiRequestLogger.LABEL, request, fileResponse);
+
+        if (statusLine.getStatusCode() == HttpServletResponse.SC_CREATED || statusLine.getStatusCode() == HttpServletResponse.SC_OK) {
+            JsonObject root = new JsonParser().parse(fileResponse).getAsJsonObject();
+            if (root != null) {
+                //String modelName = JsonTools.getAsString(root, "model");
+                JsonArray choicesArray = root.getAsJsonArray("choices");
+                if (choicesArray != null && !choicesArray.isJsonNull()) {
+                    for (int c = 0; c < choicesArray.size(); c++) {
+                        JsonObject choice = choicesArray.get(c).getAsJsonObject();
+                        JsonObject message = JsonTools.getAsObject(choice, "message");
+                        if (message != null && !message.isJsonNull()) {
+                            return JsonTools.getAsString(message, "content");
+                        }
+                    }
+                }
+            }
+
+            return fileResponse;
+        } else {
+            return "Error";
         }
     }
 
@@ -174,39 +253,41 @@ public class OpenAILabelService extends LabelService {
 
         JsonObject text = new JsonObject();
         contentArray.add(text);
-        JsonObject imageUrl = new JsonObject();
-        contentArray.add(imageUrl);
 
         JsonTools.addProperty(text, "type", "text");
         JsonTools.addProperty(text, "text", userRoleContent == null ? "What’s in this image?" : userRoleContent);
 
-        JsonTools.addProperty(imageUrl, "type", "image_url");
-
-        // based on local / remote image source, create the payload as url, or as base64 encoded string
-        JsonObject url = new JsonObject();
-        if (image.isLocal()) {
+        if (image != null) {
+            JsonObject imageUrl = new JsonObject();
+            contentArray.add(imageUrl);
+            JsonTools.addProperty(imageUrl, "type", "image_url");
+            // based on local / remote image source, create the payload as url, or as base64 encoded string
+            JsonObject url = new JsonObject();
+            if (image.isLocal()) {
             /*
             {"type": "image_url", "image_url": {
                 "url": "data:image/png;base64,{base64_image_a}"}
             }
              */
-            byte[] fileContent = FileUtils.readFileToByteArray(new File(image.getFilePath()));
-            JsonTools.addProperty(url, "url", String.format("data:image/png;base64,%s", Base64.getEncoder().encodeToString(fileContent)));
-        } else {
+                byte[] fileContent = FileUtils.readFileToByteArray(new File(image.getFilePath()));
+                JsonTools.addProperty(url, "url", String.format("data:image/png;base64,%s", Base64.getEncoder().encodeToString(fileContent)));
+            } else {
             /*
             {"type": "image_url", "image_url": {
                 "url": "http://server.com/images/1.jpg"}
             }
              */
-            JsonTools.addProperty(url, "url", image.getUrl());
-        }
-        imageUrl.add("image_url", url);
+                JsonTools.addProperty(url, "url", image.getUrl());
+            }
+            imageUrl.add("image_url", url);
 
-        if (highResolution) {
-            // low, high, or auto (default)
-            // https://platform.openai.com/docs/guides/vision/low-or-high-fidelity-image-understanding
-            JsonTools.addProperty(url, "detail", "high");
+            if (highResolution) {
+                // low, high, or auto (default)
+                // https://platform.openai.com/docs/guides/vision/low-or-high-fidelity-image-understanding
+                JsonTools.addProperty(url, "detail", "high");
+            }
         }
+
         return root;
     }
 

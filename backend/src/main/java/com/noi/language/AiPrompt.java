@@ -29,6 +29,7 @@ public class AiPrompt {
     public static final Type TYPE_IMAGE_LABEL_CATEGORIES = new Type(10, "label_categories");
     public static final Type TYPE_IMAGE_LABEL_OBJECTS = new Type(11, "image_label_objects");
     public static final Type TYPE_IMAGE_LABEL_PROPERTIES = new Type(12, "image_label_properties");
+    public static final Type TYPE_IMAGE_LABEL_COLLAPSE = new Type(13, "label_collapse");
 
     public static final Type TYPE_SCENE_CHANGE = new Type(1, "scene_change");
     public static final Type TYPE_AUDIO_SUMMARY = new Type(3, "audio_summary");

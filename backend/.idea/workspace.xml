@@ -4,19 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="small fix: re-use the image we already read.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/ImageServlet.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiLabelConsolidateRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/AiImageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/embeddings/CategoryServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/GoogleVisionLabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelMetaData.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImageLabel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/requests/AiRequestLogger.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/requests/AiRequestLogger.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideoService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -263,7 +264,14 @@
       <option name="project" value="LOCAL" />
       <updated>1721772695973</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;">
+      <created>1721956592843</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1721956592843</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -284,6 +292,7 @@
     <MESSAGE value="added prompt filter to label requests (get and post), so that we can only show labels produced by that prompt&#10;limit returned labels to only the most recent ones per prompt;" />
     <MESSAGE value="added more label types to GoogleVision requests" />
     <MESSAGE value="small fix: re-use the image we already read." />
-    <option name="LAST_COMMIT_MESSAGE" value="small fix: re-use the image we already read." />
+    <MESSAGE value="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;" />
+    <option name="LAST_COMMIT_MESSAGE" value="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;" />
   </component>
 </project>

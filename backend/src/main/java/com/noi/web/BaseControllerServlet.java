@@ -51,6 +51,15 @@ public abstract class BaseControllerServlet extends HttpServlet {
         return modelName;
     }
 
+    /**
+     * TODO: cleanup needed: the model now comes with the prompt!
+     * @param imageId
+     * @param model
+     * @param prompts
+     * @return
+     * @throws SQLException
+     * @throws NamingException
+     */
     protected static List<ImageLabelResponse> requestImageLabels(Long imageId, AiModel model, List<AiPrompt> prompts) throws SQLException, NamingException {
         List<ImageLabelResponse> responses = new ArrayList<>();
         // handle a GoogleVision request (has no prompt!)
@@ -65,10 +74,6 @@ public abstract class BaseControllerServlet extends HttpServlet {
         } else {
             // models other than GoogleVision
             for (AiPrompt prompt : prompts) {
-                if (prompt == null) {
-                    System.out.println("skipping missing prompt!");
-                    continue;
-                }
                 try {
                     AiImageLabelRequest request = AiImageLabelRequest.create(imageId, prompt, model);
                     responses.add(requestImageLabels(request));

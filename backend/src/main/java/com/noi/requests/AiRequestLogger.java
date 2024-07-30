@@ -17,7 +17,6 @@ public class AiRequestLogger {
     public static final String LABEL = "imageLabels";
 
     public static void logLabelRequest(String category, NoiRequest request, JsonObject payload) throws IOException {
-        ////        System.out.println("OpenAI Label Service: payload:\r\n" + gson.toJson(payloadJson));
         String today = TimeTools.convertToDateStringUTC(Instant.now());
 
         // <root>/yyyyMMdd/<category>/<model>/<request-uuid>-req.json
