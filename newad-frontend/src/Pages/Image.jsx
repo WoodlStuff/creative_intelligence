@@ -4,6 +4,8 @@ import axios from "axios";
 import "./Images.css"
 import { useParams } from "react-router-dom";
 
+import { MdOutlineCompress } from "react-icons/md";
+
 function Image() {
   const params = useParams();
 
@@ -22,6 +24,7 @@ function Image() {
   const [catSelectorData, setCatSelectorData] = useState(["- all -"]);
   const [promptSelectorData, setPromptSelectorData] = useState([{"prompt_name": "- all -", "prompt_id": -1}]);
   const [selectedPromptId, setSelectedPromptId] = useState(-1);
+  const [wordThemes, setWordThemes] = useState([]);
  
   function showProgressbar(){
     // find progress bar with id='progressbar' and show it
@@ -55,6 +58,44 @@ function Image() {
     fetchLabelData(params.id, newValue);
   }
 
+  function lookupTheme(event){
+    // let category = event.target.getAttribute('category');
+    // let words = event.target.getAttribute('words');
+    let s = event.target.closest('.compressButton');
+    let sp = s.querySelector('span');
+    // alert(s.querySelector('span').textContent); 
+    // alert(s.querySelector('span').getAttribute('category')); 
+    
+    fetchWordTheme(sp.getAttribute('category'), sp.textContent);
+  }
+
+  const fetchWordTheme = async (category, words) => {
+    try {
+      console.log("looking for word theme ...")
+      
+      if(category === 'undefined' || category === null || words === 'undefined' || words === null){
+        setWordThemes([]);
+        return;
+      }
+
+      let data = {"category_name": category, "words": words}
+      axios.post("http://localhost:8080/noi-server/category-theme", data).then((response) => {
+        let data = response.data;
+        if (Object.entries(data).length >= 0) {
+          setWordThemes(data.themes);
+          // console.log("word consensus:" + data.themes);
+          alert("word list consensus:" + data.themes);
+        }
+        else{
+          setWordThemes([]);
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
   const fetchLabelData = async (imageId, promptId) => {
     try {
       console.log("reading labels for image ...")
@@ -86,6 +127,18 @@ function Image() {
     }
   };
 
+const WordTheme = (props) => {
+  if(props.meta.value_count > 1){
+    // todo: call the LLM for a word theme
+    return <div className='compressButton'>
+      <MdOutlineCompress onClick={lookupTheme}/>&nbsp;<span category={props.meta.category_name}>{props.meta.value}</span>
+    </div>
+  }
+  else{
+    return <span>{props.meta.value}</span>
+  }
+}
+
   const LabelRows = (props) => {
     if(props.hasLabels === true){
         return (
@@ -98,7 +151,9 @@ function Image() {
                 {meta.key}
               </td>
               <td>
-                {meta.value}
+                {/* {meta.value} */}
+                {/* todo: of meta.value_count > 1, add (but hide until hover) a popup to call LLM for consolidation */}
+                <WordTheme meta={meta}/>
               </td>
               <td>
                 {meta.request_uuid}
