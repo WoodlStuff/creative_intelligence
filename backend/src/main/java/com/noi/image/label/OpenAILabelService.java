@@ -1,9 +1,6 @@
 package com.noi.image.label;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.noi.AiModel;
 import com.noi.Status;
 import com.noi.image.AiImage;
@@ -341,7 +338,7 @@ public class OpenAILabelService extends LabelService {
 
                             labels.add(AiImageLabel.create(image, request.getUUID(), modelName, content, metaCategories));
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | JsonSyntaxException e) {
                         // catch here so we don't lose all messages!
                         System.out.println("ERROR for choice #" + c + ": " + e.getMessage());
                     }
