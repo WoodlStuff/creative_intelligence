@@ -13,7 +13,7 @@ function VideoUpload() {
     event.preventDefault();
     const url = 'http://localhost:8080/noi-server/uploadVideoFile';
     const formData = new FormData();
-    formData.append('fileName', name);
+    formData.append('name', name);
     formData.append('brand', brand);
     formData.append('file', file);
     console.log('posting with ' + formData);
@@ -52,8 +52,12 @@ function VideoUpload() {
     if(event.target.files.length === 0){
       return;
     }
-    setName(event.target.files[0].name);
     setFile(event.target.files[0]);
+    //setFileName(event.target.files[0].name);
+    let split = event.target.files[0].name.split('.');
+    split.pop();
+    let name = split.join("."); 
+    setName(name);
   }
   
   return (
