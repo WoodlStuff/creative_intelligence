@@ -84,6 +84,8 @@ class WebRequestHandler(BaseHTTPRequestHandler):
                 [sceneChanges, videoSeconds] = video_extractor.findSceneChanges(path, videoName,
                                                     max_distance_for_similarity=maxDistanceForSimilarity,
                                                     scene_change_threshold=scoreThreshold, verbose=verbose)
+                # extract mp3 audio from the video 
+                video_extractor.extractAudio(path, videoName)
 
         # file at <folder>/<video_name>/<video_name>_scenes.json
         if callLLM:
