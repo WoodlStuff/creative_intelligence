@@ -187,6 +187,7 @@ function Video () {
         console.log(response.data);
         let videoJson = response.data;
         if (Object.entries(videoJson).length > 0){
+          // post the results from the py script to be parsed and stored in the db
           axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
             // we posted the json to be parsed and written into the db, now what? 
             let data = sqlResponse.data;
@@ -195,18 +196,22 @@ function Video () {
             // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
             if(callLLMs.selected === true){
               console.log('now call the LLMs ...');
-              postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
-              axios.post('http://localhost:8000/video', postData).then((response) => {
-                console.log(response.data);
-                let videoJson = response.data;
-                if (Object.entries(videoJson).length > 0){
-                  axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
-                    // we posted the json to be parsed and written into the db, now what? 
-                    let data = sqlResponse.data;
-                    setVideoData(data.videos);
-                    hideProgressbar();
-                  })
-                }
+              //postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
+              axios.post('http://localhost:8080/noi-server/video-llms/' + params.id).then((llmResponse) => {
+                console.log(llmResponse.data);
+                let data = llmResponse.data;
+                setVideoData(data.videos);
+                hideProgressbar();
+
+                // let videoJson = response.data;
+                // if (Object.entries(videoJson).length > 0){
+                //   axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
+                //     // we posted the json to be parsed and written into the db, now what? 
+                //     let data = sqlResponse.data;
+                //     setVideoData(data.videos);
+                //     hideProgressbar();
+                //   })
+                //}
               });
             }
             else{
@@ -385,9 +390,9 @@ function Video () {
                   <thead>
                     <tr>
                       <td></td>
-                      <td>Last Frame</td>
+                      <td>Old Scene</td>
                       <td></td>
-                      <td>First Frame</td>
+                      <td>New Scene</td>
                       <td>Similarity Score</td>
                       <td>LLM New Scene?</td>
                     </tr>
