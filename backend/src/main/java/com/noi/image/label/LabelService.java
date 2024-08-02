@@ -8,6 +8,8 @@ import com.noi.image.AiImage;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
+import com.noi.llm.google.GoogleService;
+import com.noi.llm.openai.OpenAIService;
 import com.noi.models.DbLanguage;
 import com.noi.models.Model;
 import com.noi.requests.ImageLabelResponse;
@@ -22,8 +24,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 public abstract class LabelService {
-    public static final String OPEN_AI = "OpenAI";
-    public static final String GOOGLE_VISION = "GoogleVision";
     private final String serviceName;
 
     protected LabelService(String serviceName) {
@@ -54,10 +54,10 @@ public abstract class LabelService {
 
     private static LabelService getService(String modelName) {
         String serviceName = getServiceName(modelName);
-        if (serviceName == null || OPEN_AI.equalsIgnoreCase(serviceName)) {
+        if (serviceName == null || OpenAIService.NAME.equalsIgnoreCase(serviceName)) {
             return new OpenAILabelService(modelName);
 
-        } else if (GOOGLE_VISION.equalsIgnoreCase(serviceName)) {
+        } else if (GoogleService.NAME.equalsIgnoreCase(serviceName)) {
             return new GoogleVisionLabelService();
         }
 
@@ -66,15 +66,15 @@ public abstract class LabelService {
 
     private static String getServiceName(String modelName) {
         if (GoogleVisionLabelService.MODEL_NAME.equalsIgnoreCase(modelName)) {
-            return LabelService.GOOGLE_VISION;
+            return GoogleService.NAME;
         }
         // default!
-        return LabelService.OPEN_AI;
+        return OpenAIService.NAME;
     }
 
     public static String getModelName(String serviceName, String modelName) {
         // if Google vision is the service we call to label the image, then the used model is defined by that!
-        if (LabelService.GOOGLE_VISION.equalsIgnoreCase(serviceName)) {
+        if (GoogleService.NAME.equalsIgnoreCase(serviceName)) {
             return GoogleVisionLabelService.MODEL_NAME;
         }
 

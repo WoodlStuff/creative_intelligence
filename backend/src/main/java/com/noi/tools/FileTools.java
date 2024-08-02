@@ -546,6 +546,30 @@ public class FileTools {
         return name;
     }
 
+    public static File joinPath(String folder, String subFolder, String fileName) {
+        return joinPath(folder, subFolder, null, fileName);
+    }
+
+    public static File joinPath(String folder, String subFolder, String subFolder2, String fileName) {
+        if (folder == null || subFolder == null) {
+            throw new IllegalArgumentException();
+        }
+
+        File f = new File(folder, subFolder);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+
+        if (subFolder2 != null && !subFolder2.isEmpty()) {
+            f = new File(f, subFolder2);
+            if (!f.exists()) {
+                f.mkdirs();
+            }
+        }
+
+        return new File(f, fileName);
+    }
+
     private void categorizeCsv(String fromFile, String toFile) throws IOException {
         BufferedWriter writer = getFileWriter(toFile);
         BufferedReader reader = getFileReader(fromFile);

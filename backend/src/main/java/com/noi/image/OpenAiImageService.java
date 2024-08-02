@@ -3,6 +3,7 @@ package com.noi.image;
 import com.google.gson.*;
 import com.noi.AiModel;
 import com.noi.language.AiPrompt;
+import com.noi.llm.LLMService;
 import com.noi.requests.NoiRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.SystemEnv;
@@ -21,15 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 public class OpenAiImageService extends AiImageService {
-
-    private static final Map<AiModel, String> MODEL_URLS = new HashMap<>();
-
-    static {
-        MODEL_URLS.put(AiModel.GPT_3, "https://api.openai.com/v1/chat/completions");
-        MODEL_URLS.put(AiModel.GPT_4, "https://api.openai.com/v1/chat/completions");
-        MODEL_URLS.put(AiModel.DALL_E_3, "https://api.openai.com/v1/images/generations");
-        MODEL_URLS.put(AiModel.DALL_E_2, "https://api.openai.com/v1/images/generations");
-    }
 
     private String API_KEY = null;
 
@@ -75,7 +67,7 @@ public class OpenAiImageService extends AiImageService {
     }
 
     private HttpPost createHttpPost(NoiRequest request, AiPrompt prompt) {
-        String modelUrl = getModelUrl(request.getModel());
+        String modelUrl = LLMService.getModelUrl(request.getModel());
         System.out.println("posting to " + modelUrl + ": " + prompt);
         Gson gson = new Gson();
         JsonObject payloadJson = createPayload(request.getModel(), prompt);
@@ -86,10 +78,6 @@ public class OpenAiImageService extends AiImageService {
         httpPost.setHeader("User-Agent", "Noi");
         httpPost.setEntity(entity);
         return httpPost;
-    }
-
-    private static String getModelUrl(AiModel aiModel) {
-        return MODEL_URLS.get(aiModel);
     }
 
     private AiImage parseResponse(AiImageRequest request, CloseableHttpResponse response) throws IOException {

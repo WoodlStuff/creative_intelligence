@@ -8,6 +8,7 @@ import com.noi.image.AiImageService;
 import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
+import com.noi.llm.openai.OpenAIService;
 import com.noi.models.*;
 import com.noi.requests.AiRequestLogger;
 import com.noi.requests.ImageLabelResponse;
@@ -41,7 +42,7 @@ public class OpenAILabelService extends LabelService {
     private String API_KEY = null;
 
     public OpenAILabelService(String modelName) {
-        super(LabelService.OPEN_AI);
+        super(OpenAIService.NAME);
         if (modelName == null) {
             this.modelName = MODEL_NAME;
         } else {

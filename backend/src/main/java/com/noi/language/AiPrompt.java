@@ -32,10 +32,11 @@ public class AiPrompt {
     public static final Type TYPE_IMAGE_LABEL_COLLAPSE = new Type(13, "label_collapse");
 
     public static final Type TYPE_SCENE_CHANGE = new Type(1, "scene_change");
+    public static final Type TYPE_AUDIO_TRANSCRIPT = new Type(2, "audio_transcript");
     public static final Type TYPE_AUDIO_SUMMARY = new Type(3, "audio_summary");
     public static final Type TYPE_VIDEO_SUMMARY = new Type(4, "video_summary");
 
-    public static final int TYPE_PROMPT = 2;
+    public static final int TYPE_PROMPT = 5;
 
     private AiPrompt(Long id, AiModel model, String name, String prompt, int promptType, String systemPrompt, Status status) {
         this.id = id;

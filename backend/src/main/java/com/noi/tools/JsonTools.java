@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class JsonTools {
     public static String getAsString(JsonObject object, String node) {
@@ -94,8 +95,12 @@ public class JsonTools {
     }
 
     public static boolean getAsBoolean(JsonObject object, String node) {
+        return getAsBoolean(object, node, false);
+    }
+
+    public static boolean getAsBoolean(JsonObject object, String node, boolean defaultValue) {
         JsonElement n = getNodeElement(object, node);
-        if (n == null) return false;
+        if (n == null) return defaultValue;
         return n.getAsBoolean();
     }
 
@@ -134,6 +139,14 @@ public class JsonTools {
     }
 
     public static JsonElement toJsonArray(String[] elements) {
+        JsonArray array = new JsonArray();
+        for (String element : elements) {
+            array.add(element);
+        }
+        return array;
+    }
+
+    public static JsonElement toJsonArray(List<String> elements) {
         JsonArray array = new JsonArray();
         for (String element : elements) {
             array.add(element);

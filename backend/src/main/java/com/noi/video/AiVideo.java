@@ -109,12 +109,12 @@ public class AiVideo {
 
     public static class SceneChange {
         private final AiImage lastImage, firstImage;
-        private final long lastFrame, firstFrame;
+        private final int lastFrame, firstFrame;
         private final double score;
         private final String explanation;
         private final boolean isNewScene;
 
-        private SceneChange(AiImage lastImage, AiImage firstImage, long lastFrame, long firstFrame, double score, String explanation, boolean isNewScene) {
+        private SceneChange(AiImage lastImage, AiImage firstImage, int lastFrame, int firstFrame, double score, String explanation, boolean isNewScene) {
             this.lastImage = lastImage;
             this.lastFrame = lastFrame;
             this.firstImage = firstImage;
@@ -125,19 +125,34 @@ public class AiVideo {
             this.isNewScene = isNewScene;
         }
 
-        public static SceneChange create(AiImage lastImage, AiImage firstImage, long lastFrame, long firstFrame, double score, String explanation, boolean isNewScene) {
+        public static SceneChange create(AiImage lastImage, AiImage firstImage, int lastFrame, int firstFrame, double score, String explanation, boolean isNewScene) {
             return new SceneChange(lastImage, firstImage, lastFrame, firstFrame, score, explanation, isNewScene);
         }
 
         @Override
         public String toString() {
             return "SceneChange{" +
-                    "lastImage=" + lastImage +
-                    ", firstImage=" + firstImage +
+//                    "lastImage=" + lastImage +
+//                    ", firstImage=" + firstImage +
+                    "lastFrame=" + lastImage.getVideoFrameNumber() +
+                    ", firstFrame=" + firstImage.getVideoFrameNumber() +
                     ", score=" + score +
                     ", explanation='" + explanation + '\'' +
                     ", isNewScene=" + isNewScene +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SceneChange that = (SceneChange) o;
+            return lastFrame == that.lastFrame && firstFrame == that.firstFrame;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(lastFrame, firstFrame);
         }
 
         public AiImage getLastImage() {
@@ -148,11 +163,11 @@ public class AiVideo {
             return firstImage;
         }
 
-        public long getLastFrame() {
+        public int getLastFrame() {
             return lastFrame;
         }
 
-        public long getFirstFrame() {
+        public int getFirstFrame() {
             return firstFrame;
         }
 

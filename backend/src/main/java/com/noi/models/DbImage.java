@@ -395,11 +395,11 @@ public class DbImage extends Model {
         return insert(con, video, frame, path);
     }
 
-    public static List<AiImage> findVideoScenes(Long videoId) throws SQLException, NamingException {
+    public static List<AiImage> findVideoSceneChanges(Long videoId) throws SQLException, NamingException {
         Connection con = null;
         try {
             con = Model.connectX();
-            return findVideoScenes(con, videoId);
+            return findVideoSceneChanges(con, videoId);
         } finally {
             Model.close(con);
         }
@@ -423,7 +423,7 @@ public class DbImage extends Model {
         }
     }
 
-    public static List<AiImage> findVideoScenes(Connection con, Long videoId) throws SQLException {
+    public static List<AiImage> findVideoSceneChanges(Connection con, Long videoId) throws SQLException {
         List<AiImage> images = new ArrayList<>();
         PreparedStatement stmt = null;
         try {
@@ -474,7 +474,7 @@ public class DbImage extends Model {
         return images;
     }
 
-    public static Map<AiVideo, List<AiVideo.SceneChange>> findVideoScenes(Connection con, List<AiVideo> videos, boolean llmChanges) throws SQLException {
+    public static Map<AiVideo, List<AiVideo.SceneChange>> findVideoSceneChanges(Connection con, List<AiVideo> videos, boolean llmChanges) throws SQLException {
         Map<AiVideo, List<AiVideo.SceneChange>> scenes = new HashMap<>();
 
         if (videos.size() == 0) {
@@ -510,8 +510,8 @@ public class DbImage extends Model {
                     double score = rs.getDouble("score");
                     String explanation = rs.getString("explanation");
                     boolean isNewScene = rs.getBoolean("is_scene_change");
-                    long lastFrame = rs.getLong("last_frame");
-                    long firstFrame = rs.getLong("first_frame");
+                    int lastFrame = rs.getInt("last_frame");
+                    int firstFrame = rs.getInt("first_frame");
                     changes.add(AiVideo.SceneChange.create(lastImage, firstImage, lastFrame, firstFrame, score, explanation, isNewScene));
                 }
                 scenes.put(video, changes);
@@ -524,6 +524,51 @@ public class DbImage extends Model {
         }
 
         return scenes;
+    }
+
+    public static List<AiVideo.SceneChange> findVideoSceneChanges(Connection con, AiVideo video, boolean llmChanges) throws SQLException {
+        List<AiVideo.SceneChange> sceneChanges = new ArrayList<>();
+        if (video == null) {
+            return sceneChanges;
+        }
+
+        PreparedStatement stmt = null;
+        try {
+            StringBuilder query = new StringBuilder();
+            query.append("select distinct m.name, r.ai_image_before_id last_image_id, r.ai_image_id first_image_id, r.is_scene_change, r.ai_image_id, last.image_url last_scene_url, last.video_frame_number last_frame, first.image_url first_scene_url, first.video_frame_number first_frame, r.score, r.explanation from ai_similarity_requests r join ai_models m on m.id = r.ai_model_id join ai_images last on r.ai_image_before_id = last.id join ai_images first on r.ai_image_id = first.id");
+            // we only want the most recent requests per image pair, model and prompt
+            query.append(" join (select max(r.id) _max_id, r.ai_image_id, r.ai_image_before_id, r.ai_model_id, r.ai_prompt_id from ai_similarity_requests r where r.ai_video_id=? and r.status !=? group by 2,3,4,5 order by r.ai_model_id, r.ai_prompt_id, r.ai_image_id, r.ai_image_before_id)recent on recent._max_id = r.id");
+            query.append("  where last.ai_video_id = first.ai_video_id and first.ai_video_id=?");
+            if (llmChanges) {
+                query.append(" and m.name !=?");
+            } else {
+                query.append(" and m.name=?");
+            }
+            query.append("  order by first.video_frame_number asc");
+
+            stmt = con.prepareStatement(query.toString());
+
+            stmt.setLong(1, video.getId());
+            stmt.setInt(2, Status.RETIRED.getStatus());
+            stmt.setLong(3, video.getId());
+            stmt.setString(4, AiModel.PY_INTERNAL_SCORING.getName());
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                AiImage lastImage = DbImage.find(con, rs.getLong("last_image_id"));
+                AiImage firstImage = DbImage.find(con, rs.getLong("first_image_id"));
+                double score = rs.getDouble("score");
+                String explanation = rs.getString("explanation");
+                boolean isNewScene = rs.getBoolean("is_scene_change");
+                int lastFrame = rs.getInt("last_frame");
+                int firstFrame = rs.getInt("first_frame");
+                sceneChanges.add(AiVideo.SceneChange.create(lastImage, firstImage, lastFrame, firstFrame, score, explanation, isNewScene));
+            }
+
+        } finally {
+            close(stmt);
+        }
+
+        return sceneChanges;
     }
 
     public static void createOrUpdate(Connection con, AiVideo video, int frame, String url, boolean isNewScene, boolean isSceneSnap) throws SQLException {

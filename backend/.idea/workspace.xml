@@ -4,10 +4,33 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added new prompt type for label collapse (consolidate label meta data values); &#10;minor refactors / renames">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="better json error handling">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/LLMService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/SameSceneResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/google/GoogleService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/midjourney/MidJourneyService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioExtractionRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioSummaryRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/SceneChangeRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoSceneSummaryRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/OpenAiImageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/OpenAiImageService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Image.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/VideoUpload.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/VideoUpload.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +83,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar!/javax/servlet/http/HttpServletResponse.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-18.0.1.1/Contents/Home/lib/src.zip!/java.base/java/io/FileInputStream.java" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -80,13 +107,14 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
-      <recent name="com.noi.models" />
-      <recent name="com.noi.language" />
-      <recent name="com.noi.embeddings" />
-      <recent name="com.noi.image" />
-      <recent name="com.noi.video" />
+      <recent name="com.noi.video.scenes" />
+      <recent name="com.noi.video.audio" />
+      <recent name="com.noi.llm" />
+      <recent name="com.noi.llm.midjourney" />
+      <recent name="com.noi.llm.openai" />
     </key>
     <key name="MoveMembersDialog.RECENTS_KEY">
+      <recent name="com.noi.llm.LLMService" />
       <recent name="com.noi.image.label.LabelService" />
       <recent name="com.noi.embeddings.VectorService" />
     </key>
@@ -97,7 +125,20 @@
       <recent name="com.noi.embeddings" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Gradle.backend [war]">
+    <configuration name="VideoServlet" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.noi.video.VideoServlet" />
+      <module name="backend.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.noi.video.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="backend [war]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -119,9 +160,19 @@
       <DebugAllEnabled>false</DebugAllEnabled>
       <method v="2" />
     </configuration>
+    <configuration default="true" type="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+      <option name="AUTO_RESTART" value="false" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.backend [war]" />
+        <item itemvalue="Application.VideoServlet" />
       </list>
     </recent_temporary>
   </component>
@@ -267,7 +318,14 @@
       <option name="project" value="LOCAL" />
       <updated>1722359215745</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="better json error handling">
+      <created>1722364311929</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1722364311929</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -290,6 +348,28 @@
     <MESSAGE value="small fix: re-use the image we already read." />
     <MESSAGE value="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;" />
     <MESSAGE value="added new prompt type for label collapse (consolidate label meta data values); &#10;minor refactors / renames" />
-    <option name="LAST_COMMIT_MESSAGE" value="added new prompt type for label collapse (consolidate label meta data values); &#10;minor refactors / renames" />
+    <MESSAGE value="better json error handling" />
+    <option name="LAST_COMMIT_MESSAGE" value="better json error handling" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
+          <line>1106</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
+          <line>1101</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
+          <line>1083</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

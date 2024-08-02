@@ -269,6 +269,27 @@ public class DbLanguage extends Model {
         return prompts;
     }
 
+    public static AiPrompt findPrompt(Connection con, AiPrompt.Type type) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            // look for the most recently updated one of that type
+            StringBuilder sql = new StringBuilder().append("select " + PROMPT_COLUMNS + " from ai_prompts where status in(?,?) and prompt_type=? order by updated_at desc limit 1");
+            stmt = con.prepareStatement(sql.toString());
+
+            stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(2, Status.NEW.getStatus());
+            stmt.setInt(3, type.getType());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return populatePrompt(con, rs);
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return null;
+    }
+
     public static AiPrompt findPrompt(Connection con, String prompt, int promptType) throws SQLException {
         PreparedStatement stmt = null;
         try {
