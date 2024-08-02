@@ -73,7 +73,7 @@ def transcribeVideo(folderPath, videoName, transcription_model="whisper-1", comp
         f.close()
     
     sid = uuid.uuid4()
-    system_prompt = "You are generating a transcript summary. Create a summary of the provided transcription. Respond in Markdown."
+    system_prompt = "Create a summary of the provided transcript. Respond in Markdown."
     user_prompt = "The audio transcription is: {transcription.text}"
     response = client.chat.completions.create(
         model=completion_model,
