@@ -3,6 +3,7 @@ import { useEffect, useState} from "react";
 import axios from "axios";
 import "./Images.css"
 import { NavLink} from "react-router-dom";
+import './../config';
 
 function Prompts() {
   const [promptData, setPromptData] = useState([]);
@@ -18,7 +19,7 @@ function Prompts() {
       // Perform async operations here
       // call http endpoint and assign the resulting data to local array
       try {
-        axios.get("http://localhost:8080/noi-server/api/prompts").then((response) => {
+        axios.get(global.config.noi_server.root + "/api/prompts").then((response) => {
           let data = response.data;
           if (!isCalled) {
             if (Object.entries(data).length >= 0) {

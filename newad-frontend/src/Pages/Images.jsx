@@ -4,6 +4,7 @@ import axios from "axios";
 import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
 import { NavLink } from "react-router-dom";
+import './../config';
 
 function Images() {
   const [imageData, setImageData] = useState([]);
@@ -41,7 +42,7 @@ function Images() {
       // Perform async operations here
       // call http endpoint and assign the resulting data to local array
       try {
-        axios.get("http://localhost:8080/noi-server/api/images").then((response) => {
+        axios.get(global.config.noi_server.root + "/api/images").then((response) => {
           let data = response.data;
           if (!isCalled) {
             if (Object.entries(data).length >= 0) {
@@ -98,7 +99,7 @@ function Images() {
                 {
                   imageData.map((image) => (
                     <tr key={image.id}  >
-                      <td className="image_thumb"><img className="image_thumb" alt="thumbnail" src={'http://localhost:8080/noi-server/api/image/' + image.id} /></td>
+                      <td className="image_thumb"><img className="image_thumb" alt="thumbnail" src={global.config.noi_server.root + '/api/image/' + image.id} /></td>
                       <td className="image_link">
                         {/* {image.url} */}
                         <NavLink

@@ -1,6 +1,7 @@
 import { React, useState, useEffect } from "react";
 import { useParams, NavLink } from "react-router-dom";
 import axios from "axios";
+import './../config';
 
 function Video () {
     const params = useParams();
@@ -31,96 +32,58 @@ function Video () {
         return <input type="checkbox" checked={props.value} disabled/>
       }
     
-      // const ORBVideoScenes = (props) => {
-      //   if(props.hasScenes == true){
-      //       return (
-      //           props.videoData[0].orb_scenes.map((scene) => (
-      //               <tr key={scene.last_scene_frame}>
-      //                 <td className="image_thumb"><a id={scene.last_scene_frame} name={'frame-' + scene.last_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } /></td>
-      //                 <td>
-      //                   <NavLink
-      //                     to={image_path + scene.last_scene_image_id }
-      //                     key={scene.last_scene_image_id}
-      //                     className="image-link"
-      //                   >
-      //                     {/* <div className="icon">{image.icon}</div> */}
-      //                     <div className="image_link_text">{scene.last_scene_frame}</div>
-      //                   </NavLink>
-      //                 </td>
-
-      //                 <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame}> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } /></td>
-      //                 <td>
-      //                   <NavLink
-      //                     to={image_path + scene.first_scene_image_id }
-      //                     key={scene.first_scene_image_id}
-      //                     className="image-link"
-      //                   >
-      //                     {/* <div className="icon">{image.icon}</div> */}
-      //                     <div className="image_link_text">{scene.first_scene_frame}</div>
-      //                   </NavLink>
-      //                 </td>
-      //                 <td>
-      //                   <span>{scene.score}</span>
-      //                 </td>
-      //               </tr>
-      //           ))
-      //       )
-      //   }
-      //   return <></>
-      // }
-
-      const LLMVideoScenes = (props) => {
-        if(props.hasScenes === true){
-          var scenes = props.videoData[0].llm_scenes 
-          var isLLM = true
-          if(Object.entries(scenes).length <= 0){
-            scenes = props.videoData[0].orb_scenes
-            isLLM = false
-          }
-
-          return (
-              scenes.map((scene) => (
-                    <tr key={scene.last_scene_image_id}>
-                      <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame} href="#"> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.last_scene_image_id } alt={scene.last_scene_image_id}/></td>
-                      <td>
-                        <NavLink
-                          to={image_path + scene.last_scene_image_id }
-                          key={scene.last_scene_image_id}
-                          className="image-link"
-                        >
-                          {/* <div className="icon">{image.icon}</div> */}
-                          <div className="image_link_text">{scene.last_scene_frame}</div>
-                        </NavLink>
-                      </td>
-
-                      <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame} href="#"> </a><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + scene.first_scene_image_id } alt={scene.first_scene_image_id} /></td>
-                      <td>
-                        <NavLink
-                          to={image_path + scene.first_scene_image_id }
-                          key={scene.first_scene_image_id}
-                          className="image-link"
-                        >
-                          {/* <div className="icon">{image.icon}</div> */}
-                          <div className="image_link_text">{scene.first_scene_frame}</div>
-                        </NavLink>
-                      </td>
-                      <td>
-                        <span>{scene.score}</span>
-                      </td>
-                      <td className="image_checkbox">
-                        <div className="tooltip-wrap">
-                          <Checkbox value={scene.is_new_video_scene && isLLM}/>
-                           <div className="tooltip-content">
-                            {scene.explanation}
-                           </div> 
-                        </div>
-                      </td>
-                    </tr>
-                ))
-            )
+    const LLMVideoScenes = (props) => {
+      if(props.hasScenes === true){
+        var scenes = props.videoData[0].llm_scenes 
+        var isLLM = true
+        if(Object.entries(scenes).length <= 0){
+          scenes = props.videoData[0].orb_scenes
+          isLLM = false
         }
-        return <></>
+
+        return (
+            scenes.map((scene) => (
+                  <tr key={scene.last_scene_image_id}>
+                    <td className="image_thumb"><a id={scene.last_scene_frame} name={scene.last_scene_frame} href="#"> </a><img className="image_thumb" src={global.config.noi_server.root + '/api/image/' + scene.last_scene_image_id } alt={scene.last_scene_image_id}/></td>
+                    <td>
+                      <NavLink
+                        to={image_path + scene.last_scene_image_id }
+                        key={scene.last_scene_image_id}
+                        className="image-link"
+                      >
+                        {/* <div className="icon">{image.icon}</div> */}
+                        <div className="image_link_text">{scene.last_scene_frame}</div>
+                      </NavLink>
+                    </td>
+
+                    <td className="image_thumb"><a id={scene.first_scene_frame} name={scene.first_scene_frame} href="#"> </a><img className="image_thumb" src={global.config.noi_server.root + '/api/image/' + scene.first_scene_image_id } alt={scene.first_scene_image_id} /></td>
+                    <td>
+                      <NavLink
+                        to={image_path + scene.first_scene_image_id }
+                        key={scene.first_scene_image_id}
+                        className="image-link"
+                      >
+                        {/* <div className="icon">{image.icon}</div> */}
+                        <div className="image_link_text">{scene.first_scene_frame}</div>
+                      </NavLink>
+                    </td>
+                    <td>
+                      <span>{scene.score}</span>
+                    </td>
+                    <td className="image_checkbox">
+                      <div className="tooltip-wrap">
+                        <Checkbox value={scene.is_new_video_scene && isLLM}/>
+                          <div className="tooltip-content">
+                          {scene.explanation}
+                          </div> 
+                      </div>
+                    </td>
+                  </tr>
+              ))
+          )
       }
+      return <></>
+    }
 
     async function handleLabelClick() {
       if (Object.entries(videoData).length <= 0){
@@ -129,7 +92,7 @@ function Video () {
       }
       showProgressbar();
       console.log("label images for video " + params.id);
-      axios.post('http://localhost:8080/noi-server/api/labels/' + params.id).then((response) => {
+      axios.post(global.config.noi_server.root + '/api/labels/' + params.id).then((response) => {
         console.log(response.data);
         hideProgressbar();
       });
@@ -142,7 +105,7 @@ function Video () {
         }
         showProgressbar();
         console.log("create embeddings for all images for video " + params.id);
-        axios.post('http://localhost:8080/noi-server/video-embeddings/' + params.id).then((response) => {
+        axios.post(global.config.noi_server.root + '/video-embeddings/' + params.id).then((response) => {
           console.log(response.data);
           hideProgressbar();
         });
@@ -156,7 +119,7 @@ function Video () {
 
       // delete the video and return to the list
       // var postData = {"video_id": params.id, "video_name": videoData[0].name}
-      axios.delete('http://localhost:8080/noi-server/video/' + params.id).then((response) => {
+      axios.delete(global.config.noi_server.root + '/video/' + params.id).then((response) => {
         var data = response.data;
         if(data.hasOwnProperty('error')){
           alert(data.error);
@@ -179,7 +142,6 @@ function Video () {
       showProgressbar();
       console.log("process video " + params.id);
       console.log("process video " + videoData[0].name);
-      // curl -v -X POST http://localhost:8000/video -d '{"video_name": "big_buck_bunny", "refresh": false, "llm": false, "maxSimilarityDistance": 60, "sceneChangeScoreThreshold": .70}'
       var postData = {"video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
       // Note!: this requires the python server to be running (on port 8000)!
       setVideoData([]);
@@ -188,7 +150,7 @@ function Video () {
         let videoJson = response.data;
         if (Object.entries(videoJson).length > 0){
           // post the results from the py script to be parsed and stored in the db
-          axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
+          axios.post(global.config.noi_server.root + '/video/' + params.id, videoJson).then((sqlResponse) => {
             // we posted the json to be parsed and written into the db, now what? 
             let data = sqlResponse.data;
             setVideoData(data.videos);
@@ -197,21 +159,11 @@ function Video () {
             if(callLLMs.selected === true){
               console.log('now call the LLMs ...');
               //postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
-              axios.post('http://localhost:8080/noi-server/video-llms/' + params.id).then((llmResponse) => {
+              axios.post(global.config.noi_server.root + '/video-llms/' + params.id).then((llmResponse) => {
                 console.log(llmResponse.data);
                 let data = llmResponse.data;
                 setVideoData(data.videos);
                 hideProgressbar();
-
-                // let videoJson = response.data;
-                // if (Object.entries(videoJson).length > 0){
-                //   axios.post('http://localhost:8080/noi-server/video/' + params.id, videoJson).then((sqlResponse) => {
-                //     // we posted the json to be parsed and written into the db, now what? 
-                //     let data = sqlResponse.data;
-                //     setVideoData(data.videos);
-                //     hideProgressbar();
-                //   })
-                //}
               });
             }
             else{
@@ -229,7 +181,7 @@ function Video () {
         try {
           console.log("calling for video meta...")
           showProgressbar();
-          axios.get("http://localhost:8080/noi-server/videos/" + videoId).then((response) => {
+          axios.get(global.config.noi_server.root + "/videos/" + videoId).then((response) => {
             let data = response.data;
             if (!isCalled) {
               if (Object.entries(data).length >= 0) {
@@ -253,7 +205,7 @@ function Video () {
           <div className="card">
             <div className="card-body">
               <video width="400" controls>
-                <source src={"http://localhost:8080/noi-server/video/" + params.id} type="video/mp4" />
+                <source src={global.config.noi_server.root + "/video/" + params.id} type="video/mp4" />
                 Your browser does not support HTML video.
               </video>
             </div>

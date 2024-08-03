@@ -30,7 +30,7 @@ function BrandAutocomplete(props) {
   useEffect(() => {
     const fetchLookupData = async () => {
       try {
-        axios.get("http://localhost:8080/noi-server/api/brands-lookup").then((response) => {
+        axios.get(global.config.noi_server.root + "/api/brands-lookup").then((response) => {
           let data = response.data;
           console.log(data);
           setBrandsData(data);

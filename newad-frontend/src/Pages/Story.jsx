@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import './../config';
 
 function Story() {
   const params = useParams();
@@ -79,7 +80,7 @@ function Story() {
             <td>
               {category.values}
             </td>
-            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + props.moment.image_id } alt={props.moment.image_id} /></a></td>
+            <td className="image_thumb"><a id={props.moment.image_id} name={props.moment.video_frame_number} href={'/image/' + props.moment.image_id}><img className="image_thumb" src={global.config.noi_server.root + '/api/image/' + props.moment.image_id } alt={props.moment.image_id} /></a></td>
             <td>
               {props.moment.video_frame_number} 
             </td>
@@ -107,7 +108,7 @@ function Story() {
       return (
         props.image_ids.map((image_id) => (
           // <ImageLink image_id={image_id} image_link_text={props.moment.video_frame_number} />
-            <div key={image_id} className='images-sub-column'><a href={'/image/' + image_id}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image_id } alt={image_id} /></a></div>
+            <div key={image_id} className='images-sub-column'><a href={'/image/' + image_id}><img className="image_thumb" src={global.config.noi_server.root + '/api/image/' + image_id } alt={image_id} /></a></div>
         ))
       )
   }
@@ -147,7 +148,7 @@ function Story() {
   async function handleLabelClick() {
     showProgressbar();
     console.log("label images for video " + params.id);
-    axios.post('http://localhost:8080/noi-server/api/labels/' + params.id).then((response) => {
+    axios.post(global.config.noi_server.root + '/api/labels/' + params.id).then((response) => {
       console.log(response.data);
       fetchData(params.id);
       hideProgressbar();
@@ -162,7 +163,7 @@ function Story() {
     try {
         console.log("calling for video story data...")
         console.log(videoId);
-        axios.get("http://localhost:8080/noi-server/video-story/" + videoId).then((response) => {
+        axios.get(global.config.noi_server.root + "/video-story/" + videoId).then((response) => {
           let data = response.data;
           if (Object.entries(data).length >= 0) {
             setStoryData(data.story);

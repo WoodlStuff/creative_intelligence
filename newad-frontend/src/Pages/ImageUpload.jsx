@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import axios from "axios";
 import BrandAutocomplete from "../Components/BrandAutocomplete";
+import './../config';
 
 function ImageUpload() {
   const [brand, setBrand] = useState();
@@ -10,7 +11,7 @@ function ImageUpload() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const url = 'http://localhost:8080/noi-server/uploadImageFile';
+    const url = global.config.noi_server.root + '/uploadImageFile';
     const formData = new FormData();
     formData.append('fileName', name);
     formData.append('brand', brand);

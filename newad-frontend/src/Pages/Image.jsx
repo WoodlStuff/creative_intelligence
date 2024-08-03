@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Images.css"
 import { useParams } from "react-router-dom";
-
 import { MdOutlineCompress } from "react-icons/md";
+import './../config';
 
 function Image() {
   const params = useParams();
@@ -69,7 +69,7 @@ function Image() {
     try {
       console.log("looking for word theme ...")
       let data = {"category_name": category, "words": words}
-      axios.post("http://localhost:8080/noi-server/category-theme", data).then((response) => {
+      axios.post(global.config.noi_server.root + "/category-theme", data).then((response) => {
         let data = response.data;
         if (Object.entries(data).length >= 0) {
           alert("word list consensus:" + data.themes);
@@ -85,7 +85,7 @@ function Image() {
     try {
       console.log("reading labels for image ...")
       console.log(imageId);
-      axios.get("http://localhost:8080/noi-server/categories/" + imageId + '?p=' + promptId).then((response) => {
+      axios.get(global.config.noi_server.root + "/categories/" + imageId + '?p=' + promptId).then((response) => {
         let data = response.data;
         if (Object.entries(data).length >= 0) {
           setImageLabelData(data.categories);
@@ -225,7 +225,7 @@ const WordTheme = (props) => {
     // set the progress bar to visible
     showProgressbar();
     console.log("label image for id: " + params.id);
-    axios.post('http://localhost:8080/noi-server/categories/' + params.id + "?p=" + selectedPromptId).then((response) => {
+    axios.post(global.config.noi_server.root + '/categories/' + params.id + "?p=" + selectedPromptId).then((response) => {
       // todo: take the response.data json, and post it to be inserted into the db (post to Java code on :8080)
       console.log(response.data);
       let data = response.data; 
@@ -253,7 +253,7 @@ const WordTheme = (props) => {
     // set the progress bar to visible
     showProgressbar();
     console.log("create embeddings for image id: " + params.id);
-    axios.post('http://localhost:8080/noi-server/embeddings/' + params.id).then((response) => {
+    axios.post(global.config.noi_server.root + '/embeddings/' + params.id).then((response) => {
       console.log(response.data);
       if(Object.entries(response.data.upsertCounts.length > 0)){
         setEmbedding(true);
@@ -274,7 +274,7 @@ const WordTheme = (props) => {
         setSimilarityData([]);
         return;
       }
-      axios.get("http://localhost:8080/noi-server/vectors/" + imageId + "/" + category + "?sameVideo=false").then((response) => {
+      axios.get(global.config.noi_server.root + "/vectors/" + imageId + "/" + category + "?sameVideo=false").then((response) => {
         let data = response.data;
         if (Object.entries(data).length >= 0) {
           setSimilarityData(data.results);
@@ -299,7 +299,7 @@ const WordTheme = (props) => {
       try {
         console.log("calling for image meta...")
         console.log(imageId);
-        axios.get("http://localhost:8080/noi-server/categories/" + imageId + '?p=' + selectedPromptId).then((response) => {
+        axios.get(global.config.noi_server.root + "/categories/" + imageId + '?p=' + selectedPromptId).then((response) => {
           let data = response.data;
           if (Object.entries(data).length >= 0) {
             setImageURL(data.path)
@@ -343,7 +343,7 @@ const WordTheme = (props) => {
     <div className='image'>
       <div className="card">
         <div className="card-body">
-          <img className="image_detail" src={"http://localhost:8080/noi-server/api/image/" + params.id} alt={params.id}/>
+          <img className="image_detail" src={global.config.noi_server.root + "/api/image/" + params.id} alt={params.id}/>
         </div>
         <div className="image_url">
           <span>{imageURL}</span>
@@ -378,7 +378,7 @@ const WordTheme = (props) => {
                 {
                   similarityData.map((image) => (
                     <td key={image.image_id} className="image_thumb">
-                      <a id={image.image_id} name={image.frame_number} href={ assembleImageHref(image.image_id)}><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.image_id } alt={image.image_id} /></a>
+                      <a id={image.image_id} name={image.frame_number} href={ assembleImageHref(image.image_id)}><img className="image_thumb" src={global.config.noi_server.root + '/api/image/' + image.image_id } alt={image.image_id} /></a>
                       <div><span><label>Score:</label>{image.score}</span></div>
                     </td>
                   ))

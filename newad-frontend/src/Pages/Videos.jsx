@@ -4,13 +4,12 @@ import axios from "axios";
 import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
 import { NavLink } from "react-router-dom";
-
 import './../config';
 
 function Videos() {
   const [videoData, setVideoData] = useState([]);
   const video_path = '/video';
-  alert(global.config.noi_server.root);
+  
   useEffect(() => {
     const fetchData = async () => {
       try {

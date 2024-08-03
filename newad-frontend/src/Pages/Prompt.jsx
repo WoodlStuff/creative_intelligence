@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import './../config';
 
 function Prompt() {
   const params = useParams();
@@ -34,7 +35,7 @@ function Prompt() {
     // and post to /api/prompt/<id>
     let promptId = params.id;
     let postData={id: promptId, name: name, model_id: modelId, prompt_type: promptType, status: status, prompt: prompt, system_prompt: systemPrompt};
-    axios.post("http://localhost:8080/noi-server/api/prompt/" + promptId, postData).then((response) => {
+    axios.post(global.config.noi_server.root + "/api/prompt/" + promptId, postData).then((response) => {
       let data = response.data;
       refreshState(data);
       // rewrite the URL (replace /new with /<id> from data.id)
@@ -180,7 +181,7 @@ function Prompt() {
       try {
         console.log("calling for prompt meta...")
         console.log(promptId);
-        axios.get("http://localhost:8080/noi-server/api/prompt/" + promptId).then((response) => {
+        axios.get(global.config.noi_server.root + "/api/prompt/" + promptId).then((response) => {
           let data = response.data;
           refreshState(data);
         });
@@ -191,7 +192,7 @@ function Prompt() {
 
     const fetchLookupData = async () => {
       try {
-        axios.get("http://localhost:8080/noi-server/api/prompt-lookup").then((response) => {
+        axios.get(global.config.noi_server.root + "/api/prompt-lookup").then((response) => {
           let data = response.data;
           console.log(data);
           console.log(data.id);
