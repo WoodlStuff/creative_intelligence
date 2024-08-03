@@ -39,6 +39,9 @@ class WebRequestHandler(BaseHTTPRequestHandler):
     def get_response(self):
         postData = self.post_data.decode("utf-8")
         logging.info("Video Processor: " + postData)
+        if not postData or postData is None:
+            return "";
+    
         jsonData = json.loads(postData)
 
         videoName = jsonData['video_name']

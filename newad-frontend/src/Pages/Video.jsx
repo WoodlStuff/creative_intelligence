@@ -144,7 +144,7 @@ function Video () {
       console.log("process video " + videoData[0].name);
       setVideoData([]);
       var postData = {"video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
-      // Note!: this requires the python server to be running (on port 8000)!
+      // Note!: this requires the python server (ORB script) to be running (on port 8000)!
       axios.post(global.config.noi_server.root + '/orb', postData).then((response) => {
         console.log(response.data);
         let videoJson = response.data;
