@@ -211,12 +211,14 @@ public class VideoServlet extends BaseControllerServlet {
         JsonObject root = new JsonObject();
         AudioExtractionRequest request = AudioExtractionRequest.create(video, prompt);
         LLMService service = LLMService.getService(request);
+        System.out.println("VideoServlet:handleSoundLLMs transcribing with " + service.getName());
         JsonObject textNode = service.transcribeVideo(request);
 
         String soundURL;
         if (textNode.has("sound_url")) {
             soundURL = textNode.get("sound_url").getAsString();
         } else {
+            root.add("transcribe_error", textNode);
             return root;
         }
 
@@ -283,7 +285,6 @@ public class VideoServlet extends BaseControllerServlet {
         VideoSceneSummaryRequest request = VideoSceneSummaryRequest.create(video, prompt, sceneChanges);
         LLMService service = LLMService.getService(request);
         JsonObject summaryResponse = service.summarizeVideoScenes(request);
-//        System.out.println(new Gson().toJson(summaryResponse));
 
         return summaryResponse;
     }
@@ -416,7 +417,6 @@ public class VideoServlet extends BaseControllerServlet {
             // write meta file : -scenes-llm.json
             String rootFolder = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
             File summaryFile = FileTools.joinPath(rootFolder, "videos", video.getName(), video.getName() + "-scenes-llm.json");
-            System.out.println("writing to file " + summaryFile.getAbsolutePath());
             FileTools.writeToFile(response, summaryFile);
 
             return response;
@@ -484,25 +484,15 @@ public class VideoServlet extends BaseControllerServlet {
 
         Connection con = null;
         try {
-            // {"video_id": params.id, "video_name": videoData[0].name}
-//            String jsonPayload = FileTools.readToString(req.getInputStream());
-//            JsonObject videoData = new JsonParser().parse(jsonPayload).getAsJsonObject();
-//            if (videoData == null || videoData.isJsonNull()) {
-//                throw new IllegalArgumentException("No valid json posted!");
-//            }
-//            Long id = JsonTools.getAsLong(videoData, "video_id");
-//            String name = JsonTools.getAsString(videoData, "video_name");
-
             con = Model.connectX();
             AiVideo aiVideo = DbVideo.find(con, videoId);
             if (aiVideo != null) {
-                System.out.println("found the video: " + aiVideo);
                 DbVideo.update(con, aiVideo, Status.DELETED);
                 resp.setStatus(HttpServletResponse.SC_ACCEPTED);
                 addCOARSHeaders(resp);
                 resp.setHeader("Access-Control-Allow-Methods", "*");
             } else {
-                System.out.println("NOT found: video: " + aiVideo);
+                System.out.println("handleDeleteVideo:NOT found: video: " + aiVideo);
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 addCOARSHeaders(resp);
                 resp.setHeader("Access-Control-Allow-Methods", "*");
@@ -523,6 +513,7 @@ public class VideoServlet extends BaseControllerServlet {
         String fileName = filePart.getSubmittedFileName();
         System.out.println("submitted fileName:" + fileName);
         String name = req.getParameter("name");
+        System.out.println("submitted name:" + name);
         if (name == null || name.isEmpty()) {
             System.out.println("no fileName overwrite provided!");
             name = FileTools.getFileName(fileName, false);

@@ -66,7 +66,7 @@ public class OpenAIService extends LLMService {
             JsonObject payload = createSceneChangePayload(sceneChangePrompt, sceneChange);
             String content = postToCompletions(payload);
             String jsonResponse = content.replace("```json\n", "").replace("\n```", "").replace("\n", "");
-            System.out.println("jsonResponse=" + jsonResponse);
+            System.out.println("OpenAIService:labelForSameVideoScene:jsonResponse=" + jsonResponse);
             // now try to parse the json
             JsonObject responseRoot = new JsonObject();
             JsonObject root = new JsonParser().parse(jsonResponse).getAsJsonObject();
@@ -96,7 +96,10 @@ public class OpenAIService extends LLMService {
 
 
         // check if there is an audio file (was created by the py script that also extracted the scene images)
-        File audioPath = FileTools.joinPath(rootFolder, "videos", video.getName(), video.getName() + ".mp3");
+        // Note! the folder for the raw (ORB based) files can be different from the processed file folder (which is based on the name)
+        String videoFileName = FileTools.getFileName(video.getUrl(), false);
+        File audioPath = FileTools.joinPath(rootFolder, "videos", videoFileName, videoFileName + ".mp3");
+        System.out.println("OpenAIService:transcribeVideo:audioPath=" + audioPath);
         if (!audioPath.exists()) {
             returnJson.addProperty("error", "No audio file found for " + video);
             return returnJson;
@@ -195,17 +198,7 @@ public class OpenAIService extends LLMService {
 
         JsonObject returnJson = new JsonObject();
 
-        // check if there is an audio file (was created by the py script that also extracted the scene images)
-        File audioPath = FileTools.joinPath(rootFolder, "videos", video.getName(), video.getName() + ".mp3");
-        if (!audioPath.exists()) {
-            returnJson.addProperty("error", "No audio file found for " + video);
-            return returnJson;
-        }
-
-//        String text = FileTools.readToString(new FileInputStream(audioPath));
-
         returnJson.addProperty("video_id", summaryRequest.getVideo().getId());
-        returnJson.addProperty("sound_url", audioPath.getAbsolutePath());
         returnJson.addProperty("uuid", summaryRequest.getUUID());
         returnJson.addProperty("model_name", summaryRequest.getModelName());
         returnJson.addProperty("system_prompt", summaryRequest.getPrompt().getSystemPrompt());
@@ -254,7 +247,6 @@ public class OpenAIService extends LLMService {
 
 
     private String postToCompletions(JsonObject postPayload) throws IOException {
-        System.out.println("postToCompletions... ");
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
 
@@ -305,7 +297,6 @@ public class OpenAIService extends LLMService {
     private String parseResponseMessageContent(CloseableHttpResponse response) throws IOException {
         String fileResponse = FileTools.readToString(response.getEntity().getContent());
         StatusLine statusLine = response.getStatusLine();
-        System.out.println("parseResponseMessageContent:[" + statusLine.getStatusCode() + "] " + fileResponse);
         // write to file log
 //        AiRequestLogger.logLabelResponse(AiRequestLogger.LABEL, request, fileResponse);
 

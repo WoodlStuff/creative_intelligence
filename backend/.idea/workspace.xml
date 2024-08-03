@@ -4,33 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="better json error handling">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/LLMService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/SameSceneResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/google/GoogleService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/midjourney/MidJourneyService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioExtractionRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioSummaryRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/SceneChangeRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoSceneSummaryRequest.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="cosmetics in deprecated py code">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/AiModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/OpenAiImageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/OpenAiImageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/LabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/image/label/OpenAILabelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/language/AiPrompt.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbLanguage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/JsonTools.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/AiVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/VideoUpload.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/VideoUpload.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/openAI_caller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/webapp.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/webapp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -325,7 +303,42 @@
       <option name="project" value="LOCAL" />
       <updated>1722364311929</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="the model is now tied to a 'service name', allowing th select the code to run, baed on the model; &#10;propmts are now tied to a model, allowing to pick the model based on the prompt.&#10;re-implemented the LLM calling code in py to java server, to streamline calling LLMs; &#10;started the concept of a central LLMService (work to be done to move the individual services such as LabelService to this new concept...) ;">
+      <created>1722617134626</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1722617134626</updated>
+    </task>
+    <task id="LOCAL-00022" summary="call audio extraction script as part of the ORB scene detection call (so we generate the mp3 file for future LLM calls)">
+      <created>1722617242716</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1722617242716</updated>
+    </task>
+    <task id="LOCAL-00023" summary="improved name handling for video uploads">
+      <created>1722617299591</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1722617299591</updated>
+    </task>
+    <task id="LOCAL-00024" summary="replaced call to py code (for video LLM processing) with new java server replacement">
+      <created>1722617343101</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1722617343101</updated>
+    </task>
+    <task id="LOCAL-00025" summary="cosmetics in deprecated py code">
+      <created>1722617379632</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1722617379632</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -349,24 +362,29 @@
     <MESSAGE value="added a name to images; &#10;removed hard coded file root folder for images and videos; &#10;added an ImageUpload Page, and the backend for it;" />
     <MESSAGE value="added new prompt type for label collapse (consolidate label meta data values); &#10;minor refactors / renames" />
     <MESSAGE value="better json error handling" />
-    <option name="LAST_COMMIT_MESSAGE" value="better json error handling" />
+    <MESSAGE value="the model is now tied to a 'service name', allowing th select the code to run, baed on the model; &#10;propmts are now tied to a model, allowing to pick the model based on the prompt.&#10;re-implemented the LLM calling code in py to java server, to streamline calling LLMs; &#10;started the concept of a central LLMService (work to be done to move the individual services such as LabelService to this new concept...) ;" />
+    <MESSAGE value="call audio extraction script as part of the ORB scene detection call (so we generate the mp3 file for future LLM calls)" />
+    <MESSAGE value="improved name handling for video uploads" />
+    <MESSAGE value="replaced call to py code (for video LLM processing) with new java server replacement" />
+    <MESSAGE value="cosmetics in deprecated py code" />
+    <option name="LAST_COMMIT_MESSAGE" value="cosmetics in deprecated py code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1106</line>
+          <line>1097</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1101</line>
+          <line>1092</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1083</line>
+          <line>1074</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
