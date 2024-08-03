@@ -122,7 +122,7 @@ function Video () {
         return <></>
       }
 
-      async function handleLabelClick() {
+    async function handleLabelClick() {
       if (Object.entries(videoData).length <= 0){
         console.log("no videoData!");
         return;
@@ -264,7 +264,7 @@ function Video () {
                 <label className="label-padding">Call LLMs</label><input name='llms' type="checkbox" checked={callLLMs.selected} onChange={(event) => {setCallLLMs({selected: !callLLMs.selected});}}></input>
               </div>
               <div className="left-padding">
-                <label className="label-padding">Max Similarity Distance</label><input name='maxSimilarityDistance' defaultValue={similarityDistance}></input>
+                <label className="label-padding">Max Similarity Distance</label><input name='maxSimilarityDistance' defaultValue={similarityDistance} onChange={(event) => {setSimilarityDistance(parseInt(event.target.value));}}></input>
               </div>
               <div className="left-padding">
                 <label className="label-padding">Similarity Score Threshold</label>

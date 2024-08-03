@@ -8,7 +8,7 @@ function BrandAutocomplete(props) {
   const [brandsData, setBrandsData] = useState([]);
 
   const handleBrandChange = (event) => {
-    const value = event.target.value;
+    var value = event.target.value;
     if(value === undefined || value === null){
       value = '';
     }

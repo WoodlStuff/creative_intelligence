@@ -1,5 +1,4 @@
 import React from "react";
-import { useState, useEffect } from "react";
 
 import { Outlet, Route } from "react-router-dom";
 import { BrowserRouter, Routes } from "react-router-dom";
@@ -21,9 +20,6 @@ import Header from "./Components/Header.jsx";
 import "./App.css"
 
 export default function App() {
-  const [currentImageId, setCurrentImageId] = useState();
-  const [currentVideoId, setCurrentVideoId] = useState();
-
   return (
     <div className='grid-container'>
       <Header />

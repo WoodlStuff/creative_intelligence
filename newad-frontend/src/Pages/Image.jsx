@@ -24,8 +24,7 @@ function Image() {
   const [catSelectorData, setCatSelectorData] = useState(["- all -"]);
   const [promptSelectorData, setPromptSelectorData] = useState([{"prompt_name": "- all -", "prompt_id": -1}]);
   const [selectedPromptId, setSelectedPromptId] = useState(-1);
-  const [wordThemes, setWordThemes] = useState([]);
- 
+
   function showProgressbar(){
     // find progress bar with id='progressbar' and show it
     progress.hidden=false;
@@ -64,9 +63,6 @@ function Image() {
     if(sp !== 'undefined' && sp !== null){
       fetchWordTheme(sp.getAttribute('category'), sp.textContent);
     }
-    else{
-      setWordThemes([]);
-    }
   }
 
   const fetchWordTheme = async (category, words) => {
@@ -76,12 +72,7 @@ function Image() {
       axios.post("http://localhost:8080/noi-server/category-theme", data).then((response) => {
         let data = response.data;
         if (Object.entries(data).length >= 0) {
-          setWordThemes(data.themes);
-          // console.log("word consensus:" + data.themes);
           alert("word list consensus:" + data.themes);
-        }
-        else{
-          setWordThemes([]);
         }
       });
     } catch (error) {

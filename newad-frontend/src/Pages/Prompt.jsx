@@ -64,7 +64,7 @@ function Prompt() {
     if (props.hasOwnProperty('types') && props.types !== undefined) {
       return (
         props.types.map((p) => (
-          <option key={p.code} value={p.code} selected={p.code == props.p_type ? true : false}>{p.name}</option>
+          <option key={p.code} value={p.code} selected={p.code === props.p_type ? true : false}>{p.name}</option>
           // <ModelOption id={m.id} name={m.name} selected={m.id === props.modelId}/>
         ))
       )
@@ -96,7 +96,7 @@ function Prompt() {
     if (props.hasOwnProperty('statuses') && props.statuses !== undefined) {
       return (
         props.statuses.map((s) => (
-          <option key={s.code} value={s.code} selected={s.code == props.status ? true : false}>{s.name}</option>
+          <option key={s.code} value={s.code} selected={s.code === props.status ? true : false}>{s.name}</option>
         ))
       )
     }

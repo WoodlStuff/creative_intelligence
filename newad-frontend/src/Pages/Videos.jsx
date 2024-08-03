@@ -5,30 +5,28 @@ import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
 import { NavLink } from "react-router-dom";
 
+import './../config';
+
 function Videos() {
   const [videoData, setVideoData] = useState([]);
   const video_path = '/video';
-  
+  alert(global.config.noi_server.root);
   useEffect(() => {
-    let isCalled = false;
     const fetchData = async () => {
       try {
-        axios.get("http://localhost:8080/noi-server/videos").then((response) => {
+        axios.get(global.config.noi_server.root + "/videos").then((response) => {
           let data = response.data;
-          if (!isCalled) {
-            if (Object.entries(data).length >= 0) {
-              setVideoData(data.videos);
-            }
+          if (Object.entries(data).length >= 0) {
+            setVideoData(data.videos);
           }
         });
       } catch (error) {
         console.error(error);
-        videoData = []
+        setVideoData([])
       }
     };
 
     fetchData();
-    return () => isCalled = true;
   }, []);
 
   return (

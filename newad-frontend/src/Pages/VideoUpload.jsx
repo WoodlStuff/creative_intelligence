@@ -2,7 +2,6 @@ import React from "react";
 import { useState } from "react";
 import axios from "axios";
 import BrandAutocomplete from "./../Components/BrandAutocomplete";
-import Redirect from "react-router-dom"
 
 function VideoUpload() {
   const [brand, setBrand] = useState();
@@ -44,10 +43,6 @@ function VideoUpload() {
     setBrand(newValue); 
   };
 
-  function handleNameChange(event) {
-    setName(event.target.name);
-  }
-  
   function handleFileChange(event) {
     if(event.target.files.length === 0){
       return;

@@ -1,14 +1,13 @@
 import React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState} from "react";
 import axios from "axios";
-import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink} from "react-router-dom";
 
 function Prompts() {
   const [promptData, setPromptData] = useState([]);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const prompt_path = '/prompt/';
 
@@ -29,7 +28,7 @@ function Prompts() {
         });
       } catch (error) {
         console.error(error);
-        promptData = []
+        setPromptData([])
       }
     };
 
@@ -37,9 +36,9 @@ function Prompts() {
     return () => isCalled = true;
   }, []);
 
-  function promptClickHandler(id){
-    navigate(prompt_path + id);
-  }
+  // function promptClickHandler(id){
+  //   navigate(prompt_path + id);
+  // }
 
   return (
     <div className='prompts'>

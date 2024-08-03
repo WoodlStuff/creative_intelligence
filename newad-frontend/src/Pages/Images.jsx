@@ -1,20 +1,20 @@
 import React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { HiOutlineArrowSmRight } from "react-icons/hi";
 import "./Images.css"
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 function Images() {
   const [imageData, setImageData] = useState([]);
-  const [currentImageId, setCurrentImageId] = useState();
-  const [currentVideoId, setCurrentVideoId] = useState();
+  // const [currentImageId, setCurrentImageId] = useState();
+  // const [currentVideoId, setCurrentVideoId] = useState();
 
   const video_path = '/video';
   const image_path = '/image';
-  const delay = ms => new Promise(res => setTimeout(res, ms));
+  // const delay = ms => new Promise(res => setTimeout(res, ms));
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const Checkbox = (props) => {
     return <input type="checkbox" checked={props.value} disabled/>
@@ -51,7 +51,7 @@ function Images() {
         });
       } catch (error) {
         console.error(error);
-        imageData = []
+        setImageData([]);
       }
     };
 
@@ -59,13 +59,13 @@ function Images() {
     return () => isCalled = true;
   }, []);
 
-  function videoClickHandler(id){
-    navigate('/video/' + id);
-  }
+  // function videoClickHandler(id){
+  //   navigate('/video/' + id);
+  // }
 
-  function imageClickHandler(id) {
-    navigate('/image/' + id);
-  }
+  // function imageClickHandler(id) {
+  //   navigate('/image/' + id);
+  // }
 
   return (
     <div className='images'>
@@ -98,7 +98,7 @@ function Images() {
                 {
                   imageData.map((image) => (
                     <tr key={image.id}  >
-                      <td className="image_thumb"><img className="image_thumb" src={'http://localhost:8080/noi-server/api/image/' + image.id} /></td>
+                      <td className="image_thumb"><img className="image_thumb" alt="thumbnail" src={'http://localhost:8080/noi-server/api/image/' + image.id} /></td>
                       <td className="image_link">
                         {/* {image.url} */}
                         <NavLink
