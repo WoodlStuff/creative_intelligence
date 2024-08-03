@@ -2,6 +2,7 @@ package com.noi.web;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.noi.AiModel;
 import com.noi.image.label.LabelService;
 import com.noi.language.AiImageLabelRequest;
@@ -10,6 +11,7 @@ import com.noi.models.DbLanguage;
 import com.noi.models.DbRequest;
 import com.noi.models.Model;
 import com.noi.requests.ImageLabelResponse;
+import com.noi.tools.FileTools;
 import org.apache.http.entity.ContentType;
 
 import javax.naming.NamingException;
@@ -53,6 +55,7 @@ public abstract class BaseControllerServlet extends HttpServlet {
 
     /**
      * TODO: cleanup needed: the model now comes with the prompt!
+     *
      * @param imageId
      * @param model
      * @param prompts
@@ -119,6 +122,20 @@ public abstract class BaseControllerServlet extends HttpServlet {
         out.write(gson.toJson(root));
         out.flush();
         out.close();
+    }
+
+    protected JsonObject readPostedJson(HttpServletRequest req) throws IOException {
+        String payload = FileTools.readToString(req.getInputStream());
+        if (payload.isEmpty()) {
+            throw new IllegalArgumentException("No data posted!");
+        }
+
+        JsonObject jsonPayload = new JsonParser().parse(payload).getAsJsonObject();
+        if (jsonPayload == null || jsonPayload.isJsonNull()) {
+            throw new IllegalArgumentException("No valid json posted!");
+        }
+
+        return jsonPayload;
     }
 
     protected static void addCOARSHeaders(HttpServletResponse response) {

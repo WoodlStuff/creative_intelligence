@@ -756,11 +756,7 @@ public class VideoServlet extends BaseControllerServlet {
     }
 
     private void handlePostedVideoMeta(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws IOException, SQLException, NamingException {
-        String jsonPayload = FileTools.readToString(req.getInputStream());
-        JsonObject videoScenes = new JsonParser().parse(jsonPayload).getAsJsonObject();
-        if (videoScenes == null || videoScenes.isJsonNull()) {
-            throw new IllegalArgumentException("No valid json posted!");
-        }
+        JsonObject videoScenes = readPostedJson(req);
 
         // the video id is in the path
         Long videoId = null;

@@ -585,11 +585,7 @@ public class NoiServlet extends BaseControllerServlet {
     }
 
     private void handlePostedPrompt(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws IOException, SQLException, NamingException {
-        String jsonPayload = FileTools.readToString(req.getInputStream());
-        JsonObject promptData = new JsonParser().parse(jsonPayload).getAsJsonObject();
-        if (promptData == null || promptData.isJsonNull()) {
-            throw new IllegalArgumentException("No valid json posted!");
-        }
+        JsonObject promptData = readPostedJson(req);
 
         // the video id is in the path
         Long promptId = null;

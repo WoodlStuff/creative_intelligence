@@ -567,6 +567,10 @@ public class FileTools {
             }
         }
 
+        if (fileName == null) {
+            return f;
+        }
+
         return new File(f, fileName);
     }
 

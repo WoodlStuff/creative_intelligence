@@ -4,11 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="cosmetics in deprecated py code">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added Label button to the Story page (to label all images used in the video summary)">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Story.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -338,12 +340,24 @@
       <option name="project" value="LOCAL" />
       <updated>1722617379632</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="fixed sound file url creation (to read for transcript); small other fixes">
+      <created>1722695825767</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1722695825767</updated>
+    </task>
+    <task id="LOCAL-00027" summary="added Label button to the Story page (to label all images used in the video summary)">
+      <created>1722695898633</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1722695898633</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added some resiliency for unexpected errors during image processing (don't stop all processing, if only one image fails!)&#10;switched to only label the images that were used to generate the video summary (when a &quot;label all images&quot; is requested for a video)" />
-    <MESSAGE value="added a section of video-images that feature a category (and key and value) to the video label data response ( ...so we can present what category is most present across the scenes of a video)" />
     <MESSAGE value="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
     <MESSAGE value="fixed order by for images" />
     <MESSAGE value="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
@@ -367,24 +381,26 @@
     <MESSAGE value="improved name handling for video uploads" />
     <MESSAGE value="replaced call to py code (for video LLM processing) with new java server replacement" />
     <MESSAGE value="cosmetics in deprecated py code" />
-    <option name="LAST_COMMIT_MESSAGE" value="cosmetics in deprecated py code" />
+    <MESSAGE value="fixed sound file url creation (to read for transcript); small other fixes" />
+    <MESSAGE value="added Label button to the Story page (to label all images used in the video summary)" />
+    <option name="LAST_COMMIT_MESSAGE" value="added Label button to the Story page (to label all images used in the video summary)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1097</line>
+          <line>1093</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1092</line>
+          <line>1088</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1074</line>
+          <line>1070</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
