@@ -132,26 +132,49 @@ function Story() {
     return <></>
   }
 
-  useEffect(() => {
-    // Call the async function
-    const fetchData = async (videoId) => {
-      // Perform async operations here
-      // call http endpoint and assign the resulting data to local array
-      try {
-          console.log("calling for video story data...")
-          console.log(videoId);
-          axios.get("http://localhost:8080/noi-server/video-story/" + videoId).then((response) => {
-            let data = response.data;
-            if (Object.entries(data).length >= 0) {
-              setStoryData(data.story);
-              // isCalled = true;
-            }
-        });
-    } catch (error) {
-        console.error(error);
-      }
-    };
+  function showProgressbar(){
+    // find progress bar with id='progressbar' and show it
+    let progress = document.getElementById('progressbar');
+    progress.hidden=false;
+  }
 
+  function hideProgressbar(){
+    // find progress bar with id='progressbar' and hide it
+    let progress = document.getElementById('progressbar');
+    progress.hidden=true;
+  }
+
+  async function handleLabelClick() {
+    showProgressbar();
+    console.log("label images for video " + params.id);
+    axios.post('http://localhost:8080/noi-server/api/labels/' + params.id).then((response) => {
+      console.log(response.data);
+      fetchData(params.id);
+      hideProgressbar();
+    });
+  }
+
+
+  // Call the async function
+  const fetchData = async (videoId) => {
+    // Perform async operations here
+    // call http endpoint and assign the resulting data to local array
+    try {
+        console.log("calling for video story data...")
+        console.log(videoId);
+        axios.get("http://localhost:8080/noi-server/video-story/" + videoId).then((response) => {
+          let data = response.data;
+          if (Object.entries(data).length >= 0) {
+            setStoryData(data.story);
+            // isCalled = true;
+          }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  useEffect(() => {
     console.log({ params });
     fetchData(params.id);
   }, []);
@@ -163,6 +186,10 @@ function Story() {
           <h3>Video Timeline</h3>
           <CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/>
         </div>
+        <div className="card-button">
+              <button onClick={async () => { await handleLabelClick();}}>Label All Images</button>
+            </div>
+          <progress id='progressbar' value={null} hidden />
 
         <div className="card-body" style={{marginBottom: 25}}>
           <div className="table-responsive">
