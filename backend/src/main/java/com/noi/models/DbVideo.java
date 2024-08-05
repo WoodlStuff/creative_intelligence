@@ -65,6 +65,26 @@ public class DbVideo extends Model {
         return null;
     }
 
+    public static AiVideo find(Connection con, String name) throws SQLException {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("select " + COLUMNS + " from ai_videos where name=?");
+            stmt.setString(1, name);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return assembleVideo(con, rs);
+            }
+        } finally {
+            close(stmt);
+        }
+
+        return null;
+    }
+
     private static AiVideo assembleVideo(Connection con, ResultSet rs) throws SQLException {
         AiBrand brand = null;
         if (rs.getString("ai_brand_id") != null) {

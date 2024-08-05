@@ -4,13 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="added Label button to the Story page (to label all images used in the video summary)">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBParams.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/tools/FileTools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/BaseControllerServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/web/NoiServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,6 +99,8 @@
       <recent name="com.noi.llm.openai" />
     </key>
     <key name="MoveMembersDialog.RECENTS_KEY">
+      <recent name="com.noi.video.scenes.VideoService" />
+      <recent name="com.noi.video.scenes.ORBService" />
       <recent name="com.noi.llm.LLMService" />
       <recent name="com.noi.image.label.LabelService" />
       <recent name="com.noi.embeddings.VectorService" />
@@ -354,12 +361,24 @@
       <option name="project" value="LOCAL" />
       <updated>1722695898633</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="added OrbServlet to proxy requests to the ORB python script (for now), allowing us to have one main endpoint for the webapp to call (in prep for auth handling)">
+      <created>1722723489136</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1722723489136</updated>
+    </task>
+    <task id="LOCAL-00029" summary="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port">
+      <created>1722723624193</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1722723624193</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added a &quot;most frequent labels/categories across the images of a video&quot; query" />
-    <MESSAGE value="fixed order by for images" />
     <MESSAGE value="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
     <MESSAGE value="added a brand concept to videos and images" />
     <MESSAGE value="split out video processing into two steps: ORB scene changes, and LLM scene changes (plus other LLM calls for video and sound summary)" />
@@ -383,24 +402,26 @@
     <MESSAGE value="cosmetics in deprecated py code" />
     <MESSAGE value="fixed sound file url creation (to read for transcript); small other fixes" />
     <MESSAGE value="added Label button to the Story page (to label all images used in the video summary)" />
-    <option name="LAST_COMMIT_MESSAGE" value="added Label button to the Story page (to label all images used in the video summary)" />
+    <MESSAGE value="added OrbServlet to proxy requests to the ORB python script (for now), allowing us to have one main endpoint for the webapp to call (in prep for auth handling)" />
+    <MESSAGE value="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1093</line>
+          <line>889</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1088</line>
+          <line>884</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>1070</line>
+          <line>866</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>

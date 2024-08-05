@@ -107,18 +107,15 @@ public class DbSimilarity extends Model {
         }
     }
 
-    public static void retireScenes(Long videoId) throws SQLException, NamingException {
-        Connection con = null;
+    public static void retireScenes(Connection con, Long videoId) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            con = Model.connectX();
             stmt = con.prepareStatement("update ai_similarity_requests set status=?, updated_at=now() where ai_video_id=?");
             stmt.setInt(1, Status.RETIRED.getStatus());
             stmt.setLong(2, videoId);
             stmt.executeUpdate();
         } finally {
             close(stmt);
-            close(con);
         }
     }
 

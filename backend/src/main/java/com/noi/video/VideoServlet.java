@@ -19,8 +19,10 @@ import com.noi.tools.JsonTools;
 import com.noi.tools.SystemEnv;
 import com.noi.video.audio.AudioExtractionRequest;
 import com.noi.video.audio.AudioSummaryRequest;
+import com.noi.video.scenes.ORBService;
 import com.noi.video.scenes.SceneChangeRequest;
 import com.noi.video.scenes.VideoSceneSummaryRequest;
+import com.noi.video.scenes.VideoService;
 import com.noi.web.BaseControllerServlet;
 import com.noi.web.Path;
 
@@ -109,8 +111,9 @@ public class VideoServlet extends BaseControllerServlet {
             // accept a posted video file
             if ("video".equalsIgnoreCase(path.getServletPath())) {
                 // get the id from the path , and read the posted json meta , then persist it all in the db
-                handlePostedVideoMeta(req, resp, pathTokens);
-                return;
+                //handlePostedVideoMeta(req, resp, pathTokens);
+                throw new IllegalArgumentException("no longer supported this way!");
+
             } else if ("scene-changes".equalsIgnoreCase(path.getServletPath())) {
                 // verify the scene changes determined by the local ORB model
                 handleSceneChanges(req, resp, pathTokens);
@@ -168,7 +171,8 @@ public class VideoServlet extends BaseControllerServlet {
             handleVideoSummaryLLMs(con, video);
 
             // respond with the full video metadata
-            readAndFormatVideoResponse(videoId, resp);
+            JsonObject jsonResponse = VideoService.readAndFormatVideoResponse(con, videoId);
+            writeResponse(resp, jsonResponse);
         } finally {
             Model.close(con);
         }
@@ -195,9 +199,6 @@ public class VideoServlet extends BaseControllerServlet {
         } finally {
             Model.close(con);
         }
-
-        // respond with the full video metadata
-//        readAndFormatVideoResponse(videoId, resp);
     }
 
     private static JsonObject handleSoundLLMs(Long videoId, Connection con, AiVideo video) throws SQLException, IOException {
@@ -269,7 +270,9 @@ public class VideoServlet extends BaseControllerServlet {
         }
 
         // respond with the full video metadata
-        readAndFormatVideoResponse(videoId, resp);
+        //readAndFormatVideoResponse(videoId, resp);
+        JsonObject root = VideoService.readAndFormatVideoResponse(con, videoId);
+        writeResponse(resp, root);
     }
 
     private JsonObject handleVideoSummaryLLMs(Connection con, AiVideo video) throws SQLException, IOException, NamingException {
@@ -278,8 +281,8 @@ public class VideoServlet extends BaseControllerServlet {
         List<AiVideo.SceneChange> localVideoScenes = DbImage.findVideoSceneChanges(con, video, false);
         List<AiVideo.SceneChange> llmVideoScenes = DbImage.findVideoSceneChanges(con, video, true);
         System.out.println("VideoServlet:handleVideoSummaryLLMs: localChanges[" + localVideoScenes.size() + "] llmChanges[" + llmVideoScenes.size() + "]");
-        List<AiVideo.SceneChange> sceneChanges = filterScenesForSummary(video, localVideoScenes, llmVideoScenes);
-        System.out.println("VideoServlet:handleVideoSummaryLLMs: filteredChanges[" + sceneChanges.size() + "]");
+        List<AiVideo.SceneChange> sceneChanges = VideoService.filterScenesForSummary(video, localVideoScenes, llmVideoScenes);
+        System.out.println("VideoServlet:handleVideoSummaryLLMs: with " + sceneChanges.size() + " scene changes");
 
         // call the service with the list of scene changes
         VideoSceneSummaryRequest request = VideoSceneSummaryRequest.create(video, prompt, sceneChanges);
@@ -287,43 +290,6 @@ public class VideoServlet extends BaseControllerServlet {
         JsonObject summaryResponse = service.summarizeVideoScenes(request);
 
         return summaryResponse;
-    }
-
-    private List<AiVideo.SceneChange> filterScenesForSummary(AiVideo video, List<AiVideo.SceneChange> localVideoScenes, List<AiVideo.SceneChange> llmVideoScenes) {
-        // todo: this needs some work on the edge cases !
-        List<AiVideo.SceneChange> sceneChanges = llmVideoScenes.size() > 0 ? llmVideoScenes : localVideoScenes;
-
-        // max: one scene change every 2 seconds;
-        int maxSceneChanges = (video.getSeconds() / 2) > sceneChanges.size() ? sceneChanges.size() : (int) (video.getSeconds() / 2);
-        int minSceneChanges = Math.min(maxSceneChanges, 15);
-
-        // we prefer the llm verified scene changes, but if there are not enough of them we need to fall back to using our own ...
-        if (llmVideoScenes.size() < minSceneChanges && localVideoScenes.size() > llmVideoScenes.size()) {
-            System.out.println("WARNING: not enough labeled scene changes {len(llmSceneChanges)}: attempting a fallback ...");
-            sceneChanges = localVideoScenes;
-
-            // re-calculate the min and max counts
-            maxSceneChanges = (video.getSeconds() / 2) > sceneChanges.size() ? sceneChanges.size() : (int) (video.getSeconds() / 2);
-            minSceneChanges = Math.min(maxSceneChanges, 15);
-        }
-
-        // now filter the list down (if it's too large); filter the most matching pairs first
-        double scoreFilterThreshold = 0.99d;
-        while (sceneChanges.size() > maxSceneChanges) {
-            // try to filter by score (low similarity score), in case we have too many scenes (will run into token limits with model!)
-            System.out.printf("too many scene changes to summarize: filter {%d} scene changes to max={%d} with threshold %.02f....", sceneChanges.size(), maxSceneChanges, scoreFilterThreshold);
-            // only keep the ones with a similarity score less than the threshold!
-            List<AiVideo.SceneChange> newList = new ArrayList<>();
-            for (AiVideo.SceneChange scene : sceneChanges) {
-                if (scene.getScore() < scoreFilterThreshold) {
-                    newList.add(scene);
-                }
-            }
-            sceneChanges = newList;
-            scoreFilterThreshold -= 0.01d;
-        }
-
-        return sceneChanges;
     }
 
     private void handleSceneChanges(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
@@ -349,7 +315,9 @@ public class VideoServlet extends BaseControllerServlet {
             handleSceneChangeLLMs(videoId, con, video);
 
             // respond with the full video metadata
-            readAndFormatVideoResponse(videoId, resp);
+//            readAndFormatVideoResponse(videoId, resp);
+            JsonObject root = VideoService.readAndFormatVideoResponse(con, videoId);
+            writeResponse(resp, root);
 
         } finally {
             Model.close(con);
@@ -585,173 +553,31 @@ public class VideoServlet extends BaseControllerServlet {
         }
     }
 
-    private List<AiVideo> listVideos(HttpServletRequest req, String[] pathTokens) throws SQLException, NamingException {
-        Connection con = null;
-        try {
-            int limit = 25; // default
+    private List<AiVideo> listVideos(Connection con, HttpServletRequest req, String[] pathTokens) throws SQLException, NamingException {
+        int limit = 25; // default
 
-            // is there a requested limit of images to return?
-            if (req.getParameter("limit") != null) {
-                limit = Integer.parseInt(req.getParameter("limit").trim());
-            }
-
-            Long videoId = null;
-            if (pathTokens.length > 0) {
-                videoId = Long.parseLong(pathTokens[0].trim());
-            }
-
-            con = Model.connectX();
-            if (videoId != null) {
-                List<AiVideo> videos = new ArrayList<>();
-                AiVideo video = DbVideo.find(con, videoId);
-                if (video != null) {
-                    videos.add(video);
-                }
-                return videos;
-            }
-
-            return DbVideo.findMostRecent(con, limit);
-
-        } finally {
-            Model.close(con);
-        }
-    }
-
-    public Map<AiVideo, List<AiVideo.SceneChange>> listVideoSceneChanges(List<AiVideo> videos, boolean llmChanges) throws SQLException, NamingException {
-        Map<AiVideo, List<AiVideo.SceneChange>> videoScenes = new HashMap<>();
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            videoScenes.putAll(DbImage.findVideoSceneChanges(con, videos, llmChanges));
-        } finally {
-            Model.close(con);
+        // is there a requested limit of images to return?
+        if (req.getParameter("limit") != null) {
+            limit = Integer.parseInt(req.getParameter("limit").trim());
         }
 
-        return videoScenes;
-    }
-
-    public List<AiVideo.SceneChange> listVideoSceneChanges(AiVideo video, boolean llmChanges) throws SQLException, NamingException {
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            return DbImage.findVideoSceneChanges(con, video, llmChanges);
-        } finally {
-            Model.close(con);
+        Long videoId = null;
+        if (pathTokens.length > 0) {
+            videoId = Long.parseLong(pathTokens[0].trim());
         }
+
+        return VideoService.listVideos(con, videoId, limit);
     }
 
     private void writeVideoList(HttpServletRequest req, HttpServletResponse resp, String[] pathTokens) throws SQLException, NamingException, IOException {
-        List<AiVideo> videos = listVideos(req, pathTokens);
-        Map<AiVideo, List<AiVideo.SceneChange>> localVideoScenes = listVideoSceneChanges(videos, false);
-        Map<AiVideo, List<AiVideo.SceneChange>> llmVideoScenes = listVideoSceneChanges(videos, true);
-        Map<AiVideo, String> soundSummaries = listSoundSummaries(videos);
-        Map<AiVideo, String> videoSummaries = listVideoSummaries(videos);
-
-        writeVideosResponse(videos, localVideoScenes, llmVideoScenes, soundSummaries, videoSummaries, resp);
-    }
-
-    private Map<AiVideo, String> listSoundSummaries(List<AiVideo> videos) throws SQLException, NamingException {
         Connection con = null;
         try {
             con = Model.connectX();
-            return listSoundSummaries(con, videos);
+            List<AiVideo> videos = listVideos(con, req, pathTokens);
+            JsonObject root = VideoService.readAndFormatVideoResponse(con, videos);
+            writeResponse(resp, root);
         } finally {
             Model.close(con);
-        }
-    }
-
-    private Map<AiVideo, String> listSoundSummaries(Connection con, List<AiVideo> videos) throws SQLException, NamingException {
-        Map<AiVideo, String> summaries = new HashMap<>();
-        for (AiVideo video : videos) {
-            String summary = DbMedia.findMostRecentSoundSummary(con, video.getId());
-            if (summary != null) {
-                summaries.put(video, summary);
-            }
-        }
-
-        return summaries;
-    }
-
-    private Map<AiVideo, String> listVideoSummaries(List<AiVideo> videos) throws SQLException, NamingException {
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            return listVideoSummaries(con, videos);
-        } finally {
-            Model.close(con);
-        }
-    }
-
-    private Map<AiVideo, String> listVideoSummaries(Connection con, List<AiVideo> videos) throws SQLException, NamingException {
-        Map<AiVideo, String> summaries = new HashMap<>();
-        for (AiVideo video : videos) {
-            String summary = DbMedia.findMostRecentVideoSummary(con, video.getId());
-            if (summary != null) {
-                summaries.put(video, summary);
-            }
-        }
-
-        return summaries;
-    }
-
-    private void writeVideosResponse(List<AiVideo> videos, Map<AiVideo, List<AiVideo.SceneChange>> localVideoScenes, Map<AiVideo, List<AiVideo.SceneChange>> llmVideoScenes, Map<AiVideo, String> soundSummaries, Map<AiVideo, String> videoSummaries, HttpServletResponse resp) throws IOException {
-        // {'videos': [
-        //    { url: './v1.png', id: 1, name: 'video 1', 'file_pth': '/xxx', 'status': 'new'}, { url: './v2.png', id:2, name: 'video 2'}
-        //  ]};
-        JsonObject root = new JsonObject();
-        JsonArray array = new JsonArray();
-        root.add("videos", array);
-        for (AiVideo video : videos) {
-            JsonObject i = new JsonObject();
-            array.add(i);
-            i.addProperty("id", video.getId());
-            i.addProperty("name", video.getName());
-            i.addProperty("key", video.getId());
-            i.addProperty("url", video.getUrl());
-            i.addProperty("name", FileTools.getFileName(video.getUrl(), false));
-            // i.addProperty("file_path", video.getFilePath());
-            i.addProperty("frame_rate", video.getFrameRate());
-            i.addProperty("frame_count", video.getFrameCount());
-            i.addProperty("seconds", video.getSeconds());
-            i.addProperty("status", video.getStatus().getName());
-            if (video.getBrand() != null) {
-                i.addProperty("brand", video.getBrand().getName());
-            }
-            addVideoScenes("orb", localVideoScenes.get(video), i);
-            addVideoScenes("llm", llmVideoScenes.get(video), i);
-
-            String soundSummary = soundSummaries.get(video);
-            if (soundSummary != null) {
-                i.addProperty("sound_summary", soundSummary);
-            }
-
-            String videoSummary = videoSummaries.get(video);
-            if (videoSummary != null) {
-                i.addProperty("video_summary", videoSummary);
-            }
-        }
-
-        writeResponse(resp, root);
-    }
-
-    private void addVideoScenes(String scope, List<AiVideo.SceneChange> changes, JsonObject videoObject) {
-        // add the scene images for this video as json array
-        JsonArray scenes = new JsonArray();
-        videoObject.add(scope + "_scenes", scenes);
-        for (AiVideo.SceneChange sceneChange : changes) {
-            JsonObject scene = new JsonObject();
-            scenes.add(scene);
-            scene.addProperty("key", String.format("%d-%d", sceneChange.getLastFrame(), sceneChange.getFirstFrame()));
-            scene.addProperty("last_scene_url", sceneChange.getLastImage().getUrl());
-            scene.addProperty("last_scene_image_id", sceneChange.getLastImage().getId());
-            scene.addProperty("last_scene_frame", sceneChange.getLastFrame());
-            scene.addProperty("first_scene_url", sceneChange.getFirstImage().getUrl());
-            scene.addProperty("first_scene_image_id", sceneChange.getFirstImage().getId());
-            scene.addProperty("first_scene_frame", sceneChange.getFirstFrame());
-
-            scene.addProperty("score", sceneChange.getScore());
-            scene.addProperty("explanation", sceneChange.getExplanation());
-            scene.addProperty("is_new_video_scene", sceneChange.isNewScene());
         }
     }
 
@@ -768,28 +594,11 @@ public class VideoServlet extends BaseControllerServlet {
         }
 
         // retire older scene change requests (we don't want to see old pairs that are no longer relevant)
-        DbSimilarity.retireScenes(videoId);
+        // DbSimilarity.retireScenes(videoId);
         handleScenePost(videoId, videoScenes);
 
-        readAndFormatVideoResponse(videoId, resp);
-    }
-
-    private void readAndFormatVideoResponse(Long videoId, HttpServletResponse resp) throws SQLException, NamingException, IOException {
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            List<AiVideo> videos = new ArrayList<>();
-            videos.add(DbVideo.find(con, videoId));
-            Map<AiVideo, List<AiVideo.SceneChange>> localVideoScenes = DbImage.findVideoSceneChanges(con, videos, false);
-            Map<AiVideo, List<AiVideo.SceneChange>> llmVideoScenes = DbImage.findVideoSceneChanges(con, videos, true);
-            //Map<AiVideo, String> transcripts = listVideoTranscipts(videos);
-            Map<AiVideo, String> soundSummaries = listSoundSummaries(con, videos);
-            Map<AiVideo, String> videoSummaries = listVideoSummaries(con, videos);
-
-            writeVideosResponse(videos, localVideoScenes, llmVideoScenes, soundSummaries, videoSummaries, resp);
-        } finally {
-            Model.close(con);
-        }
+        JsonObject root = VideoService.readAndFormatVideoResponse(videoId);
+        writeResponse(resp, root);
     }
 
     private static void handleScenePost(Long videoId, JsonObject videoLabels) throws SQLException, NamingException, IOException {
@@ -801,150 +610,137 @@ public class VideoServlet extends BaseControllerServlet {
 
             // if the post contains 'scored_scene_changes', we are getting local scoring results,
             // otherwise we are getting the llm results
-
-            // lookup the model id for our local scoring alg.
-            AiModel orbModel = DbModel.ensure(con, "ORB");
-
-            double scoreThreshold = JsonTools.getAsDouble(videoLabels, "score_threshold");
-            int maxSimilarityDistance = JsonTools.getAsInt(videoLabels, "max_distance_for_similarity");
-
             if (videoLabels.has("scored_scene_changes")) {
-                // int videoLength = JsonTools.getAsInt(videoLabels, "video_length_seconds", 0);
-                int frames = JsonTools.getAsInt(videoLabels, "total_frames", 0);
-                double fps = JsonTools.getAsDouble(videoLabels, "frames_per_second");
-
-                // update the ai_videos record for this video
-                AiVideo video = DbVideo.update(con, videoId, frames, fps);
-
-                // todo: write a ORB Request (with scoreThreshold, maxSimilarityDistance) to db?!?
-
-                // read the raw scored scene changes and persist the frames as ai_images
-                JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");
-                for (int i = 0; i < scores.size(); i++) {
-                    JsonObject score = scores.get(i).getAsJsonObject();
-                    int frame = JsonTools.getAsInt(score, "frame");
-                    String url = JsonTools.getAsString(score, "image_url");
-                    DbImage.createOrUpdate(con, video, frame, url, true, false);
-                    Long imageId = DbImage.exists(con, videoId, frame);
-
-                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                    String urlBefore = JsonTools.getAsString(score, "image_url_before");
-                    Long imageIdBefore = DbImage.ensure(con, video, frameBefore, urlBefore).getId();
-
-                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
-
-                    // persist the request and the score
-                    DbSimilarity.insertRequest(con, null, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, orbModel, null, similarity, null, true);
-                }
+                ORBService.handleORBScenePost(con, videoId, videoLabels);
             } else {
-                // handle posted LLM responses
-                // what text prompt was used to generate the same scene LLM answers
-                String sameScenePrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_user");
-                String sameSceneSystemPrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_system");
-                String sameSceneModel = JsonTools.getAsString(videoLabels, "same_scene_model");
-                AiModel sceneModel = DbModel.ensure(con, sameSceneModel);
-                AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE.getType());
-
-                // read the labeled_changes () scene changes the LLM agreed to) and persist the model results
-                JsonArray lScores = videoLabels.getAsJsonArray("labeled_changes");
-                for (int i = 0; i < lScores.size(); i++) {
-                    JsonObject score = lScores.get(i).getAsJsonObject();
-                    String uuid = JsonTools.getAsString(score, "uuid");
-                    int frame = JsonTools.getAsInt(score, "frame");
-                    Long imageId = DbImage.exists(con, videoId, frame);
-
-                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                    Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
-
-                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
-                    String explanation = JsonTools.getAsString(score, "explanation");
-                    if (imageId == null || imageIdBefore == null) {
-                        System.out.println("WARNING: unable to log similarity for " + new Gson().toJson(score));
-                        continue;
-                    }
-                    DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
-                }
-
-                // read the rejected_changes (LLM does not agree to the scene change) and persist the model results
-                JsonArray rScores = videoLabels.getAsJsonArray("labeled_rejections");
-                for (int i = 0; i < rScores.size(); i++) {
-                    JsonObject score = rScores.get(i).getAsJsonObject();
-                    String uuid = JsonTools.getAsString(score, "uuid");
-                    int frame = JsonTools.getAsInt(score, "frame");
-                    Long imageId = DbImage.exists(con, videoId, frame);
-
-                    int frameBefore = JsonTools.getAsInt(score, "frame_before");
-                    Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
-
-                    double similarity = JsonTools.getAsDouble(score, "similarity_score");
-                    String explanation = JsonTools.getAsString(score, "explanation");
-                    DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
-                }
+                handleLLMScenePost(con, videoId, videoLabels);
 
                 // process the media meta files (sound and video summaries)
-                Long transcriptId = null;
-                Long soundId = null;
-
-                File media = new File(JsonTools.getAsString(videoLabels, "audio_transcript"));
-                if (media.exists()) {
-                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                    String soundURL = JsonTools.getAsString(meta, "sound_url");
-                    String uuid = JsonTools.getAsString(meta, "uuid");
-                    String modelName = JsonTools.getAsString(meta, "model_name");
-                    String transcript = JsonTools.getAsString(meta, "transcription");
-
-                    soundId = DbMedia.ensureSound(con, videoId, soundURL);
-                    AiModel model = DbModel.ensure(con, modelName);
-                    Long requestId = DbMedia.insertTranscriptRequest(con, videoId, soundId, uuid, model);
-                    transcriptId = DbMedia.insertTranscript(con, soundId, requestId, transcript);
-                }
-
-                media = new File(JsonTools.getAsString(videoLabels, "audio_summary"));
-                if (media.exists() && transcriptId != null && soundId != null) {
-                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                    String uuid = JsonTools.getAsString(meta, "uuid");
-                    String modelName = JsonTools.getAsString(meta, "model_name");
-                    String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
-                    String userPrompt = JsonTools.getAsString(meta, "user_prompt");
-                    String audioSummary = JsonTools.getAsString(meta, "summary");
-
-                    AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY.getType());
-                    AiModel model = DbModel.ensure(con, modelName);
-                    Long requestId = DbMedia.insertTranscriptSummaryRequest(con, uuid, transcriptId, prompt, model);
-                    DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
-                }
+                handleSoundPost(con, videoId, videoLabels);
+                File media;
 
                 media = new File(JsonTools.getAsString(videoLabels, "video_summary"));
                 if (media.exists()) {
-                    String metaFileContent = FileTools.readToString(new FileInputStream(media));
-                    JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
-                    String uuid = JsonTools.getAsString(meta, "uuid");
-                    String modelName = JsonTools.getAsString(meta, "model_name");
-                    String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
-                    String userPrompt = JsonTools.getAsString(meta, "user_prompt");
-                    String videoSummary = JsonTools.getAsString(meta, "summary");
-                    JsonArray scenes = meta.getAsJsonArray("scenes");
-
-                    // todo: add model to the prompt call here!
-                    AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY.getType());
-                    AiModel model = DbModel.ensure(con, modelName);
-
-                    Long requestId = DbMedia.insertVideoSummaryRequest(con, uuid, videoId, prompt, model);
-
-                    // loop through images / scenes used to create the summary and persist the relations
-                    for (int i = 0; i < scenes.size(); i++) {
-                        String sceneImageURL = scenes.get(i).getAsString();
-                        AiImage image = DbImage.findForVideo(con, videoId, sceneImageURL);
-                        DbMedia.insertVideoSummaryScene(con, videoId, image, requestId);
-                    }
-
-                    DbMedia.insertVideoSummary(con, requestId, videoId, videoSummary);
+                    handeVideoSummaryPost(con, videoId, media);
                 }
             }
         } finally {
             Model.close(con);
+        }
+    }
+
+    private static void handeVideoSummaryPost(Connection con, Long videoId, File media) throws IOException, SQLException {
+        String metaFileContent = FileTools.readToString(new FileInputStream(media));
+        JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+        String uuid = JsonTools.getAsString(meta, "uuid");
+        String modelName = JsonTools.getAsString(meta, "model_name");
+        String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
+        String userPrompt = JsonTools.getAsString(meta, "user_prompt");
+        String videoSummary = JsonTools.getAsString(meta, "summary");
+        JsonArray scenes = meta.getAsJsonArray("scenes");
+
+        // todo: add model to the prompt call here!
+        AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_VIDEO_SUMMARY.getType());
+        AiModel model = DbModel.ensure(con, modelName);
+
+        Long requestId = DbMedia.insertVideoSummaryRequest(con, uuid, videoId, prompt, model);
+
+        // loop through images / scenes used to create the summary and persist the relations
+        for (int i = 0; i < scenes.size(); i++) {
+            String sceneImageURL = scenes.get(i).getAsString();
+            AiImage image = DbImage.findForVideo(con, videoId, sceneImageURL);
+            DbMedia.insertVideoSummaryScene(con, videoId, image, requestId);
+        }
+
+        DbMedia.insertVideoSummary(con, requestId, videoId, videoSummary);
+    }
+
+    private static void handleSoundPost(Connection con, Long videoId, JsonObject videoLabels) throws IOException, SQLException {
+        Long transcriptId = null;
+        Long soundId = null;
+
+        File media = new File(JsonTools.getAsString(videoLabels, "audio_transcript"));
+        if (media.exists()) {
+            String metaFileContent = FileTools.readToString(new FileInputStream(media));
+            JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+            String soundURL = JsonTools.getAsString(meta, "sound_url");
+            String uuid = JsonTools.getAsString(meta, "uuid");
+            String modelName = JsonTools.getAsString(meta, "model_name");
+            String transcript = JsonTools.getAsString(meta, "transcription");
+
+            soundId = DbMedia.ensureSound(con, videoId, soundURL);
+            AiModel model = DbModel.ensure(con, modelName);
+            Long requestId = DbMedia.insertTranscriptRequest(con, videoId, soundId, uuid, model);
+            transcriptId = DbMedia.insertTranscript(con, soundId, requestId, transcript);
+        }
+
+        media = new File(JsonTools.getAsString(videoLabels, "audio_summary"));
+        if (media.exists() && transcriptId != null && soundId != null) {
+            String metaFileContent = FileTools.readToString(new FileInputStream(media));
+            JsonObject meta = new JsonParser().parse(metaFileContent).getAsJsonObject();
+            String uuid = JsonTools.getAsString(meta, "uuid");
+            String modelName = JsonTools.getAsString(meta, "model_name");
+            String systemPrompt = JsonTools.getAsString(meta, "system_prompt");
+            String userPrompt = JsonTools.getAsString(meta, "user_prompt");
+            String audioSummary = JsonTools.getAsString(meta, "summary");
+
+            AiPrompt prompt = DbLanguage.ensurePrompt(con, userPrompt, systemPrompt, AiPrompt.TYPE_AUDIO_SUMMARY.getType());
+            AiModel model = DbModel.ensure(con, modelName);
+            Long requestId = DbMedia.insertTranscriptSummaryRequest(con, uuid, transcriptId, prompt, model);
+            DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
+        }
+    }
+
+    private static void handleLLMScenePost(Connection con, Long videoId, JsonObject videoLabels) throws SQLException {
+        // handle posted LLM responses
+
+        // retire all not ORB scene changes (they are getting replaced here!)
+        AiModel orbModel = DbModel.ensure(con, "ORB");
+        DbSimilarity.retireScenesForOtherModels(con, videoId, orbModel);
+
+        double scoreThreshold = JsonTools.getAsDouble(videoLabels, "score_threshold");
+        int maxSimilarityDistance = JsonTools.getAsInt(videoLabels, "max_distance_for_similarity");
+        // what text prompt was used to generate the same scene LLM answers
+        String sameScenePrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_user");
+        String sameSceneSystemPrompt = JsonTools.getAsString(videoLabels, "same_scene_prompt_system");
+        String sameSceneModel = JsonTools.getAsString(videoLabels, "same_scene_model");
+        AiModel sceneModel = DbModel.ensure(con, sameSceneModel);
+        AiPrompt scenePrompt = DbLanguage.ensurePrompt(con, sameScenePrompt, sameSceneSystemPrompt, AiPrompt.TYPE_SCENE_CHANGE.getType());
+
+        // read the labeled_changes () scene changes the LLM agreed to) and persist the model results
+        JsonArray lScores = videoLabels.getAsJsonArray("labeled_changes");
+        for (int i = 0; i < lScores.size(); i++) {
+            JsonObject score = lScores.get(i).getAsJsonObject();
+            String uuid = JsonTools.getAsString(score, "uuid");
+            int frame = JsonTools.getAsInt(score, "frame");
+            Long imageId = DbImage.exists(con, videoId, frame);
+
+            int frameBefore = JsonTools.getAsInt(score, "frame_before");
+            Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
+
+            double similarity = JsonTools.getAsDouble(score, "similarity_score");
+            String explanation = JsonTools.getAsString(score, "explanation");
+            if (imageId == null || imageIdBefore == null) {
+                System.out.println("WARNING: unable to log similarity for " + new Gson().toJson(score));
+                continue;
+            }
+            DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, true);
+        }
+
+        // read the rejected_changes (LLM does not agree to the scene change) and persist the model results
+        JsonArray rScores = videoLabels.getAsJsonArray("labeled_rejections");
+        for (int i = 0; i < rScores.size(); i++) {
+            JsonObject score = rScores.get(i).getAsJsonObject();
+            String uuid = JsonTools.getAsString(score, "uuid");
+            int frame = JsonTools.getAsInt(score, "frame");
+            Long imageId = DbImage.exists(con, videoId, frame);
+
+            int frameBefore = JsonTools.getAsInt(score, "frame_before");
+            Long imageIdBefore = DbImage.exists(con, videoId, frameBefore);
+
+            double similarity = JsonTools.getAsDouble(score, "similarity_score");
+            String explanation = JsonTools.getAsString(score, "explanation");
+            DbSimilarity.insertRequest(con, uuid, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, sceneModel, scenePrompt, similarity, explanation, false);
         }
     }
 

@@ -7,6 +7,7 @@ import com.noi.image.AiImage;
 import com.noi.image.AiImageRequest;
 import com.noi.language.AiPrompt;
 import com.noi.video.AiVideo;
+import com.noi.video.scenes.ORBParams;
 
 import javax.naming.NamingException;
 import java.sql.Connection;
@@ -601,5 +602,30 @@ public class DbImage extends Model {
         } finally {
             close(stmt);
         }
+    }
+
+    /**
+     * Look for the orb params used to generate the latest scene changes
+     *
+     * @param con
+     * @param video
+     * @return
+     */
+    public static ORBParams findSceneChangeORBParams(Connection con, AiVideo video) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            AiModel orbModel = DbModel.find(con, AiModel.PY_INTERNAL_SCORING.getName());
+            stmt = con.prepareStatement("select max_distance, score_threshold, _count from(select  max_distance, score_threshold, count(*) _count from ai_similarity_requests where ai_video_id=? and ai_model_id=? and status=? group by 1,2)x");
+            stmt.setLong(1, video.getId());
+            stmt.setLong(2, orbModel.getId());
+            stmt.setInt(3, Status.ACTIVE.getStatus());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return ORBParams.create(rs);
+            }
+        } finally {
+            close(stmt);
+        }
+        return null;
     }
 }

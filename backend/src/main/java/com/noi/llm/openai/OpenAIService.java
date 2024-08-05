@@ -129,6 +129,7 @@ public class OpenAIService extends LLMService {
      */
     @Override
     public JsonObject summarizeVideoScenes(VideoSceneSummaryRequest request) throws IOException, SQLException, NamingException {
+        System.out.println("OpenAIService:summarizeVideoScenes for " + request.getSceneChanges().size() + " scenes");
         JsonObject response = new JsonObject();
         if (request.getSceneChanges().size() == 0) {
             return response;
@@ -187,6 +188,8 @@ public class OpenAIService extends LLMService {
         } finally {
             Model.close(con);
         }
+
+        System.out.println("OpenAIService:done summarizeVideoScenes for " + request.getVideo().getName());
 
         return response;
     }
