@@ -143,39 +143,65 @@ function Video () {
       console.log("process video " + params.id);
       console.log("process video " + videoData[0].name);
       setVideoData([]);
-      var postData = {"video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
+      let postData = {"video_id": params.id, "video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
       // Note!: this requires the python server (ORB script) to be running (on port 8000)!
-      axios.post(global.config.noi_server.root + '/orb', postData).then((response) => {
+      axios.post(global.config.noi_server.root + '/orbX', postData).then((response) => {
         console.log(response.data);
-        let videoJson = response.data;
-        if (Object.entries(videoJson).length > 0){
-          // post the results from the py script to be parsed and stored in the db
-          axios.post(global.config.noi_server.root + '/video/' + params.id, videoJson).then((sqlResponse) => {
-            // we posted the json to be parsed and written into the db, now what? 
-            let data = sqlResponse.data;
-            setVideoData(data.videos);
-
-            // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
-            if(callLLMs.selected === true){
-              console.log('now call the LLMs ...');
-              //postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
-              axios.post(global.config.noi_server.root + '/video-llms/' + params.id).then((llmResponse) => {
-                console.log(llmResponse.data);
-                let data = llmResponse.data;
-                setVideoData(data.videos);
-                hideProgressbar();
-              });
-            }
-            else{
-              hideProgressbar();
-            }
-          })
+        let data = response.data;
+        setVideoData(data.videos);
+        if(data.videos.length > 0){
+          setScoreThreshold(data.videos[0].orb_scoring_threshold);
+          setSimilarityDistance(data.videos[0].orb_scoring_max_distance);
         }
+
+        // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
+        if(callLLMs.selected === true){
+          console.log('now call the LLMs ...');
+          //postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
+          axios.post(global.config.noi_server.root + '/video-llms/' + params.id).then((llmResponse) => {
+            console.log(llmResponse.data);
+            let data = llmResponse.data;
+            setVideoData(data.videos);
+            if(data.videos.length > 0){
+              setScoreThreshold(data.videos[0].orb_scoring_threshold);
+              setSimilarityDistance(data.videos[0].orb_scoring_max_distance);
+            }
+    
+            hideProgressbar();
+          });
+        }
+        else{
+          hideProgressbar();
+        }
+        
+        // let videoJson = response.data;
+        // if (Object.entries(videoJson).length > 0){
+        //   // post the results from the py script to be parsed and stored in the db
+        //   axios.post(global.config.noi_server.root + '/video/' + params.id, videoJson).then((sqlResponse) => {
+        //     // we posted the json to be parsed and written into the db, now what? 
+        //     let data = sqlResponse.data;
+        //     setVideoData(data.videos);
+
+        //     // now call the same endpoint, but this time ask to call the LLM(s) to label the scene changes, and do the rest (video summary, audio summary, ...)
+        //     if(callLLMs.selected === true){
+        //       console.log('now call the LLMs ...');
+        //       //postData = {"video_name": videoData[0].name, "refresh": true, "llm": true}
+        //       axios.post(global.config.noi_server.root + '/video-llms/' + params.id).then((llmResponse) => {
+        //         console.log(llmResponse.data);
+        //         let data = llmResponse.data;
+        //         setVideoData(data.videos);
+        //         hideProgressbar();
+        //       });
+        //     }
+        //     else{
+        //       hideProgressbar();
+        //     }
+        //   })
+        // }
       });
     }
 
     useEffect(() => {
-      let isCalled = false;
       // Call the async function
       const fetchData = async (videoId) => {
         try {
@@ -183,13 +209,15 @@ function Video () {
           showProgressbar();
           axios.get(global.config.noi_server.root + "/videos/" + videoId).then((response) => {
             let data = response.data;
-            if (!isCalled) {
               if (Object.entries(data).length >= 0) {
                 setVideoData(data.videos);
-                hideProgressbar();
+                if(data.videos.length > 0){
+                  setScoreThreshold(data.videos[0].orb_scoring_threshold);
+                  setSimilarityDistance(data.videos[0].orb_scoring_max_distance);
+                }
               }
-            }
-          });
+              hideProgressbar();
+            });
         } catch (error) {
           console.error(error);
         }
@@ -197,7 +225,6 @@ function Video () {
   
       console.log({params});
       fetchData(params.id);
-      return () => isCalled = true;
     }, []);
 
     return (
@@ -216,11 +243,11 @@ function Video () {
                 <label className="label-padding">Call LLMs</label><input name='llms' type="checkbox" checked={callLLMs.selected} onChange={(event) => {setCallLLMs({selected: !callLLMs.selected});}}></input>
               </div>
               <div className="left-padding">
-                <label className="label-padding">Max Similarity Distance</label><input name='maxSimilarityDistance' defaultValue={similarityDistance} onChange={(event) => {setSimilarityDistance(parseInt(event.target.value));}}></input>
+                <label className="label-padding">Max Similarity Distance</label><input name='maxSimilarityDistance' defaultValue={similarityDistance} value={similarityDistance} onChange={(event) => {setSimilarityDistance(parseInt(event.target.value));}}></input>
               </div>
               <div className="left-padding">
                 <label className="label-padding">Similarity Score Threshold</label>
-                <input name='sceneChangeScoreThreshold' defaultValue={scoreThreshold} onChange={(event) => {setScoreThreshold(parseFloat(event.target.value));}}></input>
+                <input name='sceneChangeScoreThreshold' defaultValue={scoreThreshold} value={scoreThreshold} onChange={(event) => {setScoreThreshold(parseFloat(event.target.value));}}></input>
               </div>
             </div>
             <div className="card-button">
