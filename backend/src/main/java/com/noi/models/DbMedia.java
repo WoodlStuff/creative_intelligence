@@ -70,7 +70,7 @@ public class DbMedia extends Model {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("select ss.summary_text from ai_sound_summaries ss join ai_sound_summary_requests r on r.id = ss.ai_sound_summary_request_id join ai_transcriptions t on t.id = r.ai_transcription_id join ai_sounds s on s.id = ss.ai_sound_id  where r.status = t.status and r.status=? and s.ai_video_id=? order by r.updated_at desc limit 1");
-            stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(1, Status.COMPLETE.getStatus());
             stmt.setLong(2, videoId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -225,7 +225,7 @@ public class DbMedia extends Model {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("select vs.summary_text from ai_video_summaries vs join ai_video_summary_requests r on r.id = vs.ai_video_summary_request_id and r.ai_video_id = vs.ai_video_id where vs.status=r.status and vs.status=? and vs.ai_video_id=? order by r.updated_at desc limit 1");
-            stmt.setInt(1, Status.ACTIVE.getStatus());
+            stmt.setInt(1, Status.COMPLETE.getStatus());
             stmt.setLong(2, videoId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {

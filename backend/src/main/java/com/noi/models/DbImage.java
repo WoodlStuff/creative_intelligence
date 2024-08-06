@@ -618,7 +618,7 @@ public class DbImage extends Model {
             stmt = con.prepareStatement("select max_distance, score_threshold, _count from(select  max_distance, score_threshold, count(*) _count from ai_similarity_requests where ai_video_id=? and ai_model_id=? and status=? group by 1,2)x");
             stmt.setLong(1, video.getId());
             stmt.setLong(2, orbModel.getId());
-            stmt.setInt(3, Status.ACTIVE.getStatus());
+            stmt.setInt(3, Status.COMPLETE.getStatus());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return ORBParams.create(rs);
