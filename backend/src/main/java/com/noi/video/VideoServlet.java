@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.noi.AiBrand;
 import com.noi.AiModel;
 import com.noi.Status;
+import com.noi.image.AiImage;
 import com.noi.language.AiPrompt;
 import com.noi.llm.LLMService;
 import com.noi.models.*;
@@ -198,48 +199,60 @@ public class VideoServlet extends BaseControllerServlet {
         AiPrompt prompt = DbLanguage.findPrompt(con, AiPrompt.TYPE_AUDIO_TRANSCRIPT);
         if (prompt == null) {
             System.out.println("no model defined for video sound transcription!");
+            // todo: error handling
             return null;
         }
         System.out.println("VideoServlet:handleSoundLLMs for videoId=" + video.getId());
 
         JsonObject root = new JsonObject();
-        AudioExtractionRequest request = AudioExtractionRequest.create(video, prompt);
-        LLMService service = LLMService.getService(request);
-        System.out.println("VideoServlet:handleSoundLLMs transcribing with " + service.getName());
-        JsonObject textNode = service.transcribeVideo(request);
-
-        String soundURL;
-        if (textNode.has("sound_url")) {
-            soundURL = textNode.get("sound_url").getAsString();
-        } else {
-            root.add("transcribe_error", textNode);
-            return root;
+        File audioPath = VideoService.getSoundURL(video);
+        if (audioPath == null || !audioPath.exists()) {
+            // todo: error handling
+            return null;
         }
 
+        AudioExtractionRequest request = AudioExtractionRequest.create(video, prompt, audioPath);
+
+        LLMService service = LLMService.getService(request);
+        System.out.println("VideoServlet:handleSoundLLMs transcribing with " + service.getName());
+
+        // persist the request
+        Long soundId = DbMedia.ensureSound(con, video.getId(), audioPath.getAbsolutePath());
+        AiModel model = DbModel.ensure(con, request.getModelName());
+        Long requestId = DbMedia.insertTranscriptRequest(con, soundId, request.getUUID(), model);
+
+        JsonObject textNode = service.transcribeVideo(request);
+
+        // update the request status based on the outcome
+        Status finalRequestStatus = Status.COMPLETE;
         String text = "No transcript available!";
         if (textNode.has("transcription")) {
             text = textNode.get("transcription").getAsString();
             root.addProperty("text", text);
+        } else {
+            finalRequestStatus = Status.FAILED;
         }
+        DbMedia.updateTranscriptRequest(con, requestId, finalRequestStatus);
 
         // persist the transcript
-        Long soundId = DbMedia.ensureSound(con, video.getId(), soundURL);
-        AiModel model = DbModel.ensure(con, request.getModelName());
-        Long requestId = DbMedia.insertTranscriptRequest(con, video.getId(), soundId, request.getUUID(), model);
         Long transcriptId = DbMedia.insertTranscript(con, soundId, requestId, text);
 
         prompt = DbLanguage.findPrompt(con, AiPrompt.TYPE_AUDIO_SUMMARY);
         if (prompt != null) {
             AudioSummaryRequest summaryRequest = AudioSummaryRequest.create(video, prompt, text);
+            requestId = DbMedia.insertTranscriptSummaryRequest(con, summaryRequest.getUUID(), transcriptId, prompt);
+
             service = LLMService.getService(request);
             JsonObject summaryJson = service.summarizeVideoSound(summaryRequest);
-            String audioSummary = summaryJson.get("summary").getAsString();
-            root.addProperty("sound_summary", audioSummary);
-
-            model = DbModel.ensure(con, summaryRequest.getModelName());
-
-            requestId = DbMedia.insertTranscriptSummaryRequest(con, summaryRequest.getUUID(), transcriptId, prompt, model);
-            DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
+            Status finalSummaryStatus = Status.COMPLETE;
+            if (!summaryJson.has("summary")) {
+                finalSummaryStatus = Status.FAILED;
+            } else {
+                String audioSummary = summaryJson.get("summary").getAsString();
+                root.addProperty("sound_summary", audioSummary);
+                DbMedia.insertTranscriptSummary(con, soundId, requestId, audioSummary);
+            }
+            DbMedia.updateTranscriptSummaryRequest(con, requestId, finalSummaryStatus);
         }
         return root;
     }
@@ -270,6 +283,10 @@ public class VideoServlet extends BaseControllerServlet {
 
     private JsonObject handleVideoSummaryLLMs(Connection con, AiVideo video) throws SQLException, IOException, NamingException {
         AiPrompt prompt = DbLanguage.findPrompt(con, AiPrompt.TYPE_VIDEO_SUMMARY);
+        if (prompt == null) {
+            // todo: error handling
+            return null;
+        }
 
         List<AiVideo.SceneChange> localVideoScenes = DbImage.findVideoSceneChanges(con, video, false);
         List<AiVideo.SceneChange> llmVideoScenes = DbImage.findVideoSceneChanges(con, video, true);
@@ -279,8 +296,24 @@ public class VideoServlet extends BaseControllerServlet {
 
         // call the service with the list of scene changes
         VideoSceneSummaryRequest request = VideoSceneSummaryRequest.create(video, prompt, sceneChanges);
+        Long requestId = DbMedia.insertVideoSummaryRequest(con, video.getId(), request.getUUID(), prompt);
+
+        // loop through images / scenes used to create the summary and persist the relations
+        for (String sceneImageURL : request.getSceneUrls()) {
+            AiImage image = DbImage.findForVideo(con, video.getId(), sceneImageURL);
+            DbMedia.insertVideoSummaryScene(con, video.getId(), requestId, image);
+        }
+
         LLMService service = LLMService.getService(request);
         JsonObject summaryResponse = service.summarizeVideoScenes(request);
+
+        Status finalSummaryStatus = Status.COMPLETE;
+        if (summaryResponse.has("summary")) {
+            DbMedia.insertVideoSummary(con, video.getId(), requestId, summaryResponse.get("summary").getAsString());
+        } else {
+            finalSummaryStatus = Status.FAILED;
+        }
+        DbMedia.updateVideoSummaryRequest(con, requestId, finalSummaryStatus);
 
         return summaryResponse;
     }
@@ -341,34 +374,42 @@ public class VideoServlet extends BaseControllerServlet {
             int count = 0;
             for (AiVideo.SceneChange sceneChange : localVideoScenes) {
                 SceneChangeRequest request = SceneChangeRequest.create(video, sceneChange, prompt);
+                // then persist it all
+                Long requestId = DbSimilarity.insertRequest(con, request);
+
                 LLMService service = LLMService.getService(request);
                 System.out.printf("%d/%d:using %s\r\n", ++count, localVideoScenes.size(), service.getName());
 
-                JsonObject sceneResponse = service.labelForSameVideoScene(sceneChange);
-                boolean isSameScene = JsonTools.getAsBoolean(sceneResponse, "same_scene");
-                String llmExplanation = JsonTools.getAsString(sceneResponse, "explanation");
+                try {
+                    JsonObject sceneResponse = service.labelForSameVideoScene(sceneChange);
 
-                if (isSameScene) {
-                    // ORB said it was a scene change, but the llm did not agree: rejected!
-                    rejectedScenes.put(request, llmExplanation);
-                } else {
-                    acceptedScenes.put(request, llmExplanation);
+                    String llmExplanation = JsonTools.getAsString(sceneResponse, "explanation");
+                    boolean isSameScene = JsonTools.getAsBoolean(sceneResponse, "same_scene");
+                    if (isSameScene) {
+                        // ORB said it was a scene change, but the llm did not agree: rejected!
+                        rejectedScenes.put(request, llmExplanation);
+                    } else {
+                        acceptedScenes.put(request, llmExplanation);
+                    }
+
+                    // ensure the images in the scene change exist in the local db
+                    int lastSceneFrame = sceneChange.getFirstFrame();
+                    Long lastSceneImageId = DbImage.exists(con, video.getId(), lastSceneFrame);
+                    int newSceneFrame = sceneChange.getLastFrame();
+                    Long newSceneImageId = DbImage.exists(con, video.getId(), newSceneFrame);
+
+                    double similarityScore = sceneChange.getScore();
+
+                    Status finalLLMStatus = Status.COMPLETE;
+                    if (newSceneImageId == null || lastSceneImageId == null) {
+                        System.out.println("WARNING: unable to log similarity for " + sceneChange);
+                        finalLLMStatus = Status.FAILED;
+                    }
+                    // update the request with the final results
+                    DbSimilarity.updateRequest(con, requestId, similarityScore, !isSameScene, llmExplanation, finalLLMStatus);
+                } catch (SQLException | NamingException | IOException e) {
+                    e.printStackTrace();
                 }
-
-                // ensure the images in the scene change exist in the local db
-                int lastSceneFrame = sceneChange.getFirstFrame();
-                Long lastSceneImageId = DbImage.exists(con, video.getId(), lastSceneFrame);
-                int newSceneFrame = sceneChange.getLastFrame();
-                Long newSceneImageId = DbImage.exists(con, video.getId(), newSceneFrame);
-
-                double similarityScore = sceneChange.getScore();
-
-                if (newSceneImageId == null || lastSceneImageId == null) {
-                    System.out.println("WARNING: unable to log similarity for " + sceneChange);
-                    continue;
-                }
-                // then persist it all
-                DbSimilarity.insertRequest(con, request, similarityScore, isSameScene, llmExplanation);
             }
 
             // finalize the json file content

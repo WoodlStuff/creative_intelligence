@@ -83,15 +83,27 @@ public class DbMedia extends Model {
         return null;
     }
 
-    public static Long insertTranscriptRequest(Connection con, Long videoId, Long soundId, String uuid, AiModel model) throws SQLException {
+    public static Long insertTranscriptRequest(Connection con, Long soundId, String uuid, AiModel model) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_transcribe_requests(uuid, ai_sound_id, ai_model_id, status, created_at, updated_at) values(?, ?, ?, ?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), id=LAST_INSERT_ID(id)");
             stmt.setString(1, uuid);
             stmt.setLong(2, soundId);
             stmt.setLong(3, model.getId());
-            stmt.setInt(4, Status.ACTIVE.getStatus());
+            stmt.setInt(4, Status.NEW.getStatus());
             return executeWithLastId(stmt);
+        } finally {
+            close(stmt);
+        }
+    }
+
+    public static void updateTranscriptRequest(Connection con, Long requestId, Status status) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_transcribe_requests set status=?, updated_at=now() where id=?");
+            stmt.setInt(1, status.getStatus());
+            stmt.setLong(2, requestId);
+            stmt.executeUpdate();
         } finally {
             close(stmt);
         }
@@ -111,16 +123,28 @@ public class DbMedia extends Model {
         }
     }
 
-    public static Long insertTranscriptSummaryRequest(Connection con, String uuid, Long transcriptId, AiPrompt prompt, AiModel model) throws SQLException {
+    public static Long insertTranscriptSummaryRequest(Connection con, String uuid, Long transcriptId, AiPrompt prompt) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_sound_summary_requests(uuid, ai_transcription_id, ai_model_id, ai_prompt_id, status, created_at, updated_at) values(?, ?, ?, ?, ?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), id=LAST_INSERT_ID(id)");
             stmt.setString(1, uuid);
             stmt.setLong(2, transcriptId);
-            stmt.setLong(3, model.getId());
+            stmt.setLong(3, prompt.getModel().getId());
             stmt.setLong(4, prompt.getId());
-            stmt.setInt(5, Status.ACTIVE.getStatus());
+            stmt.setInt(5, Status.NEW.getStatus());
             return executeWithLastId(stmt);
+        } finally {
+            close(stmt);
+        }
+    }
+
+    public static void updateTranscriptSummaryRequest(Connection con, Long requestId, Status status) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_sound_summary_requests set status=?, updated_at=now() where id=?");
+            stmt.setInt(1, status.getStatus());
+            stmt.setLong(2, requestId);
+            stmt.executeUpdate();
         } finally {
             close(stmt);
         }
@@ -141,22 +165,34 @@ public class DbMedia extends Model {
         }
     }
 
-    public static Long insertVideoSummaryRequest(Connection con, String uuid, Long videoId, AiPrompt prompt, AiModel model) throws SQLException {
+    public static Long insertVideoSummaryRequest(Connection con, Long videoId, String uuid, AiPrompt prompt) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_video_summary_requests(uuid, ai_video_id, ai_model_id, ai_prompt_id, status, created_at, updated_at) values(?, ?, ?, ?, ?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), id=LAST_INSERT_ID(id)");
             stmt.setString(1, uuid);
             stmt.setLong(2, videoId);
-            stmt.setLong(3, model.getId());
+            stmt.setLong(3, prompt.getModel().getId());
             stmt.setLong(4, prompt.getId());
-            stmt.setInt(5, Status.ACTIVE.getStatus());
+            stmt.setInt(5, Status.NEW.getStatus());
             return executeWithLastId(stmt);
         } finally {
             close(stmt);
         }
     }
 
-    public static void insertVideoSummaryScene(Connection con, Long videoId, AiImage image, Long requestId) throws SQLException {
+    public static void updateVideoSummaryRequest(Connection con, Long requestId, Status status) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_video_summary_requests set status=?, updated_at=now() where id=?");
+            stmt.setInt(1, status.getStatus());
+            stmt.setLong(2, requestId);
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+        }
+    }
+
+    public static void insertVideoSummaryScene(Connection con, Long videoId, Long requestId, AiImage image) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_video_summary_scenes(ai_video_summary_request_id, ai_video_id, ai_image_id, status, created_at, updated_at) values(?, ?, ?, ?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now()");
@@ -170,14 +206,14 @@ public class DbMedia extends Model {
         }
     }
 
-    public static void insertVideoSummary(Connection con, Long requestId, Long videoId, String videoSummary) throws SQLException {
+    public static void insertVideoSummary(Connection con, Long videoId, Long requestId, String videoSummary) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_video_summaries(ai_video_id, ai_video_summary_request_id, summary_text, status, created_at, updated_at) values(?, ?, ?, ?, now(), now()) ON DUPLICATE KEY UPDATE updated_at=now(), summary_text=?");
             stmt.setLong(1, videoId);
             stmt.setLong(2, requestId);
             stmt.setString(3, videoSummary);
-            stmt.setInt(4, Status.ACTIVE.getStatus());
+            stmt.setInt(4, Status.COMPLETE.getStatus());
             stmt.setString(5, videoSummary);
             stmt.executeUpdate();
         } finally {

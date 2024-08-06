@@ -209,7 +209,7 @@ CREATE TABLE `ai_similarity_requests` (
   `max_distance` int NULL,
   `score_threshold` decimal(4,2) NULL,
   `score` DECIMAL(20,18) NOT NULL DEFAULT 0,
-  `explanation` VARCHAR(255) NULL,
+  `explanation` TEXT NULL,
   `is_scene_change` TINYINT NOT NULL DEFAULT 0,
   `status` tinyint default 1,
   `created_at` datetime NOT NULL,
@@ -222,6 +222,7 @@ CREATE TABLE `ai_similarity_requests` (
   FOREIGN KEY(ai_prompt_id) references ai_prompts(id) ON DELETE RESTRICT,
   foreign key (ai_video_id) references ai_videos(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB3 ;
+-- 2024-08-06:  alter table ai_similarity_requests modify column explanation text null;
 
 DROP TABLE if exists `ai_transcribe_requests`;
 CREATE TABLE `ai_transcribe_requests` (

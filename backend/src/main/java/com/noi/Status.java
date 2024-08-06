@@ -14,6 +14,7 @@ public class Status implements Comparable<Status> {
         statusMap.put(status, this);
     }
 
+    public static final Status FAILED = new Status(-3, "failed");
     public static final Status RETIRED = new Status(-2, "retired");
     public static final Status DELETED = new Status(-1, "deleted");
     public static final Status NEW = new Status(0, "new");

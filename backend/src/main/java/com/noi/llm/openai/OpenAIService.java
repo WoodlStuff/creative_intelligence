@@ -94,17 +94,7 @@ public class OpenAIService extends LLMService {
         String rootFolder = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
         AiVideo video = request.getVideo();
 
-
-        // check if there is an audio file (was created by the py script that also extracted the scene images)
-        // Note! the folder for the raw (ORB based) files can be different from the processed file folder (which is based on the name)
-        String videoFileName = FileTools.getFileName(video.getUrl(), false);
-        File audioPath = FileTools.joinPath(rootFolder, "videos", videoFileName, videoFileName + ".mp3");
-        System.out.println("OpenAIService:transcribeVideo:audioPath=" + audioPath);
-        if (!audioPath.exists()) {
-            returnJson.addProperty("error", "No audio file found for " + video);
-            return returnJson;
-        }
-
+        File audioPath = request.getAudioPath();
         returnJson.addProperty("sound_url", audioPath.getAbsolutePath());
         returnJson.addProperty("uuid", request.getUUID());
         returnJson.addProperty("model_name", request.getModelName());
@@ -135,58 +125,28 @@ public class OpenAIService extends LLMService {
             return response;
         }
 
-        List<String> base64Frames = new ArrayList<>();
-        List<String> sceneUrls = new ArrayList<>();
+        AiPrompt prompt = request.getPrompt();
+        if (prompt != null) {
+            AiVideo video = request.getVideo();
+            // format the message, and call the LLM
+            AiModel summaryModel = request.getModel();
+            JsonObject postData = createVideoSummaryPayload(prompt, summaryModel, request.getBase64Frames());
+            String llmResponseContent = postToCompletions(postData);
 
-        List<AiVideo.SceneChange> sceneChanges = request.getSceneChanges();
-        // add the starting image
-        base64Frames.add(imageToBase64String(sceneChanges.get(0).getLastImage()));
-        sceneUrls.add(sceneChanges.get(0).getLastImage().getUrl());
-        // loop urls and convert the content to base64
-        for (AiVideo.SceneChange sceneChange : sceneChanges) {
-            base64Frames.add(imageToBase64String(sceneChange.getFirstImage()));
-            sceneUrls.add(sceneChange.getFirstImage().getUrl());
-        }
-
-        Connection con = null;
-        try {
-            con = Model.connectX();
-            AiPrompt summaryPrompt = DbLanguage.findPrompt(con, AiPrompt.TYPE_VIDEO_SUMMARY);
-            if (summaryPrompt != null) {
-                AiVideo video = request.getVideo();
-                // format the message, and call the LLM
-                AiModel summaryModel = summaryPrompt.getModel();
-                JsonObject postData = createVideoSummaryPayload(summaryPrompt, summaryModel, base64Frames);
-                String llmResponseContent = postToCompletions(postData);
-
-                response.addProperty("uuid", request.getUUID());
-                response.addProperty("model_name", summaryModel.getName());
-                if (summaryPrompt.getSystemPrompt() != null) {
-                    response.addProperty("system_prompt", summaryPrompt.getSystemPrompt());
-                }
-                response.addProperty("user_prompt", summaryPrompt.getPrompt());
-                response.add("scenes", JsonTools.toJsonArray(sceneUrls));
-
-                response.addProperty("summary", llmResponseContent);
-
-                // write json to local file
-                String rootFolder = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
-                File summaryFile = FileTools.joinPath(rootFolder, "videos", video.getName(), video.getName() + "_scene_summary.json");
-                FileTools.writeToFile(response, summaryFile);
-
-                // persist it all to db!
-                Long requestId = DbMedia.insertVideoSummaryRequest(con, request.getUUID(), video.getId(), summaryPrompt, summaryModel);
-
-                // loop through images / scenes used to create the summary and persist the relations
-                for (String sceneImageURL : sceneUrls) {
-                    AiImage image = DbImage.findForVideo(con, video.getId(), sceneImageURL);
-                    DbMedia.insertVideoSummaryScene(con, video.getId(), image, requestId);
-                }
-
-                DbMedia.insertVideoSummary(con, requestId, video.getId(), llmResponseContent);
+            response.addProperty("uuid", request.getUUID());
+            response.addProperty("model_name", summaryModel.getName());
+            if (prompt.getSystemPrompt() != null) {
+                response.addProperty("system_prompt", prompt.getSystemPrompt());
             }
-        } finally {
-            Model.close(con);
+            response.addProperty("user_prompt", prompt.getPrompt());
+            response.add("scenes", JsonTools.toJsonArray(request.getSceneUrls()));
+
+            response.addProperty("summary", llmResponseContent);
+
+            // write json to local file
+            String rootFolder = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+            File summaryFile = FileTools.joinPath(rootFolder, "videos", video.getName(), video.getName() + "_scene_summary.json");
+            FileTools.writeToFile(response, summaryFile);
         }
 
         System.out.println("OpenAIService:done summarizeVideoScenes for " + request.getVideo().getName());

@@ -58,7 +58,7 @@ public abstract class LLMService {
         return null;
     }
 
-    protected static String imageToBase64String(AiImage image) throws IOException {
+    public static String imageToBase64String(AiImage image) throws IOException {
         // todo: make the 'jpg' not hard coded: replace with file ending?
         byte[] fileContent = FileUtils.readFileToByteArray(new File(image.getFilePath()));
         return String.format("data:image/jpg;base64,%s", Base64.getEncoder().encodeToString(fileContent));

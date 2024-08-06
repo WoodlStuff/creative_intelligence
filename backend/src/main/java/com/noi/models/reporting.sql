@@ -74,6 +74,74 @@ select v.frame_rate, s.ai_image_id, i.image_url, i.video_frame_number, round(i.v
    and s.ai_video_id = @video_id
  order by i.video_frame_number asc;
 
+-- ORB similarity requests
+set @video_id=39;
+set @status=11; — complete
+--set @status=0; — active
+--set @status=-3 ; — failed
+select uuid, img_a.video_frame_number from_frame, img_b.video_frame_number to_frame, score, r.status
+  from ai_similarity_requests r join ai_images img_a on r.ai_image_before_id = img_a.id
+   join ai_images img_b on r.ai_image_id = img_b.id
+   join ai_models m on m.id = r.ai_model_id
+  where r.ai_video_id=@video_id
+    and r.status = @status
+    and m.name = 'ORB'
+  order by img_a.video_frame_number;
+
+-- LLM similarity requests:
+set @video_id=39;
+select uuid, img_a.video_frame_number from_frame, img_b.video_frame_number to_frame, score, r.status
+  from ai_similarity_requests r
+   join ai_images img_a on r.ai_image_before_id = img_a.id
+   join ai_images img_b on r.ai_image_id = img_b.id
+   join ai_models m on m.id = r.ai_model_id
+  where r.ai_video_id=@video_id
+    and r.status = @status
+    and m.name != 'ORB'
+  order by img_a.video_frame_number;
+
+-- Video sound and summaries
+-- transcription
+set @video_id=39;
+select r.uuid, v.name video_name, s.sound_url, m.name model_name, r.updated_at, r.status
+  from ai_videos v
+   join ai_sounds s on s.ai_video_id=v.id
+   join ai_transcribe_requests r on r.ai_sound_id = s.id
+   join ai_models m on m.id = r.ai_model_id
+  where v.id = @video_id
+  order by r.updated_at desc
+
+-- sound summary
+set @video_id=39;
+select r.uuid, v.name video_name, s.sound_url, m.name model_name, r.updated_at, r.status
+  from ai_videos v
+   join ai_sounds s on s.ai_video_id=v.id
+   join ai_transcriptions t on t.ai_sound_id = s.id
+   join ai_sound_summary_requests r on r.ai_transcription_id = t.id
+   join ai_models m on m.id = r.ai_model_id
+  where v.id = @video_id
+  order by r.updated_at desc;
+
+-- video summary
+set @video_id=39;
+select r.uuid, v.name video_name, m.name model_name, r.updated_at, r.status
+  from ai_videos v
+   join ai_video_summary_requests r on r.ai_video_id = v.id
+   join ai_models m on m.id = r.ai_model_id
+  where v.id = @video_id order by r.updated_at desc;
+
+-- video summary scenes:
+set @video_id=39;
+select r.uuid, v.name video_name, m.name model_name, r.updated_at, r.status, i.video_frame_number
+  from ai_videos v
+   join ai_video_summary_requests r on r.ai_video_id = v.id
+   join ai_models m on m.id = r.ai_model_id
+   join ai_video_summary_scenes s on s.ai_video_id=v.id and s.ai_video_summary_request_id=r.id
+   join ai_images i on i.id = s.ai_image_id
+  where v.id = @video_id
+  order by r.updated_at desc;
+
+
 -- most frequent labels/categories across the images of a video
 set @video_id = 23;
 select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids

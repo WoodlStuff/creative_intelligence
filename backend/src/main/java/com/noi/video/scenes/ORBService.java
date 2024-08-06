@@ -3,6 +3,7 @@ package com.noi.video.scenes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.noi.AiModel;
+import com.noi.Status;
 import com.noi.models.DbImage;
 import com.noi.models.DbModel;
 import com.noi.models.DbSimilarity;
@@ -60,7 +61,7 @@ public class ORBService {
             double similarity = JsonTools.getAsDouble(score, "similarity_score");
 
             // persist the request and the score
-            DbSimilarity.insertRequest(con, null, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, orbModel, null, similarity, null, true);
+            DbSimilarity.insertRequest(con, null, maxSimilarityDistance, scoreThreshold, videoId, imageId, imageIdBefore, orbModel, null, similarity, null, true, Status.COMPLETE);
         }
     }
 }

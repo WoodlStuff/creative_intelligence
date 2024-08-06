@@ -6,10 +6,12 @@ import com.noi.language.MetaKeyImages;
 import com.noi.language.MetaKeyValues;
 import com.noi.models.*;
 import com.noi.tools.FileTools;
+import com.noi.tools.SystemEnv;
 import com.noi.video.AiVideo;
 import com.noi.video.VideoFrameMoment;
 
 import javax.naming.NamingException;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -276,5 +278,16 @@ public class VideoService {
         }
 
         return root;
+    }
+
+    public static File getSoundURL(AiVideo video) {
+        String rootFolder = SystemEnv.get("NOI_PATH", "/Users/martin/work/tmp/ai-data");
+        String videoFileName = FileTools.getFileName(video.getUrl(), false);
+        File audioPath = FileTools.joinPath(rootFolder, "videos", videoFileName, videoFileName + ".mp3");
+        System.out.println("OpenAIService:transcribeVideo:audioPath=" + audioPath);
+        if (audioPath.exists()) {
+            return audioPath;
+        }
+        return null;
     }
 }

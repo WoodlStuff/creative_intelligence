@@ -6,8 +6,18 @@
   <component name="ChangeListManager">
     <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="more cleanup around video processing and ingteractions with the front end">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/Status.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/LLMService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/LLMService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/001.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbMedia.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbMedia.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/reporting.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioExtractionRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/audio/AudioExtractionRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoSceneSummaryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoSceneSummaryRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -417,17 +427,17 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>621</line>
+          <line>662</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>616</line>
+          <line>657</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>598</line>
+          <line>639</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>

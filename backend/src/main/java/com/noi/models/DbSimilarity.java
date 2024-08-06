@@ -5,7 +5,6 @@ import com.noi.Status;
 import com.noi.language.AiPrompt;
 import com.noi.video.scenes.SceneChangeRequest;
 
-import javax.naming.NamingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -27,7 +26,7 @@ public class DbSimilarity extends Model {
         }
     }
 
-    public static Long insertRequest(Connection con, String uuid, Integer maxSimilarityDistance, Double scoreThreshold, Long videoId, Long imageId, Long imageIdBefore, AiModel model, AiPrompt prompt, double similarity, String explanation, boolean isSceneChange) throws SQLException {
+    public static Long insertRequest(Connection con, String uuid, Integer maxSimilarityDistance, Double scoreThreshold, Long videoId, Long imageId, Long imageIdBefore, AiModel model, AiPrompt prompt, double similarity, String explanation, boolean isSceneChange, Status status) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = con.prepareStatement("insert ignore into ai_similarity_requests (uuid, ai_image_id, ai_image_before_id, ai_model_id, ai_prompt_id, max_distance, score_threshold, score, explanation, is_scene_change, status, ai_video_id, created_at, updated_at) values(?,?,?,?,?,?,?,?,?,?,?,?, now(), now()) ON DUPLICATE KEY update updated_at=now(), max_distance=?, score_threshold=?, score=?, explanation=?, is_scene_change=?, id=LAST_INSERT_ID(id)");
@@ -63,7 +62,7 @@ public class DbSimilarity extends Model {
             stmt.setString(9, explanation != null && explanation.length() > 255 ? explanation.substring(0, 254) : explanation);
             stmt.setBoolean(10, isSceneChange);
 
-            stmt.setInt(11, Status.ACTIVE.getStatus());
+            stmt.setInt(11, status.getStatus());
             if (videoId != null) {
                 stmt.setLong(12, videoId);
             } else {
@@ -119,8 +118,27 @@ public class DbSimilarity extends Model {
         }
     }
 
-    public static void insertRequest(Connection con, SceneChangeRequest request, double similarityScore, boolean isSameScene, String llmExplanation) throws SQLException {
+    private static Long insertRequest(Connection con, SceneChangeRequest request, double similarityScore, boolean isSameScene, String llmExplanation, Status status) throws SQLException {
         // insert for LLM checked scene change
-        insertRequest(con, request.getUUID(), null, null, request.getVideo().getId(), request.getSceneChange().getFirstImage().getId(), request.getSceneChange().getLastImage().getId(), request.getModel(), request.getPrompt(), similarityScore, llmExplanation, !isSameScene);
+        return insertRequest(con, request.getUUID(), null, null, request.getVideo().getId(), request.getSceneChange().getFirstImage().getId(), request.getSceneChange().getLastImage().getId(), request.getModel(), request.getPrompt(), similarityScore, llmExplanation, !isSameScene, status);
+    }
+
+    public static Long insertRequest(Connection con, SceneChangeRequest request) throws SQLException {
+        return insertRequest(con, request, 0.0d, true, null, Status.NEW);
+    }
+
+    public static void updateRequest(Connection con, Long requestId, double similarityScore, boolean isSceneChange, String llmExplanation, Status status) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = con.prepareStatement("update ai_similarity_requests set score=?, explanation=?, is_scene_change=?, status=?, updated_at=now() where id=?");
+            stmt.setDouble(1, similarityScore);
+            stmt.setString(2, llmExplanation);
+            stmt.setBoolean(3, isSceneChange);
+            stmt.setInt(4, status.getStatus());
+            stmt.setLong(5, requestId);
+            stmt.executeUpdate();
+        } finally {
+            close(stmt);
+        }
     }
 }
