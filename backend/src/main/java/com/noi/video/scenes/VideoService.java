@@ -2,21 +2,18 @@ package com.noi.video.scenes;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.noi.models.DbImage;
-import com.noi.models.DbMedia;
-import com.noi.models.DbVideo;
-import com.noi.models.Model;
+import com.noi.language.MetaKeyImages;
+import com.noi.language.MetaKeyValues;
+import com.noi.models.*;
 import com.noi.tools.FileTools;
 import com.noi.video.AiVideo;
+import com.noi.video.VideoFrameMoment;
 
 import javax.naming.NamingException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VideoService {
 
@@ -200,5 +197,84 @@ public class VideoService {
         }
 
         return sceneChanges;
+    }
+
+    public static JsonObject readAndFormatVideoStoryData(Connection con, Long videoId) throws SQLException {
+        JsonObject root = new JsonObject();
+        JsonObject story = new JsonObject();
+        root.add("story", story);
+
+        List<VideoFrameMoment> moments = DbVideo.findSummaryFrames(con, videoId);
+        JsonArray momentsArray = new JsonArray();
+        story.add("moments", momentsArray);
+        for (VideoFrameMoment moment : moments) {
+            JsonObject mom = new JsonObject();
+            mom.addProperty("image_id", moment.getImageId());
+            mom.addProperty("image_url", moment.getImageURL());
+            mom.addProperty("video_frame_number", moment.getFrameNumber());
+            mom.addProperty("frame_rate", moment.getVideoFrameRate());
+            mom.addProperty("seconds", moment.getSecondsFromStart());
+
+            momentsArray.add(mom);
+        }
+
+        Set<String> catNames = new TreeSet<>();
+        JsonArray categories = new JsonArray();
+        story.add("categories", categories);
+
+        // Map<image_id> => Map<Category-Name> => KV-Pair[k,v]
+        Map<Long, Map<String, List<MetaKeyValues>>> metaData = DbImageLabel.findImageCategoryKeyGroups(con, videoId);
+        for (Map.Entry<Long, Map<String, List<MetaKeyValues>>> entry : metaData.entrySet()) {
+            // one array per image
+            JsonObject image = new JsonObject();
+            categories.add(image);
+            image.addProperty("image_id", entry.getKey());
+
+            JsonArray storyElements = new JsonArray();
+            image.add("story_elements", storyElements);
+
+            for (Map.Entry<String, List<MetaKeyValues>> metaEntry : entry.getValue().entrySet()) {
+                String categoryName = metaEntry.getKey();
+                if (!catNames.contains(categoryName)) {
+                    catNames.add(categoryName);
+                }
+
+                for (MetaKeyValues kv : metaEntry.getValue()) {
+                    JsonObject storyElement = new JsonObject();
+                    storyElements.add(storyElement);
+                    storyElement.addProperty("category_name", categoryName);
+                    storyElement.addProperty("key", kv.getKey());
+                    storyElement.addProperty("values", kv.getValues());
+                }
+            }
+        }
+
+        // add a map of image counts by category
+        // select category_name, meta_key, meta_value, count(distinct ai_image_id) image_count, group_concat(distinct ai_image_id) image_ids from (select ai_image_id, name category_name, meta_key, meta_value, count(*) _count from (select distinct lmc.ai_image_id, i.video_frame_number, c.name, lmc.meta_key, lmc.meta_value from ai_image_label_meta_categories lmc join meta_categories c on c.id = lmc.meta_category_id join ai_images i on i.id = lmc.ai_image_id where i.ai_video_id=@video_id and name=@category)a group by 1,2,3,4)x group by 1,2,3 having count(distinct ai_image_id) > 1 order by count(distinct ai_image_id), category_name, meta_key, meta_value;
+        JsonArray catImages = new JsonArray();
+        story.add("category_images", catImages);
+        Map<String, List<MetaKeyImages>> categoryImages = DbImageLabel.findCategoryImages(con, videoId);
+        for (Map.Entry<String, List<MetaKeyImages>> entry : categoryImages.entrySet()) {
+            for (MetaKeyImages mki : entry.getValue()) {
+                JsonObject categoryImageCounts = new JsonObject();
+                catImages.add(categoryImageCounts);
+                categoryImageCounts.addProperty("category_name", entry.getKey());
+                categoryImageCounts.addProperty("key", mki.getMetaKey());
+                categoryImageCounts.addProperty("value", mki.getMetaValue());
+                categoryImageCounts.add("image_ids", mki.getImageIds());
+            }
+        }
+
+        // add unique category names as a separate array
+        JsonArray categoryNames = new JsonArray();
+        story.add("category_names", categoryNames);
+        List<String> sorted = new ArrayList<>(catNames);
+        System.out.println("sorted has a size of: " + sorted.size());
+        Collections.sort(sorted);
+        for (String catName : sorted) {
+            categoryNames.add(catName);
+        }
+
+        return root;
     }
 }

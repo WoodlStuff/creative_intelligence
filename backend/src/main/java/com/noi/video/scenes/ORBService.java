@@ -22,6 +22,7 @@ public class ORBService {
             throw new IllegalArgumentException();
         }
 
+        // retire all existing scene changes for this video
         DbSimilarity.retireScenes(con, videoId);
 
         // lookup the model id for our local scoring alg.
@@ -39,8 +40,6 @@ public class ORBService {
 
         double scoreThreshold = JsonTools.getAsDouble(videoLabels, "score_threshold");
         int maxSimilarityDistance = JsonTools.getAsInt(videoLabels, "max_distance_for_similarity");
-
-        // todo: write a ORB Request (with scoreThreshold, maxSimilarityDistance) to db?!?
 
         // read the raw scored scene changes and persist the frames as ai_images
         JsonArray scores = videoLabels.getAsJsonArray("scored_scene_changes");

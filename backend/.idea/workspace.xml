@@ -4,18 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBParams.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" afterDir="false" />
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/llm/openai/OpenAIService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbSimilarity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/models/DbVideo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../newad-frontend/src/Pages/Video.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -375,11 +368,17 @@
       <option name="project" value="LOCAL" />
       <updated>1722723624193</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)">
+      <created>1722883336928</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1722883336928</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="fixe json names (_ vs -);&#10;added similar images to the Image page (using vector similarity);&#10;added CORS headers;" />
     <MESSAGE value="added a brand concept to videos and images" />
     <MESSAGE value="split out video processing into two steps: ORB scene changes, and LLM scene changes (plus other LLM calls for video and sound summary)" />
     <MESSAGE value="small fix for gender db column size; &#10;fix for single image label request" />
@@ -404,24 +403,25 @@
     <MESSAGE value="added Label button to the Story page (to label all images used in the video summary)" />
     <MESSAGE value="added OrbServlet to proxy requests to the ORB python script (for now), allowing us to have one main endpoint for the webapp to call (in prep for auth handling)" />
     <MESSAGE value="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port" />
-    <option name="LAST_COMMIT_MESSAGE" value="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port" />
+    <MESSAGE value="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>889</line>
+          <line>621</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>884</line>
+          <line>616</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java</url>
-          <line>866</line>
+          <line>598</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
