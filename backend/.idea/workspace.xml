@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)">
+    <list default="true" id="0de3b2e8-717e-4878-a5ab-aa4f0cfab6b3" name="Changes" comment="more cleanup around video processing and ingteractions with the front end">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/VideoServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/ORBService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/scenes/VideoService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/noi/video/OrbServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../video-scene-detect/video_extractor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -375,11 +374,17 @@
       <option name="project" value="LOCAL" />
       <updated>1722883336928</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="more cleanup around video processing and ingteractions with the front end">
+      <created>1722908212364</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1722908212364</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added a brand concept to videos and images" />
     <MESSAGE value="split out video processing into two steps: ORB scene changes, and LLM scene changes (plus other LLM calls for video and sound summary)" />
     <MESSAGE value="small fix for gender db column size; &#10;fix for single image label request" />
     <MESSAGE value="link the video and brand id automatically when we create images in the process of analyzing a video;" />
@@ -404,7 +409,8 @@
     <MESSAGE value="added OrbServlet to proxy requests to the ORB python script (for now), allowing us to have one main endpoint for the webapp to call (in prep for auth handling)" />
     <MESSAGE value="changed ORB call URL to streamline endpoints to be called by the webapp; now all remote endpoints are on the same server URL and port" />
     <MESSAGE value="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)" />
-    <option name="LAST_COMMIT_MESSAGE" value="removed dependency on the frontend to proxy orb results thtough to the backend. now we call the orb directly from the backend and process the results before we return the json to the frontend. &#10;ORB prams are now persisted and brought back to the frontend (so it's clear what params were used to create the current scores)" />
+    <MESSAGE value="more cleanup around video processing and ingteractions with the front end" />
+    <option name="LAST_COMMIT_MESSAGE" value="more cleanup around video processing and ingteractions with the front end" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -52,15 +52,15 @@ def test():
     clip.audio.close()
     clip.close()
 
-def storeSnapShots(video, path, videoName, startFrame, snap_range=5):
+def storeSnapShots(video, path, videoName, startFrame, snap_range=3):
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = video.get(cv2.CAP_PROP_FPS)
     for x in range(snap_range):
-        # frame one second later 
-        nextFrame = startFrame + int(fps * (x + 1))
-        if nextFrame >= totalFrames - 1:
+        # frame half a second later 
+        futureFrame = startFrame + int(fps * (x + 0.5))
+        if futureFrame >= totalFrames - 1:
             break
-        video.set(cv2.CAP_PROP_POS_FRAMES, nextFrame)
+        video.set(cv2.CAP_PROP_POS_FRAMES, futureFrame)
         success, frame = video.read()
         if not success:
             break
@@ -69,9 +69,23 @@ def storeSnapShots(video, path, videoName, startFrame, snap_range=5):
         snapPath = os.path.join(path, videoName, 'snaps')
         if not os.path.exists(snapPath):
             os.mkdir(snapPath)
-        # imgURL = os.path.join(snapPath, videoName + str(nextFrame) + '.' + img.format)
-        imgURL = os.path.join(snapPath, videoName + '_frame' + str(nextFrame) + '.jpg')
+        # imgURL = os.path.join(snapPath, videoName + str(futureFrame) + '.' + img.format)
+        imgURL = os.path.join(snapPath, videoName + '_frame_' + str(startFrame) + "_" + str(futureFrame) + '.jpg')
         img.save(imgURL)
+
+        # past: frame half a second before 
+        pastFrame = startFrame - int(fps * (x + 0.5))
+        if pastFrame <= 0:
+            continue
+        video.set(cv2.CAP_PROP_POS_FRAMES, pastFrame)
+        success, frame = video.read()
+        if not success:
+            continue
+        _, buffer = cv2.imencode(".jpg", frame)
+        img = Image.open(BytesIO(buffer))
+        imgURL = os.path.join(snapPath, videoName + '_frame_' + str(startFrame) + "_" + str(pastFrame) + '.jpg')
+        img.save(imgURL)
+
 
 
 # look for scene changes in this video, and store first scene frame(s) as jpg file(s)

@@ -39,6 +39,13 @@ public class OrbServlet extends BaseControllerServlet {
         // posted data: {"video_id": 123, "video_name": videoData[0].name, "refresh": true, "llm": false, "maxSimilarityDistance": similarityDistance, "sceneChangeScoreThreshold": scoreThreshold}
         // read the posted json doc
         JsonObject postedData = readPostedJson(req);
+        if (!postedData.has("sceneChangeScoreThreshold")) {
+            throw new IllegalArgumentException();
+        }
+
+        if (postedData.get("sceneChangeScoreThreshold").getAsDouble() >= 1.0d) {
+            throw new IllegalArgumentException("sceneChangeScoreThreshold must be < 1.0!");
+        }
 
         // add the root video path to what we send to the ORB script
         String rootPath = SystemEnv.get("NOI_PATH", null);
