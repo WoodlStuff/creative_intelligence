@@ -247,7 +247,7 @@ function Video () {
               </div>
               <div className="left-padding">
                 <label className="label-padding">Similarity Score Threshold</label>
-                <input name='sceneChangeScoreThreshold' defaultValue={scoreThreshold} value={scoreThreshold} onChange={(event) => {setScoreThreshold(parseFloat(event.target.value));}}></input>
+                <input name='sceneChangeScoreThreshold' type='number' min='0.10' max='0.99' step='0.01' value={scoreThreshold} onChange={(event) => {setScoreThreshold(parseFloat(event.target.value));}}></input>
               </div>
             </div>
             <div className="card-button">
