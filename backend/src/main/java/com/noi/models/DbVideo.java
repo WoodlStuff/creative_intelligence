@@ -128,10 +128,11 @@ public class DbVideo extends Model {
         List<VideoFrameMoment> moments = new LinkedList<>();
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select s.ai_image_id, i.image_url, i.video_frame_number, v.frame_rate, round(i.video_frame_number/v.frame_rate) _seconds_in  from ai_video_summary_scenes s join ai_images i on i.id = s.ai_image_id join ai_videos v on v.id = s.ai_video_id and v.id = i.ai_video_id  where s.status=? and i.status !=? and s.ai_video_id=?  order by i.video_frame_number asc");
-            stmt.setInt(1, Status.ACTIVE.getStatus());
-            stmt.setInt(2, Status.DELETED.getStatus());
-            stmt.setLong(3, videoId);
+            stmt = con.prepareStatement("select s.ai_image_id, i.image_url, i.video_frame_number, v.frame_rate, round(i.video_frame_number/v.frame_rate) _seconds_in  from ai_video_summary_scenes s join ai_images i on i.id = s.ai_image_id join ai_videos v on v.id = s.ai_video_id and v.id = i.ai_video_id join (select max(ai_video_summary_request_id) _max_request_id from ai_video_summary_scenes where ai_video_id=?)_max on _max._max_request_id = s.ai_video_summary_request_id where s.status=? and i.status !=? and s.ai_video_id=? order by i.video_frame_number asc");
+            stmt.setLong(1, videoId);
+            stmt.setInt(2, Status.ACTIVE.getStatus());
+            stmt.setInt(3, Status.DELETED.getStatus());
+            stmt.setLong(4, videoId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 moments.add(VideoFrameMoment.create(rs));
