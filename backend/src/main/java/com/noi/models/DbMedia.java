@@ -69,7 +69,7 @@ public class DbMedia extends Model {
     public static String findMostRecentSoundSummary(Connection con, Long videoId) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("select ss.summary_text from ai_sound_summaries ss join ai_sound_summary_requests r on r.id = ss.ai_sound_summary_request_id join ai_transcriptions t on t.id = r.ai_transcription_id join ai_sounds s on s.id = ss.ai_sound_id  where r.status = t.status and r.status=? and s.ai_video_id=? order by r.updated_at desc limit 1");
+            stmt = con.prepareStatement("select ss.summary_text from ai_sound_summaries ss join ai_sound_summary_requests r on r.id = ss.ai_sound_summary_request_id join ai_transcriptions t on t.id = r.ai_transcription_id join ai_sounds s on s.id = ss.ai_sound_id  where r.status=? and s.ai_video_id=? order by r.updated_at desc limit 1");
             stmt.setInt(1, Status.COMPLETE.getStatus());
             stmt.setLong(2, videoId);
             ResultSet rs = stmt.executeQuery();
