@@ -8,7 +8,7 @@ function Story() {
   const params = useParams();
   const [storyData, setStoryData] = useState({}) 
   const [selectedCategoryName, setSelectedCategoryName] = useState('situation')
-  // const [selectedKeyName, setSelectedKeyName] = useState('*')
+  const [searchTerm, setSearchTerm] = useState("")
 
   const CategoryOptions = (props) => {
     if(Object.entries(props).length > 0 && Object.entries(props.categories).length > 0){
@@ -31,7 +31,6 @@ function Story() {
     if(props.hasStory === true){
       return(
           <label>
-            Filter Categories:
             <select
               name="selectedCategory"
               value={selectedCategoryName}
@@ -60,7 +59,12 @@ function Story() {
   function filterImageCategories() {
     // find the images for the currently selected category
     if(Object.entries(storyData.category_images).length > 0){
-      return storyData.category_images.filter( (imageRow) => imageRow.category_name === selectedCategoryName);
+      var catFiltered = storyData.category_images.filter( (imageRow) => imageRow.category_name === selectedCategoryName);
+      if(searchTerm !== ""){
+        return catFiltered.filter(category => category.key.toLowerCase().includes(searchTerm.toLowerCase()));
+      };
+      
+      return catFiltered;
     }
 
     return[]
@@ -68,8 +72,9 @@ function Story() {
 
   // render all rows for one moment / image, but all its category data (after the filter is applied)  
   const StoryCategoryRows = (props) => {
-      return(
-        props.categories.map((category) => (
+    return(
+      props.categories.filter(category => 
+        category.key.toLowerCase().includes(searchTerm.toLowerCase())).map((category) => (
           <tr key={category.key}>
             <td>
               {category.category_name}
@@ -89,7 +94,7 @@ function Story() {
             </td>
           </tr>
         ))
-      )
+    )
   }
 
   const StoryRows = (props) => {
@@ -155,6 +160,9 @@ function Story() {
     });
   }
 
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  }
 
   // Call the async function
   const fetchData = async (videoId) => {
@@ -176,7 +184,6 @@ function Story() {
   };
   
   useEffect(() => {
-    console.log({ params });
     fetchData(params.id);
   }, []);
 
@@ -185,20 +192,20 @@ function Story() {
       <div className="card">
         <div className="card-header">
           <h3>Video Timeline</h3>
-          <CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/>
         </div>
-        <div className="card-button">
-              <button onClick={async () => { await handleLabelClick();}}>Label All Images</button>
-            </div>
-          <progress id='progressbar' value={null} hidden />
+        <div style={{float: "left"}} className="card-button">
+            <button onClick={async () => { await handleLabelClick();}}>Label All Images</button>
+        </div>
+        
+        <progress id='progressbar' value={null} hidden />
 
         <div className="card-body" style={{marginBottom: 25}}>
           <div className="table-responsive">
             <table width="90%">
               <thead>
                 <tr>
-                  <td>Category</td>
-                  <td>Key</td>
+                  <td>Category&nbsp;<CategorySelector hasStory={Object.entries(storyData).length > 0 } categories={storyData.category_names}/></td>
+                  <td>Key <input type='text' placeholder='search' defaultValue={searchTerm} onChange={handleSearch} className="searchInput"></input></td>
                   <td>Values</td>
                   <td>Image</td>
                   <td>Frame</td>
