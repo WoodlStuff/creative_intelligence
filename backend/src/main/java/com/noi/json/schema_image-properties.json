@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "image_properties": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "overall_color": {
+          "type": "string"
+        },
+        "color_gradients": {
+          "type": "string"
+        },
+        "shadows": {
+          "type": "string"
+        },
+        "lighting": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "size",
+        "format",
+        "overall_color",
+        "color_gradients",
+        "shadows",
+        "lighting"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "image_properties"
+  ],
+  "additionalProperties": false
+}

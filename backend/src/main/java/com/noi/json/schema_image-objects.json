@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "image_objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "relative_size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"]
+          },
+          "color": {
+            "type": "string"
+          },
+          "background_color": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "font": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "location",
+          "relative_size",
+          "color",
+          "background_color",
+          "brand",
+          "font"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["image_objects"],
+  "additionalProperties": false
+}

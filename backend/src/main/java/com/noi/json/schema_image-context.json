@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "image_context": {
+      "type": "object",
+      "properties": {
+        "physical_material": {
+          "type": "string"
+        },
+        "para_language": {
+          "type": "object",
+          "properties": {
+            "voice_quality": {
+              "type": "string"
+            },
+            "gestures": {
+              "type": "string"
+            },
+            "facial_expressions": {
+              "type": "string"
+            },
+            "touch": {
+              "type": "string"
+            }
+          },
+          "required": ["voice_quality", "gestures", "facial_expressions", "touch"],
+          "additionalProperties": false
+        },
+        "choice_of_typeface": {
+          "type": "string"
+        },
+        "choice_of_letter_sizes": {
+          "type": "string"
+        },
+        "situation": {
+          "type": "object",
+          "properties": {
+            "properties": {
+              "type": "string"
+            },
+            "relations_of_objects": {
+              "type": "string"
+            },
+            "people_in_the_vicinity_of_the_text": {
+              "type": "string"
+            }
+          },
+          "required": ["properties", "relations_of_objects", "people_in_the_vicinity_of_the_text"],
+          "additionalProperties": false
+        },
+        "co_text": {
+          "type": "string"
+        },
+        "inter_text": {
+          "type": "string"
+        },
+        "participants": {
+          "type": "object",
+          "properties": {
+            "intentions": {
+              "type": "string"
+            },
+            "interpretations": {
+              "type": "string"
+            },
+            "knowledge": {
+              "type": "string"
+            },
+            "beliefs": {
+              "type": "string"
+            },
+            "attitudes": {
+              "type": "string"
+            },
+            "affiliations": {
+              "type": "string"
+            },
+            "feelings": {
+              "type": "string"
+            },
+            "senders": {
+              "type": "string"
+            },
+            "receivers": {
+              "type": "string"
+            },
+            "addresser": {
+              "type": "string"
+            },
+            "addressee": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "intentions",
+            "interpretations",
+            "knowledge",
+            "beliefs",
+            "attitudes",
+            "affiliations",
+            "feelings",
+            "senders",
+            "receivers",
+            "addresser",
+            "addressee"
+          ],
+          "additionalProperties": false
+        },
+        "function": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "physical_material",
+        "para_language",
+        "choice_of_typeface",
+        "choice_of_letter_sizes",
+        "situation",
+        "co_text",
+        "inter_text",
+        "participants",
+        "function"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["image_context"],
+  "additionalProperties": false
+}
