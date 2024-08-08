@@ -150,6 +150,10 @@ public class AiPrompt {
         return name;
     }
 
+    public String getResponseFormat() {
+        return AiPrompt.Type.getSchema(promptType);
+    }
+
     //    public String getSystemPrompt() {
 //// for prompt 1:       return "Please output the information as json. The labels should be concise, no more than four words each. Objects in the image should contain a name, a type, a primary color, the background color, the location within the image, a relative size, and any brand and gender information. Overlay text should contain the text content, the font and location within the image, and a relative size. The layout should list the aspect ratio, image orientation, and any dominant element in the image.";
 //        return "Please output the information as json. The labels should be concise, no more than four words each. Please use primitive json types in the response.";
@@ -169,6 +173,17 @@ public class AiPrompt {
 
         public static Type parse(int type) {
             return types.get(type);
+        }
+
+        public static String getSchema(int type) {
+            if (type == TYPE_IMAGE_LABEL_OBJECTS.getType()) {
+                return SCHEMA_IMAGE_OBJECTS;
+            } else if (type == TYPE_IMAGE_LABEL_PROPERTIES.getType()) {
+                return SCHEMA_IMAGE_PROPERTIES;
+            } else if (type == TYPE_IMAGE_LABEL_CATEGORIES.getType()) {
+                return SCHEMA_IMAGE_CONTEXT;
+            }
+            return null;
         }
 
         @Override
@@ -205,4 +220,230 @@ public class AiPrompt {
             return this.name.compareTo(o.name);
         }
     }
+
+    private static String SCHEMA_IMAGE_PROPERTIES = "{\n" +
+            "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n" +
+            "  \"type\": \"object\",\n" +
+            "  \"properties\": {\n" +
+            "    \"image_properties\": {\n" +
+            "      \"type\": \"object\",\n" +
+            "      \"properties\": {\n" +
+            "        \"size\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"format\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"overall_color\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"color_gradients\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"shadows\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"lighting\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        }\n" +
+            "      },\n" +
+            "      \"required\": [\n" +
+            "        \"size\",\n" +
+            "        \"format\",\n" +
+            "        \"overall_color\",\n" +
+            "        \"color_gradients\",\n" +
+            "        \"shadows\",\n" +
+            "        \"lighting\"\n" +
+            "      ],\n" +
+            "      \"additionalProperties\": false\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"required\": [\n" +
+            "    \"image_properties\"\n" +
+            "  ],\n" +
+            "  \"additionalProperties\": false\n" +
+            "}\n";
+
+    private static String SCHEMA_IMAGE_OBJECTS = "{\n" +
+            "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n" +
+            "  \"type\": \"object\",\n" +
+            "  \"properties\": {\n" +
+            "    \"image_objects\": {\n" +
+            "      \"type\": \"array\",\n" +
+            "      \"items\": {\n" +
+            "        \"type\": \"object\",\n" +
+            "        \"properties\": {\n" +
+            "          \"name\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"type\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"location\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"relative_size\": {\n" +
+            "            \"type\": \"string\",\n" +
+            "            \"enum\": [\"small\", \"medium\", \"large\"]\n" +
+            "          },\n" +
+            "          \"color\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"background_color\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"brand\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          },\n" +
+            "          \"font\": {\n" +
+            "            \"type\": \"string\"\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"required\": [\n" +
+            "          \"name\",\n" +
+            "          \"type\",\n" +
+            "          \"location\",\n" +
+            "          \"relative_size\",\n" +
+            "          \"color\",\n" +
+            "          \"background_color\",\n" +
+            "          \"brand\",\n" +
+            "          \"font\"\n" +
+            "        ],\n" +
+            "        \"additionalProperties\": false\n" +
+            "      }\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"required\": [\"image_objects\"],\n" +
+            "  \"additionalProperties\": false\n" +
+            "}\n";
+    private static String SCHEMA_IMAGE_CONTEXT = "{\n" +
+            "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n" +
+            "  \"type\": \"object\",\n" +
+            "  \"properties\": {\n" +
+            "    \"image_context\": {\n" +
+            "      \"type\": \"object\",\n" +
+            "      \"properties\": {\n" +
+            "        \"physical_material\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"para_language\": {\n" +
+            "          \"type\": \"object\",\n" +
+            "          \"properties\": {\n" +
+            "            \"voice_quality\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"gestures\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"facial_expressions\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"touch\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            }\n" +
+            "          },\n" +
+            "          \"required\": [\"voice_quality\", \"gestures\", \"facial_expressions\", \"touch\"],\n" +
+            "          \"additionalProperties\": false\n" +
+            "        },\n" +
+            "        \"choice_of_typeface\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"choice_of_letter_sizes\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"situation\": {\n" +
+            "          \"type\": \"object\",\n" +
+            "          \"properties\": {\n" +
+            "            \"properties\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"relations_of_objects\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"people_in_the_vicinity_of_the_text\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            }\n" +
+            "          },\n" +
+            "          \"required\": [\"properties\", \"relations_of_objects\", \"people_in_the_vicinity_of_the_text\"],\n" +
+            "          \"additionalProperties\": false\n" +
+            "        },\n" +
+            "        \"co_text\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"inter_text\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        },\n" +
+            "        \"participants\": {\n" +
+            "          \"type\": \"object\",\n" +
+            "          \"properties\": {\n" +
+            "            \"intentions\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"interpretations\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"knowledge\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"beliefs\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"attitudes\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"affiliations\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"feelings\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"senders\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"receivers\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"addresser\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            },\n" +
+            "            \"addressee\": {\n" +
+            "              \"type\": \"string\"\n" +
+            "            }\n" +
+            "          },\n" +
+            "          \"required\": [\n" +
+            "            \"intentions\",\n" +
+            "            \"interpretations\",\n" +
+            "            \"knowledge\",\n" +
+            "            \"beliefs\",\n" +
+            "            \"attitudes\",\n" +
+            "            \"affiliations\",\n" +
+            "            \"feelings\",\n" +
+            "            \"senders\",\n" +
+            "            \"receivers\",\n" +
+            "            \"addresser\",\n" +
+            "            \"addressee\"\n" +
+            "          ],\n" +
+            "          \"additionalProperties\": false\n" +
+            "        },\n" +
+            "        \"function\": {\n" +
+            "          \"type\": \"string\"\n" +
+            "        }\n" +
+            "      },\n" +
+            "      \"required\": [\n" +
+            "        \"physical_material\",\n" +
+            "        \"para_language\",\n" +
+            "        \"choice_of_typeface\",\n" +
+            "        \"choice_of_letter_sizes\",\n" +
+            "        \"situation\",\n" +
+            "        \"co_text\",\n" +
+            "        \"inter_text\",\n" +
+            "        \"participants\",\n" +
+            "        \"function\"\n" +
+            "      ],\n" +
+            "      \"additionalProperties\": false\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"required\": [\"image_context\"],\n" +
+            "  \"additionalProperties\": false\n" +
+            "}\n";
 }

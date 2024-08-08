@@ -25,4 +25,9 @@ public class AiImageLabelRequest extends NoiRequest {
     public Long getImageId() {
         return imageId;
     }
+
+    public boolean isHighResolution() {
+        // todo: add that to the schema!
+        return false;
+    }
 }

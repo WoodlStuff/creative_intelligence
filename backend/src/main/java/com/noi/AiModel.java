@@ -27,6 +27,7 @@ public class AiModel implements Comparable<AiModel> {
 
     // The latest GPT-4 Turbo model with vision capabilities.
     public static final AiModel GPT_4_TURBO = new AiModel(OpenAIService.NAME, "gpt-4-turbo");
+    public static final AiModel GPT_4_2024_08_06 = new AiModel(OpenAIService.NAME, "gpt-4o-2024-08-06");
     public static final AiModel WHISPER_1 = new AiModel(OpenAIService.NAME, "whisper-1");
     public static final AiModel TEXT_EMBEDDING_3_SMALL = new AiModel(OpenAIService.NAME, "text-embedding-3-small");
 

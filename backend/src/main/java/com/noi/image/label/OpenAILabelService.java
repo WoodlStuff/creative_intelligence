@@ -9,10 +9,12 @@ import com.noi.language.AiImageLabelRequest;
 import com.noi.language.AiLabelConsolidateRequest;
 import com.noi.language.AiPrompt;
 import com.noi.llm.openai.OpenAIService;
-import com.noi.models.*;
+import com.noi.models.DbImage;
+import com.noi.models.DbImageLabel;
+import com.noi.models.DbRequest;
+import com.noi.models.Model;
 import com.noi.requests.AiRequestLogger;
 import com.noi.requests.ImageLabelResponse;
-import com.noi.requests.NoiRequest;
 import com.noi.tools.FileTools;
 import com.noi.tools.JsonTools;
 import com.noi.tools.SystemEnv;
@@ -54,26 +56,6 @@ public class OpenAILabelService extends LabelService {
     @Override
     public ImageLabelResponse labelize(Connection con, AiImageLabelRequest request) throws SQLException, IOException {
         // read the image(s) for this request, and call the vision api per image
-        String systemRoleContent = AiPrompt.DEFAULT_SYSTEM_PROMPT;
-        String userRoleContent = AiPrompt.DEFAULT_USER_PROMPT;
-        boolean useHighResolution = false;
-
-        if (request.getPrompt() != null) {
-            if (request.getPrompt().getSystemPrompt() != null) {
-                systemRoleContent = request.getPrompt().getSystemPrompt();
-            }
-            userRoleContent = request.getPrompt().getPrompt();
-        } else {
-            // find or create the default prompt!
-            AiPrompt prompt = DbLanguage.findPrompt(con, userRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
-            if (prompt == null) {
-                prompt = DbLanguage.insertPrompt(con, userRoleContent, systemRoleContent, AiPrompt.TYPE_IMAGE_LABEL_CATEGORIES.getType());
-            }
-            // now link this request to the correct prompt
-            DbRequest.updateForLabel(con, request, prompt);
-            request.setPrompt(prompt);
-        }
-
         AiImage image = DbImage.find(con, request.getImageId());
 
         // make sure we have a local copy of the image file!
@@ -83,7 +65,7 @@ public class OpenAILabelService extends LabelService {
         }
 
         List<AiImageLabel> labels = new ArrayList<>();
-        labels.addAll(post(API_KEY, request, image, systemRoleContent, userRoleContent, useHighResolution));
+        labels.addAll(post(API_KEY, request, image));
 
         // persist the labels
         DbImageLabel.insert(con, request, labels);
@@ -93,23 +75,18 @@ public class OpenAILabelService extends LabelService {
 
     @Override
     public String lookupThemeForWords(AiLabelConsolidateRequest request) throws IOException {
-        // replace tokens on the prompt text:
-        String promptText = request.getPrompt().getPrompt().replace("{category}", request.getCategoryName());
-        promptText = promptText.replace("{category_name}", request.getCategoryName());
-        promptText = promptText + ": " + request.getWords();
-
         // call the LLM and extract the result
-        return post(API_KEY, request, promptText);
+        return post(API_KEY, request);
     }
 
-    private List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
+    private List<AiImageLabel> post(String apiKey, AiImageLabelRequest request, AiImage image) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
 
         try {
             client = HttpClients.createDefault();
 
-            HttpPost httpPost = createHttpPost(apiKey, request, image, systemRoleContent, userRoleContent, useHighResolution);
+            HttpPost httpPost = createHttpPost(apiKey, request, image);
             response = client.execute(httpPost);
 
             return parseResponse(request, image, response);
@@ -124,14 +101,14 @@ public class OpenAILabelService extends LabelService {
         }
     }
 
-    private String post(String apiKey, AiLabelConsolidateRequest request, String prompt) throws IOException {
+    private String post(String apiKey, AiLabelConsolidateRequest request) throws IOException {
         CloseableHttpClient client = null;
         CloseableHttpResponse response = null;
 
         try {
             client = HttpClients.createDefault();
 
-            HttpPost httpPost = createHttpPost(apiKey, null, prompt, request);
+            HttpPost httpPost = createHttpPost(apiKey, request);
             response = client.execute(httpPost);
 
             return parseResponse(request, response);
@@ -146,9 +123,9 @@ public class OpenAILabelService extends LabelService {
         }
     }
 
-    private HttpPost createHttpPost(String apiKey, AiImageLabelRequest request, AiImage image, String systemRoleContent, String userRoleContent, boolean useHighResolution) throws IOException {
+    private HttpPost createHttpPost(String apiKey, AiImageLabelRequest request, AiImage image) throws IOException {
         System.out.println("posting to " + LABEL_URL + ": " + image);
-        JsonObject payloadJson = createPayload(image, modelName, systemRoleContent, userRoleContent, useHighResolution);
+        JsonObject payloadJson = createPayload(image, modelName, request);
 
         Gson gson = new Gson();
 //        System.out.println("OpenAI Label Service: payload:\r\n" + gson.toJson(payloadJson));
@@ -163,9 +140,10 @@ public class OpenAILabelService extends LabelService {
         return httpPost;
     }
 
-    private HttpPost createHttpPost(String apiKey, String systemRoleContent, String userRoleContent, NoiRequest request) throws IOException {
-        System.out.println("posting to " + LABEL_URL + ": " + userRoleContent);
-        JsonObject payloadJson = createPayload(null, modelName, systemRoleContent, userRoleContent, false);
+    private HttpPost createHttpPost(String apiKey, AiLabelConsolidateRequest request) throws IOException {
+        System.out.println("posting to " + LABEL_URL + ": " + request.getCompletedPrompt());
+        String modelName = request.getPrompt().getModel().getName();
+        JsonObject payloadJson = createPayload(null, modelName, false, request.getCompletedPrompt(), request.getPrompt().getSystemPrompt(), request.getPrompt().getPromptType(), null);
 
         Gson gson = new Gson();
         AiRequestLogger.logLabelRequest(AiRequestLogger.LABEL, request, payloadJson);
@@ -225,7 +203,23 @@ public class OpenAILabelService extends LabelService {
         }
     }
 
-    private static JsonObject createPayload(AiImage image, String modelName, String systemRoleContent, String userRoleContent, boolean highResolution) throws IOException {
+    private static JsonObject createPayload(AiImage image, String modelName, AiImageLabelRequest request) throws IOException {
+        AiPrompt prompt = request.getPrompt();
+        boolean highResolution = request.isHighResolution();
+
+        String userPrompt = null;
+        String systemPrompt = null;
+        String responseFormat = null;
+        if (prompt != null) {
+            userPrompt = prompt.getPrompt();
+            systemPrompt = prompt.getSystemPrompt();
+            responseFormat = prompt.getResponseFormat();
+        }
+
+        return createPayload(image, modelName, highResolution, userPrompt, systemPrompt, prompt.getPromptType(), responseFormat);
+    }
+
+    private static JsonObject createPayload(AiImage image, String modelName, boolean highResolution, String userPrompt, String systemPrompt, int promptType, String responseFormat) throws IOException {
         JsonObject root = new JsonObject();
         root.addProperty("model", modelName);
         //root.addProperty("max_tokens", 300);
@@ -233,12 +227,12 @@ public class OpenAILabelService extends LabelService {
         JsonArray messages = new JsonArray();
         root.add("messages", messages);
 
-        if (systemRoleContent != null) {
+        if (systemPrompt != null) {
             JsonObject systemMessage = new JsonObject();
             messages.add(systemMessage);
 
             JsonTools.addProperty(systemMessage, "role", "system");
-            JsonTools.addProperty(systemMessage, "content", systemRoleContent);
+            JsonTools.addProperty(systemMessage, "content", systemPrompt);
         }
 
         JsonObject message = new JsonObject();
@@ -253,7 +247,7 @@ public class OpenAILabelService extends LabelService {
         contentArray.add(text);
 
         JsonTools.addProperty(text, "type", "text");
-        JsonTools.addProperty(text, "text", userRoleContent == null ? "What’s in this image?" : userRoleContent);
+        JsonTools.addProperty(text, "text", userPrompt == null ? "What’s in this image?" : userPrompt);
 
         if (image != null) {
             JsonObject imageUrl = new JsonObject();
@@ -286,7 +280,28 @@ public class OpenAILabelService extends LabelService {
             }
         }
 
+        // add json response format (if the prompt type has one ... )
+        if (responseFormat != null) {
+            String schemaName = String.format("%s_response", AiPrompt.Type.parse(promptType).getName());
+            addResponseFormat(root, responseFormat, schemaName);
+        }
+
         return root;
+    }
+
+    private static void addResponseFormat(JsonObject root, String responseFormat, String name) {
+        JsonObject formatNode = new JsonObject();
+        root.add("response_format", formatNode);
+
+        formatNode.addProperty("type", "json_schema");
+        JsonObject schemaNode = new JsonObject();
+        formatNode.add("json_schema", schemaNode);
+
+        schemaNode.addProperty("name", name);
+        schemaNode.addProperty("strict", true);
+
+        JsonObject format = new JsonParser().parse(responseFormat).getAsJsonObject();
+        schemaNode.add("schema", format);
     }
 
     private static List<AiImageLabel> parseLabels(AiImageLabelRequest request, AiImage image, String visionResponse) throws IOException {
